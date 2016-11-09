@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block breadcrumb %} 
+机房更新
+{% endblock %}
+
+{% block main %} 
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="row">
+	<div class="col-sm-10">
+	    <div class="ibox float-e-margins">
+		<div class="ibox-title">
+		    <h5>填写基本信息</h5>
+		<div class="ibox-tools">
+			<a class="collapse-link">
+			    <i class="fa fa-chevron-up"></i>
+			</a>
+			<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+			    <i class="fa fa-wrench"></i>
+			</a>
+			<a class="close-link">
+			    <i class="fa fa-times"></i>
+			</a>
+        </div>
+       </div>   
+	<div class="ibox-content">  
+    <form  id="updateForm" class="form-horizontal">
+		<input id='id' type='hidden' name='id' value= {{idc.id}} readonly='true'>
+
+	    <div class='form-group'>
+                <label for="name" class="col-sm-3 control-label">机房英文简写<span class="red-fonts">*</span></label>
+                <div class="col-sm-7">
+                    <input id="name" name="name" value={{idc.name}} type="text" class="form-control" >
+                </div>
+	    </div> <!--name-->
+	    <div class="hr-line-dashed"></div>
+	    <div class='form-group'>
+                <label for="name_cn" class="col-sm-3 control-label">机房中文名</label>
+                <div class="col-sm-7">
+                    <input id="name_cn" name="name_cn" value={{idc.name_cn}} type="text" class="form-control" >
+                </div>
+	    </div> <!--name_cn-->
+	    <div class="hr-line-dashed"></div>
+	    <div class='form-group'>
+                <label for="address" class="col-sm-3 control-label">地址</label>
+                <div class="col-sm-7">
+                    <input id="address" name="address" value={{idc.address}} type="text" class="form-control">
+                </div>
+	    </div><!--address-->
+	    <div class="hr-line-dashed"></div>
+	    <div class='form-group'>
+                <label for="adminer" class="col-sm-3 control-label">联系人</label>
+                <div class="col-sm-7">
+                    <input id="adminer" name="adminer" value="{{idc.adminer}}" type="text" class="form-control">
+                </div>
+	    </div><!--address-->
+	    <div class="hr-line-dashed"></div>
+	    <div class='form-group'>
+		<label for="phone" class="col-sm-3 control-label">联系电话</label>
+                <div class="col-sm-7">
+                    <input id="phone" name="phone" value="{{idc.phone}}" type="text" class="form-control" >
+                </div>
+	    </div><!--phone-->
+	    <div class="hr-line-dashed"></div>
+        <div class="form-group">
+           <div class="col-sm-6 col-sm-offset-2"> 
+                    <button type="button" class="btn btn-primary update-sure">确认</button>
+                    <button type="button" class="btn btn-default update-cancel">取消</button>
+            </div>
+       </div> <!--button-->
+	</form> <!--form-->
+ </div> <!--ibox-content-->
+</div>  <!---->
+</div><!---->
+
+<script>
+
+$(".update-sure").click(function(){
+	$.post("/idcupdate",$("#updateForm").serialize(),function(data){
+	    console.log(data)
+	    data=JSON.parse(data);
+	    if(data["code"] == 0){
+		swal({
+		    title:'Congratulation',
+		    text:data['result'],
+		    type:'success',
+		    confirmButtonText:'确定'
+		    },function(){
+			location.href='/idc'
+		    })
+	    }else{
+		swal('Error',data['errmsg'],'error')
+	    }
+	})
+    return false
+})
+</script>
+{% endblock %}
