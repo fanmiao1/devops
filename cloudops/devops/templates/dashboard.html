@@ -1,0 +1,309 @@
+{% extends 'main.html' %}
+{% load staticfiles %}
+{% block tinymce_js %}{% endblock %}
+{% block form_use %}
+<style>
+    .ivu-tabs-nav-scroll{background-color: #fff;border-radius:4px;}
+    .ivu-tabs-bar{margin-bottom: 5px;}
+    .ivu-tabs-nav{height: 60px;line-height: 60px;}
+    .ivu-tabs-tab{height: inherit;line-height: inherit;padding-top: 0 !important;}
+    .x_title small{color:#495060}
+    #top_dashboard ul li a{color:#2d8cf0;line-height: 35px;}
+    #top_dashboard ul li{list-style-type:none}
+    .roll::-webkit-scrollbar {/*滚动条整体样式*/
+        width: 5px;     /*高宽分别对应横竖滚动条的尺寸*/
+        height: 1px;
+    }
+    .roll::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+        border-radius: 3px;
+         -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        background: #6e6e6e;
+    }
+    .roll::-webkit-scrollbar-track {/*滚动条里面轨道*/
+        -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        border-radius: 3px;
+        background: #EDEDED;
+    }
+    .tile_stats_count{}
+    .top_count .count{font-size:40px;height:47px;line-height: 47px !important;}
+    .tile_count{margin-bottom:10px;margin-top: 0;}
+    .home-text-senior{font-size: 30px;font-family: PingFangSC-Light monospace}
+    .filter-box .filter-open{top: 37px;}
+    .monitor_line_div_class {
+        border-bottom: 1px #D7DEE5 solid;
+        padding-top: 5px;
+    }
+    .san_line {
+        width: 100%;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+{% block ext_before %}
+<link href="{% static 'css/asset_list.css' %}" rel="stylesheet">
+{% endblock %}
+{% block right_col %}
+    <!-- top tiles -->
+    <div class="row tile_count" style="margin-bottom: 0"></div>
+    <div class="row" id="top_dashboard" style="margin: 0;">
+        <tabs value="upcoming" @on-click="handleTabClick">
+            <tab-pane label="我的待办" name="upcoming" icon="ios-calendar">
+                <div id="dashboard_upcoming_tab" class="dashboard_tab" style="display: block;">{% include 'dashboard/upcoming.html' %}</div>
+            </tab-pane>
+            <tab-pane label="工作流" name="flow" icon="card">
+                <div id="dashboard_workflow_tab" class="dashboard_tab" style="display: none;">{% include 'dashboard/flow_amount.html' %}</div>
+            </tab-pane>
+            <tab-pane label="工单系统" name="worksheet" icon="monitor">
+                <div id="dashboard_worksheet_tab" class="dashboard_tab" style="display: none;">{% include 'dashboard/worksheet_amount.html' %}</div>
+            </tab-pane>
+            <tab-pane label="业务运行状态" name="system_run" icon="ios-pulse">
+                <div id="dashboard_run_status_tab" class="dashboard_tab" style="display: none;">{% include 'dashboard/business_system_run_status.html' %}</div>
+            </tab-pane>
+            <tab-pane label="固定资产统计" name="fixed_asset" icon="ios-pie-outline">
+                <div id="dashboard_asset_tab" class="dashboard_tab" style="display: none;">{% include 'dashboard/fixed_asset_amount.html' %}</div>
+            </tab-pane>
+            <tab-pane label="数据库资源状态" name="database" icon="social-buffer">
+                <div id="dashboard_database_tab" class="dashboard_tab" style="display: none;">{% include 'dashboard/database.html' %}</div>
+            </tab-pane>
+{#            <tab-pane label="网络运行状态" name="net_status" icon="network">#}
+{#                <div id="dashboard_network_tab" class="dashboard_tab" style="display: none;">{% include 'dashboard/net_run_status.html' %}</div>#}
+{#            </tab-pane>#}
+            <tab-pane label="费用管理" name="cost" icon="social-usd">
+                <div id="dashboard_cost_tab" class="dashboard_tab" style="display: none;">{% include 'dashboard/cost_amount.html' %}</div>
+            </tab-pane>
+        </tabs>
+    </div>
+{% endblock %}
+{% block ext_script %}
+    <script src="{% static 'js/echarts/echarts.min.js' %}"></script>
+    <script src="{% static 'js/echarts/wonderland.js' %}"></script>
+    <script src="{% static 'js/echarts/customed.js' %}"></script>
+    <script src="{% static 'js/echarts/macarons.js' %}"></script>
+    <script src="{% static 'js/echarts/westeros.js' %}"></script>
+    <script src="{% static 'js/echarts/roma.js' %}"></script>
+    <script src="{% static 'vuejs/vue-2.5.17.js' %}"></script>
+    <script src="{% static 'vuejs/iview-2.14.3.js' %}"></script>
+    <!-- top导航栏 -->
+    <script>
+    var shortcuts = [
+        {
+            text: '今日',
+            value () {
+                const today = new Date();
+                return [today, today];
+            }
+        },
+        {
+            text: '昨日',
+            value () {
+                const end = new Date();
+                const start = new Date();
+                start.setTime(start.getTime() - 3600 * 1000 * 24);
+                return [start, end];
+            }
+        },
+        {
+            text: '近7日',
+            value () {
+                const end = new Date();
+                const start = new Date();
+                start.setTime(start.getTime() - 3600 * 1000 * 24 * 6);
+                return [start, end];
+            }
+        },
+        {
+            text: '近1个月',
+            value () {
+                const end = new Date();
+                const start = new Date();
+                start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                return [start, end];
+            }
+        },
+        {
+            text: '近3个月',
+            value () {
+                const end = new Date();
+                const start = new Date();
+                start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+                return [start, end];
+            }
+        }
+    ];
+    var Main = {
+        data () {
+            return {
+                theme1: 'light',
+                groupList: [],
+                serverList: [],
+
+                cost_look_all_isShow: true,
+                cost_start_date_value: ["", ""],
+                cost_date_range: {
+                    shortcuts: shortcuts
+                },
+
+                workflowProjectList: [],
+                workflow_select_project_default: "",
+                workflow_start_date_value: [],
+                workflow_date_range: {
+                    shortcuts: shortcuts
+                },
+                worksheet_start_date_value: [],
+                worksheet_date_range: {
+                    shortcuts: shortcuts
+                },
+
+                fixed_asset_computer_start_date_value: [],
+                fixed_asset_computer_date_range: {
+                    shortcuts: shortcuts
+                },
+
+                system_run_group_default: "",
+                system_run_server_default: "",
+            }
+        },
+        mounted () {
+            this.init();
+        },
+        methods:{
+            init () {
+                var that = this;
+                $.ajax({
+                    url: '/opscenter/server/get_server_group_list',
+                    type: 'get',
+                    success: function(result){
+                        that.groupList = result.result;
+                        for (var i in result.result){
+                            that.selectServerGroup (result.result[i].id, false);
+                            if (that.serverList.length > 0){
+                                that.system_run_group_default = result.result[i].id;
+                                that.system_run_server_default = that.serverList[0].id;
+                                break
+                            }
+                        }
+                    }
+                });
+                $.ajax({
+                    url: '/flow/get_all_project',
+                    type: 'get',
+                    success: function(result2){
+                        if (result2.result){
+                            that.workflowProjectList = result2.result;
+                        }
+                    }
+                });
+            },
+            selectServerGroup (group_id, async=true) {
+                var that = this;
+                that.serverList = [];
+                $.ajax({
+                    url: '/opscenter/server/get_server_list_by_group',
+                    type: 'get',
+                    data: {'group_id': group_id},
+                    async: async,
+                    success: function (res) {
+                        that.serverList = res.result;
+                    }
+                });
+            },
+            system_run_status_select_server (server_id) {
+                if(server_id){
+                    system_run_get_server_amount(server_id)
+                }
+            },
+            workflow_select_project (project_id) {
+                if (project_id) {
+                    get_project_user_amount(project_id)
+                }
+            },
+            workflow_datarange_change(date){
+                if (date[0] && date[1]){
+                    get_flow_count(date[0],date[1])
+                }
+            },
+            worksheet_datarange_change(date){
+                if (date[0] && date[1]){
+                    get_worksheet_count(date[0],date[1])
+                }
+            },
+            fixed_asset_computer_datarange_change(date){
+                if (date[0] && date[1]){
+                    get_computer_flow_fun(date[0],date[1])
+                }
+            },
+            cost_datarange_change(date){
+                this.cost_start_date_value = [date[0], date[1]];
+                cost_amount_by_department_fun(date[0],date[1]);
+                cost_amount_by_type_fun(date[0],date[1]);
+                cost_amount_by_purchase_type_fun(date[0],date[1]);
+            },
+            cost_look_all_action(){
+                var number = 10;
+                if (this.cost_look_all_isShow){
+                    number = ''
+                }
+                cost_amount_by_department_fun(this.cost_start_date_value[0], this.cost_start_date_value[1], number);
+                this.cost_look_all_isShow = !this.cost_look_all_isShow
+            },
+            handleTabClick(name){
+                $('#top_dashboard .dashboard_tab').hide();
+                const end = new Date();
+                const start = new Date();
+                start.setTime(start.getTime() - 3600 * 1000 * 24 * 6);
+                switch(name) {
+                    case 'database':
+                        break;
+                    case 'upcoming':
+                        $('#dashboard_upcoming_tab').show();
+                        break;
+                    case 'flow':
+                        $('#dashboard_workflow_tab').show();
+                        this.workflow_start_date_value = [start, end];
+                        get_flow_count(moment().subtract(6,'days').startOf('day').format('YYYY-MM-DD'),moment().format('YYYY-MM-DD'));
+                        get_all_workflow_amount();
+                        this.workflow_select_project_default = this.workflowProjectList[0].id;
+                        this.workflow_select_project(this.workflow_select_project_default);
+                        break;
+                    case 'worksheet':
+                        $('#dashboard_worksheet_tab').show();
+                        this.worksheet_start_date_value = [start, end];
+                        get_worksheet_count(moment().subtract(6 ,'days').format('YYYY-MM-DD'),moment().format('YYYY-MM-DD'));
+                        break;
+                    case 'system_run':
+                        $('#dashboard_run_status_tab').show();
+                        get_web_detect();
+                        system_run_get_server_amount(this.system_run_server_default);
+                        break;
+                    case 'fixed_asset':
+                        $('#dashboard_asset_tab').show();
+                        this.fixed_asset_computer_start_date_value = [start, end];
+                        get_computer_flow_fun(moment().subtract(6,'days').startOf('day').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD'));
+                        get_asset_amount_fun();
+                        get_server_amount_fun();
+                        break;
+                    case 'net_status':
+                        $('#dashboard_network_tab').show();
+                        break;
+                    case 'cost':
+                        $('#dashboard_cost_tab').show();
+                        this.cost_look_all_isShow = true;
+                        cost_amount_by_department_fun('', '');
+                        cost_amount_by_type_fun('', '');
+                        cost_amount_by_purchase_type_fun('', '');
+                        break;
+                }
+            }
+        }
+    };
+    var Component = Vue.extend(Main);
+    new Component().$mount('#top_dashboard');
+    </script>
+    <script src="{% static 'dashboard/upcoming.js' %}"></script>
+    <script src="{% static 'dashboard/workflow.js' %}"></script>
+    <script src="{% static 'dashboard/worksheet.js' %}"></script>
+    <script src="{% static 'dashboard/system_run.js' %}"></script>
+    <script src="{% static 'dashboard/fixed_asset.js' %}"></script>
+    <script src="{% static 'dashboard/database.js' %}"></script>
+    <script src="{% static 'dashboard/cost.js' %}"></script>
+{% endblock %}

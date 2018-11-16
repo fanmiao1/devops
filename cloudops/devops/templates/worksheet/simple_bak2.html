@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!-- Meta, title, CSS, favicons, etc. -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  {% block viewport %}<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">{% endblock %}
+  <title>{% block title_top %}工单系统{% endblock %}</title>
+<head>
+  <!-- Jquery JS -->
+  <script src="{%static 'js/jquery-3.0.0.min.js' %}"></script>
+  <!-- Bootstrap -->
+  <link href="{% static 'vendors/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="{% static 'vendors/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet">
+  <!-- bootstrap-wysiwyg -->
+  <link href="{% static 'vendors/google-code-prettify/bin/prettify.min.css' %}" rel="stylesheet">
+  <!-- iCheck -->
+  <link href="{% static 'vendors/iCheck/skins/flat/green.css' %}" rel="stylesheet">
+  <!-- Bootstrap-select CSS -->
+  <link href="{% static 'bootstrap/css/bootstrap-select.min.css' %}" rel="stylesheet">
+  <!-- PNotify -->
+  <link href="{% static 'css/pnotify.css' %}" rel="stylesheet">
+  <link href="{% static 'css/pnotify.buttons.css' %}" rel="stylesheet">
+  <link href="{% static 'css/pnotify.nonblock.css' %}" rel="stylesheet">
+  <link href="{% static 'js/my-message/css/jquery.my-message.1.1.css' %}" rel="stylesheet">
+  <!-- Jquery-confirm CSS -->
+  <link href="{%static 'css/jquery-confirm.css' %}" rel="stylesheet" type="text/css">
+  <link href="{% static 'vendors/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+  <!-- import stylesheet -->
+  <link rel="stylesheet" href="{% static 'vuejs/iview.css' %}">
+  <link href="{% static 'css/sweetalert.css' %}" rel="stylesheet">
+  <link href="{% static 'css/weui.css' %}" rel="stylesheet">
+  <link href="{% static 'css/weui-example.css' %}" rel="stylesheet">
+{#  <link href="{% static 'build/css/custom.min.css' %}" rel="stylesheet">#}
+
+  {% block ext_css %}{% endblock %}
+  <style type="text/css">
+    .stepContainer{max-height: 20px;}
+    .error{color: red;font-weight: normal;}
+    body{
+        background: #FFFFFF;
+        margin: 0 auto;
+    }
+    .x_panel{border:0;}
+    .roll::-webkit-scrollbar {/*滚动条整体样式*/
+        width: 10px;     /*高宽分别对应横竖滚动条的尺寸*/
+        height: 1px;
+    }
+    .roll::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+        border-radius: 10px;
+         -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        background: #6e6e6e;
+    }
+    .roll::-webkit-scrollbar-track {/*滚动条里面轨道*/
+        -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        border-radius: 10px;
+        background: #EDEDED;
+    }
+    .watch_all{
+        font-size: 12px;
+    }
+    #remind_maxlenght{
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        border: 0;
+        background: transparent;
+        font-family:Tahoma,Arial,Roboto,”Droid Sans”,”Helvetica Neue”,”Droid Sans Fallback”,”Heiti SC”,”Hiragino Sans GB”,Simsun,sans-self;
+    }
+    @media screen and (min-width: 320px) {
+        #remind_maxlenght {font-size: 15px;}
+    }
+    .ivu-form-item-label{
+        padding-bottom: 0;
+    }
+    .x_content{
+        margin: 0 auto;
+        padding: 0;
+    }
+    .weui-cells::before{
+        margin-left: 15px;
+    }
+    .weui-cells::after{
+        border: 0;
+    }
+  </style>
+</head>
+<body>
+{#  <div class="container body">#}
+{#    <div class="main_container">#}
+{% block content %}
+<div class="container" id="container">
+    <div class="page home js_show">
+        <div class="page input js_show">
+            <div class="page__hd" style="padding: 20px 0 0 15px;" id="top_page">
+                <h1 class="page__title" style="margin-bottom: 15px;">工单登记</h1>
+                <p id="remind_maxlenght" class="page__desc">{{ remind }}</p>
+            </div>
+            <div class="page__bd">
+                <div id="app">
+                    <form id="demo-form2" autocomplete="off">
+                    <div class="weui-cells weui-cells_form">
+                        <div class="weui-cell">
+                            <div class="weui-cell__hd" style="width: 100%;">
+                                <label class="weui-label">标题</label>
+                                <div class="weui-cell__bd">
+                                    {{ workder_forms.title }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-cell">
+                            <div class="weui-cell__hd">
+                                <label class="weui-label" title="{{ remind }}">抄送</label>
+                                <div class="weui-cell__bd">
+                                    {{ workder_forms.have_power_change }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-cell" id="email_div_id" style="display: none">
+                            <div class="weui-cell__hd" style="width: 100%;">
+                                <label class="weui-label">邮件</label>
+                                <div class="weui-cell__bd">
+                                    {{ workder_forms.email }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-cell">
+                            <div class="weui-cell__hd">
+                                <label class="weui-label">附件</label>
+                                <div class="weui-cell__bd">
+                                    {{ workder_forms.file }}
+                                    <upload
+                                        multiple
+                                        ref="upload"
+                                        :max-size="8192"
+                                        :default-file-list="defaultList"
+                                        :on-success="handleSuccess"
+                                        :on-exceeded-size="handleMaxSize"
+                                        action="{% url 'ws_uploadFILE' 1 %}">
+                                        <i-button type="ghost" icon="ios-cloud-upload-outline">上传附件</i-button>
+                                    </upload>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-cell">
+                            <div class="weui-cell__hd" style="width: 100%">
+                                <label class="weui-label">描述</label>
+                                <div class="weui-cell__bd">
+                                    {{ workder_forms.description }}
+                                    <div id="editor_toolbar" style="width: 100%;border: 1px solid #ccc;border-bottom: 0"></div>
+                                    <div id="editor" style="width: 100%;border: 1px solid #ccc;height: 300px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weui-btn-area">
+                            <button type="button" class="weui-btn weui-btn_primary"  id="submit_id" onclick="submit_action()">提交</button>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+            </div>
+            <div class="page__ft" style="padding-top: 40px;padding-bottom: 10px;text-align: center;">
+                <p class="weui-footer__text">Copyright © 2018 AUKEY Ops</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{#        <div class="x_content">#}
+{#              {% block content %}#}
+{#                  <div id="app">#}
+{#                    <row>#}
+{#                      <i-col span="24">#}
+{#                          <card>#}
+{#                              <p slot="title">工单登记</p>#}
+{#                              <pre id="remind_maxlenght">{{ remind }}</pre>#}
+{#                              <card>#}
+{#                              <i-form :model="formItem" id="demo-form2">#}
+{#                              {% csrf_token %}#}
+{#                                <form-item label="标题" style="margin-bottom: 7px">#}
+{#                                    {{ workder_forms.title }}#}
+{#                                </form-item>#}
+{#                                <form-item label="是否抄送邮件" style="margin-bottom: 0;">#}
+{#                                    {{ workder_forms.have_power_change }}#}
+{#                                </form-item>#}
+{#                                <form-item label="邮件" style="margin-bottom: 5px;">#}
+{#                                    {{ workder_forms.email }}#}
+{#                                </form-item>#}
+{#                                <form-item label="附件" style="margin-top: 10px;margin-bottom: 0">#}
+{#                                    {{ workder_forms.file }}#}
+{#                                    <upload#}
+{#                                        multiple#}
+{#                                        ref="upload"#}
+{#                                        :max-size="8192"#}
+{#                                        :default-file-list="defaultList"#}
+{#                                        :on-success="handleSuccess"#}
+{#                                        :on-exceeded-size="handleMaxSize"#}
+{#                                        action="{% url 'ws_uploadFILE' 1 %}">#}
+{#                                        <i-button type="ghost" icon="ios-cloud-upload-outline">上传附件</i-button>#}
+{#                                    </upload>#}
+{#                                </form-item>#}
+{#                                <form-item label="描述" style="margin-bottom: 5px;">#}
+{#                                   {{ workder_forms.description }}#}
+{#                                </form-item>#}
+{#                              <div id="editor"></div>#}
+{#                              <button type="button" class="btn btn-primary" style="width: 100%;margin-top: 10px;" id="submit_id" onclick="submit_action()">提交</button>#}
+{#                              </i-form>#}
+{#                            </card>#}
+{#                        </card>#}
+{#                    </i-col>#}
+{#                  </row>#}
+{#              </div>#}
+{#          {% endblock %}#}
+{#        </div>#}
+{#    </div>#}
+{#  </div>#}
+  <!-- Bootstrap -->
+  <script src="{%static 'bootstrap/js/bootstrap.min.js' %}"></script>
+  <!-- Custom Theme Scripts -->
+  <script src="{% static 'build/js/custom.min.js' %}"></script>
+  {% block tinymce_js %}
+  <!-- tinymce -->
+{#  <script src="{% static 'js/tinymce/jquery.tinymce.min.js' %}"></script>#}
+{#  <script src="{% static 'js/tinymce/tinymce.min.js' %}"></script>#}
+{#  <script src="{% static 'js/tinymce/textareas-worksheet.js' %}"></script>#}
+  <script src="{% static 'js/aukeyops/wangEditor.min.js' %}"></script>
+  {% endblock %}
+  <!-- PNotify -->
+  <script src="{% static 'js/pnotify.js' %}"></script>
+  <script src="{% static 'js/pnotify.buttons.js' %}"></script>
+  <script src="{% static 'js/pnotify.nonblock.js' %}"></script>
+  <script src="{% static 'js/my-message/js/my-message.1.1.js' %}"></script>
+  <script src="{% static 'js/jquery.validate.js' %}"></script>
+  <!-- import Vue.js -->
+  <script src="{% static 'vuejs/vue.min.js' %}"></script>
+  <!-- import iView -->
+  <script src="{% static 'vuejs/iview.min.js' %}"></script>
+  <!-- Main -->
+  <script src="{% static 'js/aukeyops/main.js' %}"></script>
+  <script type="text/javascript" src="{% static 'js/aukeyops/sweetalert.min.js' %}"></script>
+  <script type="text/javascript">
+{#  $(document).ready(function() {#}
+{#      $("#editor div div").blur();#}
+{#      $("#id_title").focus();#}
+{#      $("#id_title").blur()#}
+{#  });#}
+  </script>
+  {% block ext_js %}
+  <script type="text/javascript">
+      var message = new MyMessage.message({
+        /*默认参数，下面为默认项*/
+        iconFontSize: "20px", //图标大小,默认为20px
+        messageFontSize: "12px", //信息字体大小,默认为12px
+        showTime: 3000, //消失时间,默认为3000
+        align: "center", //显示的位置类型center,right,left
+        positions: { //放置信息距离周边的距离,默认为10px
+            top: "10px",
+            bottom: "10px",
+            right: "10px",
+            left: "10px"
+        },
+        message: "这是一条消息", //消息内容,默认为"这是一条消息"
+        type: "normal" //消息的类型，还有success,error,warning等，默认为normal
+      });
+     var file_list = [];
+     var Main = {
+         data () {
+            return {
+{#                formItem: {#}
+{#                    title: '',#}
+{#                    Switch:'',#}
+{#                    email: ''#}
+{#                },#}
+                defaultList: [],
+                imgName: '',
+                visible: false,
+                uploadList: []
+            }
+         },
+         methods: {
+             handleView (name) {
+                this.imgName = name;
+                this.visible = true;
+             },
+             handleSuccess (res, file) {
+                 file.url = res.url;
+                 file.name = res.name;
+             },
+             handleMaxSize (file) {
+                message.add("超出文件大小限制，不能超过8M", "error");
+             }
+         },
+         mounted () {
+             this.uploadList = this.$refs.upload.fileList;
+             file_list = this.$refs.upload.fileList;
+         }
+      };
+      var Component = Vue.extend(Main);
+      new Component().$mount('#app');
+      var E = window.wangEditor;
+      var editor = new E('#editor_toolbar','#editor');
+      editor.customConfig.uploadImgServer = "{% url 'ws_uploadIMG' %}";
+      editor.customConfig.uploadFileName = 'img';
+      editor.customConfig.showLinkImg = false; //隐藏网络图片功能
+      editor.customConfig.pasteFilterStyle = false; //关闭粘贴样式的过滤
+      editor.customConfig.uploadImgHooks = {
+          error: function (xhr, editor) {
+                message.add("贴图失败，请点击上传图片", "error");
+            },
+          customInsert: function (insertImg, result, editor) {
+              if (result.url.length == 0){
+                  message.add("贴图失败，请点击上传图片", "error");
+              }else {
+                  var the_url;
+                  for (the_url in result.url) {
+                      insertImg(result.url[the_url])
+                  }
+              }
+          }
+      };
+      editor.customConfig.menus = [
+        'undo',  // 撤销
+        'redo',  // 重复
+        'head',  // 标题
+        'bold',  // 粗体
+        'link',  // 插入链接
+        'image'  // 插入图片
+      ];
+      editor.customConfig.customAlert = function (info) {
+        //
+      };
+      editor.create();
+      function submit_action(){
+        if (file_list[0] != undefined){
+            $('#id_file').val(JSON.stringify(file_list));
+        }
+        $('#submit_id').addClass('ivu-btn-loading');
+        $('#submit_id').prop('disabled', true);
+        var submit_btn = document.getElementById('submit_id');
+        var old_text = submit_btn.innerHTML;
+        var loading_text = '<i class="ivu-load-loop ivu-icon ivu-icon-load-c" id="loading_id"></i>';
+        submit_btn.innerHTML = loading_text + old_text;
+        var judge_null = editor.txt.text().replace(/&nbsp;/ig, "").replace(/^\s+|\s+$/gm,"");
+        var html_judge_null = editor.txt.html().replace(/&nbsp;/ig, "").replace(/<p>/ig,"").replace(/<\/p>/ig,"").replace(/<br>/ig,"").replace(/^\s+|\s+$/gm,"");;
+        if (judge_null == '' & html_judge_null == ''){
+            message.add("请检查填写的内容", "error");
+            submit_btn.removeChild(document.getElementById("loading_id"));
+            $('#submit_id').removeClass('ivu-btn-loading');
+            $('#submit_id').prop('disabled', false);
+            return false
+        }else{
+            $("#id_description").val(editor.txt.html());
+            $.ajax({
+                type: "post",
+                url: "{{ the_url }}",
+                dataType: "json",
+                data: $('#demo-form2').serialize(),
+                timeout:'10000',
+                success: function(result) {
+                    if(result['code'] == 1){
+                        window.location.href="/worksheet/work_order_record/detail/"+result['the_wsid']+"/";
+                    }else{
+                        message.add(result['result'], "error");
+                        submit_btn.removeChild(document.getElementById("loading_id"));
+                        $('#submit_id').removeClass('ivu-btn-loading');
+                        $('#submit_id').prop('disabled', false);
+                    }
+                },
+                error:function(jqXHR, textStatus, errorThrown){
+                    message.add("网络连接失败", "error");
+                    if(textStatus == 'timeout'){
+                         message.add("网络连接超时", "error");
+                    }
+                    submit_btn.removeChild(document.getElementById("loading_id"));
+                    $('#submit_id').removeClass('ivu-btn-loading');
+                    $('#submit_id').prop('disabled', false);
+                }
+            });
+        }
+    }
+  </script>
+  <script src="{% static 'vendors/switchery/dist/switchery.min.js' %}"></script>
+  <script type="text/javascript">
+  $(document).ready(function() {
+      if (document.getElementById("id_have_power_change").checked) {
+          $("#id_email").removeAttr("disabled style");
+          $('#email_div_id').prop({style:"display:block"})
+      } else {
+          $("#id_email").prop({disabled:"disabled", style:"background-color:#eee"});
+          $("#id_email").val();
+          $('#email_div_id').prop({style:"display:none"})
+      }
+  });
+  var jsswitch = document.querySelector('.js-switch');
+  jsswitch.onchange = function() {
+     if( jsswitch.checked) {
+         $("#id_email").removeAttr("disabled style");
+          $('#email_div_id').prop({style:"display:block"})
+     }else{
+         $("#id_email").prop({disabled:"disabled", style:"background-color:#eee"});
+          $("#id_email").val();
+          $('#email_div_id').prop({style:"display:none"})
+     }
+
+  };
+  $(document).ready(function () {
+      $("#demo-form2").validate({
+          rules: {
+            title: {
+                required: true
+            }
+          },
+          messages:{
+            title: {
+              required: '请输入标题'
+            }
+          }
+      })
+  });
+  if($("#remind_maxlenght").length>0){
+    function show(){
+        var box = document.getElementById("remind_maxlenght");
+        var text = box.innerHTML;
+        var newBox = document.createElement("div");
+        var btn = document.createElement("a");
+        newBox.innerHTML = text.substring(0,50);
+        btn.innerHTML = text.length > 50 ? "...显示全部" : "";
+        btn.className = "btn btn-link watch_all";
+        btn.onclick = function(){
+            if (btn.innerHTML == "...显示全部"){
+                btn.innerHTML = "收起";
+                newBox.innerHTML = text;
+            }else{
+                btn.innerHTML = "...显示全部";
+                newBox.innerHTML = text.substring(0,50);
+            }
+        };
+        box.innerHTML = "";
+        box.appendChild(newBox);
+        box.appendChild(btn);
+    }
+    show();
+}
+  </script>
+  {% endblock %}
+{% if messages %}
+    <script>
+      {% for message in messages %}
+{#          new PNotify({#}
+{#            title: '{{ message.tags }}',#}
+{#            text: '{{ message }}',#}
+{#            type: '{{ message.tags }}',#}
+{#            styling: 'bootstrap3'#}
+{#          });#}
+          message.add('{{ message }}','{{ message.tags }}');
+      {% endfor %}
+    </script>
+  {% endif %}
+</body>
+</html>

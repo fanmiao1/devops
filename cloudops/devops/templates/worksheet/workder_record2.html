@@ -1,0 +1,268 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="all" />
+<meta http-equiv="imagetoolbar" content="no" />
+<meta http-equiv="pragma" Content="no-cach" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="format-detection" content="telephone=no" />
+<meta http-equiv="keywords" content="" />
+<meta name="author" content="" />
+<meta name="copyright" content="" />
+<meta name="description" content="" />
+<meta name="HandheldFriendly" content="true" />
+
+<title>我提交的工单</title>
+
+<link type="text/css" media="all" rel="stylesheet" href="{% static 'worksheet/workder_record/css/style.css' %}" />
+<link type="text/css" media="all" rel="stylesheet" href="{% static 'worksheet/workder_record/css/dropload.css' %}">
+<style>
+    .tabHead .active{
+        color:#296DC6;
+    }
+    .tabHead .border{
+        background: #296DC6;
+    }
+    .khfxRow footer a{
+        color:#296DC6;
+    }
+</style>
+</head>
+<body ontouchstart=""  id="container">
+<header class="tabHead">
+  <span class="active" style="cursor:pointer;">未受理<small></small></span>
+  <span style="cursor:pointer;">处理中<small></small></span>
+  <span style="cursor:pointer;">已处理<small></small></span>
+  <b class="border"></b>
+</header>
+<div class="swiper-container swiper-container-horizontal">
+    <article class="khfxWarp swiper-wrapper">
+      <section class="khfxPane swiper-slide" style="display:block">
+      </section>
+
+      <section class="khfxPane swiper-slide">
+      </section>
+
+      <section class="khfxPane swiper-slide">
+      </section>
+    </article>
+</div>
+<script src="{% static 'worksheet/workder_record/lib/jquery-2.2.3.min.js' %}"></script>
+<script src="{% static 'worksheet/workder_record/lib/dropload.js' %}"></script>
+<script src="{% static 'js/my-message/js/my-message.1.1.js' %}"></script>
+<script>
+    var message = new MyMessage.message({
+        /*默认参数，下面为默认项*/
+        iconFontSize: "20px", //图标大小,默认为20px
+        messageFontSize: "12px", //信息字体大小,默认为12px
+        showTime: 3000, //消失时间,默认为3000
+        align: "center", //显示的位置类型center,right,left
+        positions: { //放置信息距离周边的距离,默认为10px
+            top: "10px",
+            bottom: "10px",
+            right: "10px",
+            left: "10px"
+        },
+        message: "这是一条消息", //消息内容,默认为"这是一条消息"
+        type: "normal" //消息的类型，还有success,error,warning等，默认为normal
+      });
+	$(function () {
+        var pageNum_1 = 0;
+        var pageNum_2 = 0;
+        var pageNum_3 = 0;
+        var pageSize = 6;
+		var itemIndex = 0;
+		var tabLoadEndArray = [false, false, false];
+		var tabLenghtArray = [28, 15, 47];
+		var tabScroolTopArray = [0, 0, 0];
+        var last_itemIndex = 0;
+		// dropload
+		var dropload = $('.khfxWarp').dropload({
+			scrollArea: window,
+            domUp : {
+                domClass   : 'dropload-up',
+                domRefresh : '<div class="dropload-refresh">下拉刷新</div>',
+                domUpdate  : '<div class="dropload-update">释放更新</div>',
+                domLoad    : '<div class="dropload-load"><span class="loading"></span>加载中...</div>'
+            },
+			domDown: {
+				domClass: 'dropload-down',
+				domRefresh: '<div class="dropload-refresh">上拉加载更多</div>',
+				domLoad: '<div class="dropload-load"><span class="loading"></span>加载中...</div>',
+				domNoData: '<div class="dropload-noData">无更多数据</div>'
+			},
+            loadUpFn : function(me){
+                me.noData(false);
+                $('.khfxPane').eq(itemIndex).empty();
+                if (itemIndex == 0){
+			        pageNum_1 = 1;
+			        var pageNum = pageNum_1;
+                    last_itemIndex = itemIndex;
+                } else if (itemIndex == 1){
+			        pageNum_2 = 1;
+			        var pageNum = pageNum_2
+                } else {
+                    pageNum_3 = 1;
+			        var pageNum = pageNum_3
+                }
+                me.resetload();
+                me.unlock();
+                var result = '';
+                var data = '';
+                var count = 0;
+                $.ajax({
+                    type: "post",
+                    url: "{% url 'get_work_order_record_data' wechat_user_id %}",
+                    dataType: "json",
+                    data:{
+                        'itemIndex':itemIndex,
+                        'pageNum':pageNum,
+                        'pageSize':pageSize
+                    },
+                    timeout: 5000,
+                    success: function(re_data) {
+                        data = re_data;
+                        count = re_data['count'];
+                        for (i in data['result']){
+                            if (tabLenghtArray[itemIndex] > 0) {
+                                tabLenghtArray[itemIndex]--;
+                            } else {
+                                tabLoadEndArray[itemIndex] = true;
+                                break;
+                            }
+                            result
+                            += ''
+                            + '    <hgroup class="khfxRow">'
+                            + '      <header>'+data['result'][i]['c_time']+'</header>'
+                            + '      <div class="mid">'
+                            + '        <img class="photo" src="{% static 'images/img.jpg' %}" >'
+                            + '        <span style="width:100%"><label>标题：</label>'+data['result'][i]['title']+'</span> '
+                            + '        <span style="width:100%"><label>状态：</label>'+data['result'][i]['status']+'</span> '
+                            + '        <span style="width:100%"><label>编号：</label>'+data['result'][i]['wsid']+'</span> '
+                            + '      </div>'
+                            + '      <footer><a href="/worksheet/work_order_record/detail/'+ data['result'][i]['wsid'] +'">查看详情</a></footer>'
+                            + '    </hgroup>';
+                        }
+                        if ((pageNum+1)*pageSize > count){
+                            me.lock('down');
+                            me.noData();
+                        }
+                        $('.khfxPane').eq(itemIndex).append(result);
+                        me.resetload();
+                    },
+                    complete: function (XMLHttpRequest,status) {
+                        if(status == 'timeout') {
+                            xhr.abort();    // 超时后中断请求
+                            message.add("网络超时", "error");
+                        }
+                    }
+                });
+{#                setTimeout(function () {#}
+{#					if (tabLoadEndArray[itemIndex]) {#}
+{#						me.resetload();#}
+{#						me.lock();#}
+{#						me.noData();#}
+{#						me.resetload();#}
+{#						return;#}
+{#					}#}
+{#					#}
+{#				},500);#}
+            },
+
+			loadDownFn: function (me) {
+			    if (itemIndex == 0){
+			        pageNum_1 += 1;
+			        var pageNum = pageNum_1;
+                    last_itemIndex = itemIndex;
+                } else if (itemIndex == 1){
+			        pageNum_2 += 1;
+			        var pageNum = pageNum_2
+                } else {
+                    pageNum_3 += 1;
+			        var pageNum = pageNum_3
+                }
+			    var result = '';
+                var data = '';
+                var count = 0;
+                $.ajax({
+                    type: "post",
+                    url: "{% url 'get_work_order_record_data' wechat_user_id %}",
+                    dataType: "json",
+                    data:{
+                        'itemIndex':itemIndex,
+                        'pageNum':pageNum,
+                        'pageSize':pageSize
+                    },
+                    timeout: 5000,
+                    success: function(re_data) {
+                        data = re_data;
+                        count = re_data['count'];
+                        if (tabLoadEndArray[itemIndex]) {
+                            me.resetload();
+                            me.lock();
+                            me.noData();
+                            me.resetload();
+                            return;
+                        }
+                        for (i in data['result']){
+                            result
+                            += ''
+                            + '    <hgroup class="khfxRow">'
+                            + '      <header>'+data['result'][i]['c_time']+'</header>'
+                            + '      <div class="mid">'
+                            + '        <img class="photo" src="{% static 'images/img.jpg' %}" >'
+                            + '        <span style="width:100%"><label>标题：</label>'+data['result'][i]['title']+'</span> '
+                            + '        <span style="width:100%"><label>状态：</label>'+data['result'][i]['status']+'</span> '
+                            + '        <span style="width:100%"><label>编号：</label>'+data['result'][i]['wsid']+'</span> '
+                            + '      </div>'
+                            + '      <footer><a href="/worksheet/work_order_record/detail/'+ data['result'][i]['wsid'] +'">查看详情</a></footer>'
+                            + '    </hgroup>';
+                        }
+                        if ((pageNum+1)*pageSize > count){
+                            me.lock('down');
+                            me.noData();
+                        }
+                        $('.khfxPane').eq(itemIndex).append(result);
+                        me.resetload();
+                    },
+                    complete: function (XMLHttpRequest,status) {
+                        if(status == 'timeout') {
+                            xhr.abort();    // 超时后中断请求
+                            message.add("网络超时", "error");
+                        }
+                    }
+                });
+{#				setTimeout(function () {#}
+{##}
+{##}
+{#				},500);#}
+            }
+		});
+
+
+		$('.tabHead span').on('click', function () {
+
+			tabScroolTopArray[itemIndex] = $(window).scrollTop();
+			var $this = $(this);
+			itemIndex = $this.index();
+			$(window).scrollTop(tabScroolTopArray[itemIndex]);
+
+			$(this).addClass('active').siblings('.tabHead span').removeClass('active');
+			$('.tabHead .border').css('left', $(this).offset().left + 'px');
+			$('.khfxPane').eq(itemIndex).show().siblings('.khfxPane').hide();
+
+			if (!tabLoadEndArray[itemIndex]) {
+				dropload.unlock();
+				dropload.noData(false);
+			} else {
+				dropload.lock('down');
+				dropload.noData();
+			}
+			dropload.resetload();
+		});
+	});
+</script>
+</body>
+</html>

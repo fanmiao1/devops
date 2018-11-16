@@ -1,0 +1,89 @@
+{% extends 'form.html' %}
+{% load staticfiles %}
+{% block page_title %}项目变更{% endblock %}
+{% block table_title %}申请{% endblock %}
+{% block ext_before %}
+<link href="{% static 'vendors/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+<link href="{% static 'build/css/custom.min.css' %}" rel="stylesheet">
+<style type="text/css">
+    #id_type li{list-style-type:none;float: left;margin-right: 15px;margin-top: 10px;}
+    #id_type{padding-left: 0}
+    .stepContainer{max-height: 20px;}
+    #id_priority li{list-style-type:none;float: left;margin-right: 15px;margin-top: 10px;}
+    #id_priority{padding-left: 0}
+</style>
+{% endblock %}
+{% block page_form %}
+    {% for field in projectform %}
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ field.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+            {{ field }}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
+{% block ext_script %}
+    <!-- Switchery -->
+    <script src="{% static 'vendors/switchery/dist/switchery.min.js' %}"></script>
+    <script type="text/javascript">
+    $("#flow").css("display","block");
+    $("#releaseflow_manage").addClass('current-page');
+{#    $(document).ready(function() {#}
+{#        if (document.getElementById("id_priority_0").checked) {#}
+{#            $("#radio_id_0").addClass('active');#}
+{#        } else if (document.getElementById("id_priority_1").checked) {#}
+{#            $("#radio_id_1").addClass('active');#}
+{#        }#}
+{#    });#}
+
+    function getProject(user_id) {
+        console.log(user_id);
+        $.ajax({
+            type: "post",
+            url: '{% url "get_project" %}',
+            dataType: "json",
+            data: {"user_id": user_id},
+            success: function (dict) {
+                county = $('#project_name');
+                county.append('<option value>请选择项目</option>');
+                $.each(dict.data, function (index, item) {
+                    county.append('<option value=' + item[0] + '>' + item[1] + '</option>');
+                });
+                county.selectpicker('val', '');
+                county.selectpicker('refresh');
+            }
+        });
+    }
+
+    $(function () {
+        $("#project_manager").selectpicker({
+            noneSelectedText: '请先选择项目'
+        });
+
+        $(window).on('load', function () {
+            $('.selectpicker').selectpicker('val', '');
+            $('.selectpicker').selectpicker('refresh');
+        });
+        //获取项目经理
+        $('#project_name').change(function () {
+            if ($(this).val() == '') {
+                return false
+            }
+            $.get('/get_project_manager_' + $(this).val() + '/', function (dict) {
+                county = $('#project_manager');
+                county.empty();
+                $.each(dict.data, function (index, item) {
+                    county.append('<option value=' + item[0] + '>' + item[1] + '</option>');
+                });
+                county.selectpicker('val', '');
+                county.selectpicker('refresh');
+            })
+        });
+    });
+
+    $().ready(function () {
+        getProject({{ user.id }});
+    });
+    </script>
+{% endblock %}

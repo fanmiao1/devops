@@ -1,0 +1,714 @@
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}{% endblock %}
+{% block table_title %}
+    <div class="ivu-btn-group pull-left" style="padding-left: 0;">
+        <button id="view1_id" type="button" class="ivu-btn ivu-btn-primary" onclick="view_trans(1)">凭证管理</button>
+        <button id="view2_id" type="button" class="ivu-btn ivu-btn-ghost" onclick="view_trans(2)">协议管理</button>
+    </div>
+    <div id="bt_group" class="pull-right">
+        <button id="add_bt_id" type="button" class="ivu-btn ivu-btn-primary pull-left" data-toggle="modal" data-target="#changeModal" data-id="-1">添加</button>
+    </div>
+{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_before %}
+    <link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+    <style>
+    .error_input{
+        border-color: #a94442;
+    }
+    .error_alert{
+        color: #a94442;
+        display: block;
+        margin-top: 5px;
+        margin-bottom: 10px;
+    }
+    </style>
+{% endblock %}
+{% block ext_button %}
+    <!-- 搜索栏 -->
+    <form class="form-horizontal" action="#" id="searchFormId">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div id="asset_search">
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">名称</label></div>
+                    <div class="col-md-8"><input class="ivu-input" type="text" name="name"></div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">协议</label></div>
+                    <div class="col-md-8"><select class="selectpicker show-tick form-control" id="search_protocol_id" name="protocol"></select></div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">用户名</label></div>
+                    <div class="col-md-8"><input class="ivu-input" type="text" name="username"></div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">端口</label></div>
+                    <div class="col-md-8"><input class="ivu-input" type="text" name="port"></div>
+                </div>
+            </div>
+            <div class="ivu-form-item-content pull-left">
+                <div class="col-md-12">
+                <a href="javascript:void(0);" id="searchBtnId" class="ivu-btn ivu-btn-circle ivu-btn-primary ivu-btn-circle-outline">
+                    <i class="fa fa-search"></i> 搜索 </a>
+                <a href="javascript:;" class="ivu-btn ivu-btn-circle ivu-btn-ghost ivu-btn-circle-outline" onclick="formReset()">
+                    <i class="fa fa-print"></i> 重置 </a>
+                </div>
+            </div>
+        </div>
+    </form>
+    <!-- /.搜索栏结束 -->
+
+    <!-- 凭证 添加/修改 -->
+    <div class="modal fade" id="changeModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="change_mo_title_id">添加</h4>
+                </div>
+                <form id="change_form" action="#" class="form-horizontal form-label-left">
+                    <div class="modal-body roll">
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">名称 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <input id="change_name_id" name="name" class="ivu-input" required="required" type="text" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">协议 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <select class="selectpicker show-tick form-control" id="change_protocol_id" name="protocol"></select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">用户名</label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <input class="ivu-input" id="change_username_id" name="username" type="text" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">端口</label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <input id="change_port_id" name="port" class="ivu-input" type="text" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">Key <span class="required">*</span></label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <input id="change_key_input_id" name="key_pass" class="ivu-input" type="password" autocomplete="off">
+                                <textarea id="change_key_text_id" name="key_text" class="ivu-input" type="text" autocomplete="off" style="display: none"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">备注</label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <textarea id="change_remark_id" name="remark" class="ivu-input"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" id="change_submit_btn">
+                            <span class="ladda-label"> 确认 </span>
+                        </button>
+                        <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /. 凭证 添加/修改结束 -->
+
+    <!-- 协议 添加/修改 -->
+    <div class="modal fade" id="protocolChangeModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="change_pro_title_id">添加</h4>
+                </div>
+                <form id="protocol_change_form" action="#" class="form-horizontal form-label-left">
+                    <div class="modal-body roll">
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">名称 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <input id="protocol_change_name_id" name="name" class="ivu-input" required="required" type="text" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">类型 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <select class="selectpicker show-tick form-control" id="protocol_change_type_id" name="type">
+                                    <option></option>
+                                    <option value="0">密码</option>
+                                    <option value="1">密钥</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" id="protocol_change_submit_btn">
+                            <span class="ladda-label"> 确认 </span>
+                        </button>
+                        <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /. 协议 添加 / 修改结束 -->
+{% endblock %}
+{% block ext_script %}
+    <script src="{% static 'js/aukeyops/searchTable.js' %}"></script>
+    <script src="{% static 'js/aukeyops/currency.js' %}"></script>
+    <script type="text/javascript">
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "get",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:'/opscenter/certificate/list/',
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                minimumCountColumns: 1,
+                dataField: "results",
+                pagination: true, //启动分页
+                sortable: true,  //启用排序
+                pageSize: 15,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+                search: false,  //是否启用查询
+                searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+                searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+                showColumns: false,  //显示下拉框勾选要显示的列
+                showRefresh: false,  //显示刷新按钮
+                showSearchButton: false, //显示搜索按钮
+                showExport: false,//显示导出按钮
+                exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                sidePagination: "server", //分页方式：client客户端分页，server服务端分页（*）
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined", //设置为 'limit' 则会发送符合 RESTFul 格式的参数
+                clickToSelect: true,//是否启用点击选中行
+                singleSelect:true, // 设置 true 将禁止多选
+                checkboxHeader:false, //设置 false 将在列头隐藏全选复选框
+                toolbarAlign:'left',//工具栏对齐方式
+                buttonsAlign:'right',//按钮对齐方式
+                undefinedText: '', //当数据为 undefined 时显示的字符
+                detailView:false,
+                responseHandler: function (res) { //加载服务器数据之前的处理程序，可以用来格式化数据。参数：res为从服务器请求到的数据
+                    res['total'] = res['count'];
+                    return res
+                },
+                columns:[
+                    {
+                        title:'凭证ID',
+                        field:'id',
+                        sortable:false,
+                        align:'center',
+                        width:50
+                    },
+                    {
+                        title:'凭证名称',
+                        field:'name',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'协议',
+                        field:'protocol',
+                        align:'center',
+                        sortable:true,
+                        formatter:function(value){
+                            if (value){
+                                return value.name
+                            } else {
+                                return value
+                            }
+                        }
+                    },
+                    {
+                        title:'用户名',
+                        field:'username',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'端口',
+                        field:'port',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'备注',
+                        field:'remark',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'操作',
+                        field:'id',
+                        align:'center',
+                        //列数据格式化
+                        //formatter:operateFormatter
+                        formatter:function(value,row,gitflow){
+                            var e = '<button type="button" class="btn btn-link btn-xs" data-toggle="modal" data-target="#changeModal" data-id="'+row.id+'"> 编辑</button> ';
+                            var d = '<button type="button" class="btn btn-link btn-xs" onclick="confirmDelete(1, '+row.id+',\''+row.name+'\')"> 删除</button>';
+                            return e+d;
+                        }
+                    }
+                ],
+                queryParams: function queryParams(params) {   //设置查询参数
+                    if (params.sortOrder == 'desc') {
+                        params.sortName = '-'+params.sortName
+                    }
+                    var param = {
+                        page: params.pageNumber,
+                        size: params.pageSize,
+                        ordering:params.sortName
+                    };
+                    return param;
+                },
+                detailFormatter:function (index, row) {
+                }
+            });
+        }
+
+        function view_trans(view) {
+            if (view == 2) {
+                document.getElementById("view2_id").className = "ivu-btn ivu-btn-primary";
+                document.getElementById("view1_id").className = "ivu-btn ivu-btn-ghost";
+                $('#add_bt_id').attr('data-target', '#protocolChangeModal');
+                $('#searchFormId').hide();
+                $('#table').bootstrapTable('refreshOptions', {
+                    url: '/opscenter/protocol/list/',
+                    dataField: "",
+                    sortable: false,
+                    sidePagination: 'client',
+                    responseHandler: function (res) {return res},
+                    columns:[
+                        {
+                            title:'协议ID',
+                            field:'id',
+                            sortable:false,
+                            align:'center',
+                            width:50
+                        },
+                        {
+                            title:'协议名称',
+                            field:'name',
+                            align:'center',
+                            sortable:false
+                        },
+                        {
+                            title:'协议类型',
+                            field:'type',
+                            align:'center',
+                            sortable:false,
+                            formatter: function (value) {
+                                var my_type = {0: '密码', 1: '密钥'};
+                                if (value == 0 || value == 1) {
+                                    var ren_value = my_type[value];
+                                } else {
+                                    var ren_value = value;
+                                }
+                                return ren_value
+                            }
+                        },
+                        {
+                            title:'操作',
+                            field:'id',
+                            align:'center',
+                            //列数据格式化
+                            //formatter:operateFormatter
+                            formatter:function(value,row,gitflow){
+                                var e = '<button type="button" class="btn btn-link btn-xs" data-toggle="modal" data-target="#protocolChangeModal" data-id="'+row.id+'"> 编辑</button> ';
+                                var d = '<button type="button" class="btn btn-link btn-xs" onclick="confirmDelete(2, '+row.id+',\''+row.name+'\')"> 删除</button>';
+                                return e+d;
+                            }
+                        }
+                    ],
+{#                    queryParams: function queryParams(params) {return params}#}
+                });
+            } else {
+                document.getElementById("view1_id").className = "ivu-btn ivu-btn-primary";
+                document.getElementById("view2_id").className = "ivu-btn ivu-btn-ghost";
+                $('#add_bt_id').attr('data-target', '#changeModal');
+                $('#searchFormId').show();
+                $('#table').bootstrapTable('refreshOptions', {
+                    url:'/opscenter/certificate/list/',
+                    pagination: true,
+                    dataField: "results",
+                    sortable: true,
+                    sidePagination: 'server',
+                    columns:[
+                        {
+                            title:'凭证ID',
+                            field:'id',
+                            sortable:false,
+                            align:'center',
+                            width:50
+                        },
+                        {
+                            title:'凭证名称',
+                            field:'name',
+                            align:'center',
+                            sortable:true
+                        },
+                        {
+                            title:'协议',
+                            field:'protocol.name',
+                            align:'center',
+                            sortable:true
+                        },
+                        {
+                            title:'用户名',
+                            field:'username',
+                            align:'center',
+                            sortable:true
+                        },
+                        {
+                            title:'端口',
+                            field:'port',
+                            align:'center',
+                            sortable:true
+                        },
+                        {
+                            title:'备注',
+                            field:'remark',
+                            align:'center',
+                            sortable:true
+                        },
+                        {
+                            title:'操作',
+                            field:'id',
+                            align:'center',
+                            //列数据格式化
+                            //formatter:operateFormatter
+                            formatter:function(value,row,gitflow){
+                                var e = '<button type="button" class="btn btn-link btn-xs" data-toggle="modal" data-target="#changeModal" data-id="'+row.id+'"> 编辑</button> ';
+                                var d = '<button type="button" class="btn btn-link btn-xs" onclick="confirmDelete(1, '+row.id+',\''+row.name+'\')"> 删除</button>';
+                                return e+d;
+                            }
+                        }
+                    ],
+                    responseHandler: function (res) { //加载服务器数据之前的处理程序，可以用来格式化数据。参数：res为从服务器请求到的数据
+                        res['total'] = res['count'];
+                        return res
+                    },
+                    queryParams: function queryParams(params) {   //设置查询参数
+                        if (params.sortName == 'protocol.name') {
+                            params.sortName = 'protocol'
+                        }
+                        if (params.sortOrder == 'desc') {
+                            params.sortName = '-'+params.sortName
+                        }
+                        var param = {
+                            page: params.pageNumber,
+                            size: params.pageSize,
+                            ordering:params.sortName
+                        };
+                        return param;
+                    }
+                });
+            }
+        }
+    </script>
+    <script type="text/javascript">
+        // 新增、修改
+        var change_key_input_id = $("#change_key_input_id");
+        var change_key_text_id = $("#change_key_text_id");
+
+        // 打开协议模态框触发
+        $('#protocolChangeModal').on('show.bs.modal', function (event) {
+            $('#protocol_change_type_id').selectpicker('refresh');
+            $('.error_alert').remove();
+            $("#protocol_change_form").find("[class*='error_input']").removeClass("error_input");
+            var id = $(event.relatedTarget).data('id');
+            if (id > 0) {
+                $('#change_pro_title_id').html('修改协议');
+                $.ajax({
+                    url: '/opscenter/protocol/detail/' + id + '/',
+                    type: 'get',
+                    success: function (result) {
+                        $('#protocol_change_name_id').val(result['name']);
+                        $('#protocol_change_type_id').selectpicker('val', result['type']);
+                        $('#protocol_change_type_id').selectpicker('refresh');
+                    }
+                });
+            } else {
+                $('#change_pro_title_id').html('添加协议');
+            }
+            $("#protocol_change_submit_btn").attr('onclick', 'protocolChange('+id+')')
+        });
+
+        // 关闭协议模态框触发
+        $('#protocolChangeModal').on('hide.bs.modal', function () {
+              document.getElementById("protocol_change_form").reset();
+        });
+
+        // 提交协议添加/修改触发
+        function protocolChange(id) {
+            $('.error_alert').remove();
+            $("#protocol_change_form").find("[class*='error_input']").removeClass("error_input");
+            if (!$("#protocol_change_name_id").val()){
+                $("#protocol_change_name_id").addClass('error_input');
+                $("#protocol_change_name_id").after("<div class='error_alert'>协议名称不能为空。</div>");
+                return false
+            } else if (!$("#protocol_change_type_id").val()){
+                $('#protocol_change_type_id').parent().addClass('error_input');
+                $("#protocol_change_type_id").parent().children('div').after("<div class='error_alert'>请选择协议类型。</div>");
+                return false
+            } else {
+                var json_obj = $('#protocol_change_form').serializeArray();
+                console.log(json_obj);
+                var form_dict = jsonToDict(json_obj);
+                var url;
+                var type;
+                if (id > 0) {
+                    url = '/opscenter/protocol/detail/'+id+'/';
+                    type = 'PUT';
+                } else {
+                    url = '/opscenter/protocol/list/';
+                    type = 'post';
+                }
+                $.ajax({
+                    url: url,
+                    type: type,
+                    data: form_dict,
+                    datatype: 'json',
+                    success: function (result) {
+                        MyMessage(1, '操作成功！');
+                        $('#protocolChangeModal').modal('hide');
+                        $('#table').bootstrapTable("refresh");
+                    },
+                    error: function (result) {
+                        var re_json = result.responseJSON;
+                        for (i in re_json){
+                            $("#protocol_change_form [name="+i+"]").addClass('error_input');
+                            $("#protocol_change_form [name="+i+"]").after("<div class='error_alert'>"+result.responseJSON[i]+"</div>");
+                        }
+                    }
+                })
+            }
+        }
+
+        // 打开凭证模态框触发
+        $('#changeModal').on('show.bs.modal', function (event) {
+            change_key_input_id.show();
+            change_key_text_id.hide();
+            $('.error_alert').remove();
+            $("#change_form").find("[class*='error_input']").removeClass("error_input");
+            // 获取协议初始化下拉框
+            $.ajax({
+                url: "/opscenter/protocol/list/",
+                type: "get",
+                async: false,
+                success: function(result){
+                   $('#change_protocol_id').empty();
+                   $('#change_protocol_id.selectpicker').append('<option></option>');
+                   $.each(result, function (index, item) {
+                       $('#change_protocol_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                   });
+                   $('#change_protocol_id').selectpicker('refresh');
+                }
+            });
+            var id = $(event.relatedTarget).data('id');
+            if (id > 0) {
+                $('#change_mo_title_id').html('修改凭证');
+                $.ajax({
+                    url: '/opscenter/certificate/detail/' + id + '/',
+                    type: 'get',
+                    success: function (result) {
+                        $('#change_name_id').val(result['name']);
+                        $('#change_username_id').val(result['username']);
+                        $('#change_port_id').val(result['port']);
+                        $('#change_remark_id').val(result['remark']);
+                        if (result['protocol']) {
+                            $('#change_protocol_id').selectpicker('val', result['protocol']['id']);
+                            $('#change_protocol_id').selectpicker('refresh');
+                            if (result['protocol']['type'] == 0) {
+                                change_key_input_id.show();
+                                change_key_text_id.hide();
+                                $('#change_key_input_id').val(result['key']);
+                            } else {
+                                change_key_input_id.hide();
+                                change_key_text_id.show();
+                                $('#change_key_text_id').val(result['key']);
+                            }
+                        }
+                    }
+                });
+            } else {
+                $('#change_mo_title_id').html('添加凭证');
+            }
+            $("#change_submit_btn").attr('onclick', 'change('+id+')')
+        });
+
+        // 关闭凭证模态框触发
+        $('#changeModal').on('hide.bs.modal', function () {
+              document.getElementById("change_form").reset();
+        });
+
+        // 选择凭证管理协议后触发
+        $(function(){
+            $('#change_protocol_id').change(function(e){
+                var protocol_result = getProtocolDetail(e.target.value);
+                if (protocol_result['type'] == 0) {
+                    change_key_input_id.show();
+                    change_key_text_id.hide();
+                } else {
+                    change_key_input_id.hide();
+                    change_key_text_id.show();
+                }
+            })
+        });
+
+        // 提交凭证添加/修改触发
+        function change(id) {
+            $('.error_alert').remove();
+            $("#change_form").find("[class*='error_input']").removeClass("error_input");
+            if (!$("#change_name_id").val()){
+                $("#change_name_id").addClass('error_input');
+                $("#change_name_id").after("<div class='error_alert'>凭证名称不能为空。</div>");
+                return false
+            } else if (!$("#change_protocol_id").val()){
+                $('#change_protocol_id').parent().addClass('error_input');
+                $("#change_protocol_id").parent().children('div').after("<div class='error_alert'>请选择协议。</div>");
+                return false
+            } else {
+                var protocol_obj = getProtocolDetail($("#change_protocol_id").val());
+                var key;
+                if (protocol_obj.type == 0) {
+                    key = "change_key_input_id";
+                } else {
+                    key = "change_key_text_id";
+                }
+                if (!($("#"+key).val())) {
+                    $("#"+key).addClass('error_input');
+                    $("#change_key_text_id").after("<div class='error_alert'>Key不能为空。</div>");
+                    return false
+                } else {
+                    var json_obj = $('#change_form').serializeArray();
+                    var form_dict = jsonToDict(json_obj);
+                    form_dict['key'] = $("#"+key).val();
+                    var url;
+                    var type;
+                    if (id > 0) {
+                        url = '/opscenter/certificate/detail/'+id+'/';
+                        type = 'PUT';
+                    } else {
+                        url = '/opscenter/certificate/list/';
+                        type = 'post';
+                    }
+                    $.ajax({
+                        url: url,
+                        type: type,
+                        data: form_dict,
+                        datatype: 'json',
+                        success: function (result) {
+                            MyMessage(1, '操作成功！');
+                            $('#changeModal').modal('hide');
+                            $('#table').bootstrapTable("refresh");
+                        },
+                        error: function (result) {
+                            var re_json = result.responseJSON;
+                            for (i in re_json){
+                                $("#change_form [name="+i+"]").addClass('error_input');
+                                $("#change_form [name="+i+"]").after("<div class='error_alert'>"+result.responseJSON[i]+"</div>");
+                            }
+                        }
+                    })
+
+                }
+            }
+        }
+
+        // 删除
+        function confirmDelete(view, id, name){
+            var url;
+            var view_name;
+            if (view == 2) {
+                url = '/opscenter/protocol/detail/'+id+'/';
+                view_name = '协议'
+            } else {
+                url = '/opscenter/certificate/detail/'+id+'/';
+                view_name = '凭证'
+            }
+            if (id > 0) {
+                $.confirm({
+                    title: '提示！',
+                    content: '确定要删除'+view_name+'「'+name+'」吗？',
+                    closeIcon: true,
+                    confirmButtonClass:'btn-danger',
+                    cancelButtonClass: 'btn-default ',
+                    confirmButton: '删除!',
+                    cancelButton: '取消',
+                    confirm: function(){
+                        $.ajax({
+                            url: url,
+                            type: 'DELETE',
+                            success: function (result) {
+                                MyMessage(1, '操作成功！');
+                                $('#table').bootstrapTable("refresh");
+                            },
+                            error: function (result) {
+                                MyMessage(0, result.responseText);
+                            }
+                        })
+                    }
+                });
+            }
+        }
+
+        // 获取协议详情
+        function getProtocolDetail(id) {
+            var data;
+            $.ajax({
+                url: '/opscenter/protocol/detail/'+id+'/',
+                type: 'get',
+                async: false,
+                success: function (result) {
+                    data = result
+                }
+            });
+            return data
+        }
+
+        // 搜索触发
+        $("#searchBtnId").on("click", function () {
+            searchGetTable('table', 'searchFormId', '/opscenter/certificate/list/');
+        });
+
+        // 重置搜索表单
+        function formReset() {
+            document.getElementById("searchFormId").reset();
+            $('#search_protocol_id').selectpicker('refresh');
+        }
+        $(document).ready(function(){
+            initTable();
+            $(".selectpicker").selectpicker({
+                noneSelectedText : ''//默认显示内容
+            });
+            // 协议搜索下拉框
+            $.ajax({
+                url: "/opscenter/protocol/list/",
+                type: "get",
+                async: false,
+                success: function(result){
+                   $('#search_protocol_id').empty();
+                   $('#search_protocol_id.selectpicker').append('<option></option>');
+                   $.each(result, function (index, item) {
+                       $('#search_protocol_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                   });
+                   $('#search_protocol_id').selectpicker('refresh');
+                }
+            });
+        });
+    </script>
+{% endblock %}

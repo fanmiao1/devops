@@ -1,0 +1,118 @@
+{% extends 'main.html' %}
+{% load staticfiles %}
+{% block ext_before %}
+<!-- 引入ystep样式 -->
+<link href="{% static 'css/ystep.css' %}" rel="stylesheet">
+<link href="{% static 'css/details.css' %}" rel="stylesheet">
+<style>
+    img{
+        width:100%;
+        height:100%;
+    }
+    .roll::-webkit-scrollbar {/*滚动条整体样式*/
+            width: 10px;     /*高宽分别对应横竖滚动条的尺寸*/
+            height: 1px;
+        }
+    .roll::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+            border-radius: 10px;
+             -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            background: #6e6e6e;
+        }
+    .roll::-webkit-scrollbar-track {/*滚动条里面轨道*/
+            -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            background: #EDEDED;
+        }
+</style>
+{% block ext_css %}{% endblock %}
+{% endblock %}
+{% block right_col %}
+    <div class="page-title">
+      <div class="title_left" style="margin-bottom: 10px;">
+        <h3>
+            {% block page_title %}AUKEY{% endblock %}
+        </h3>
+      </div>
+    </div>
+    <div class="row">
+        <div {% block ext_div %}class="col-md-8 col-sm-8 col-xs-12"{% endblock %}>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="x_panel">
+                      <div class="x_title">
+                          <h2><i class="fa fa-align-left"></i> {% block table_title %}AUKEY | Form title{% endblock %}</h2>
+                        <ul class="nav navbar-right panel_toolbox">
+                          <!-- <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                          </li>
+                          <li><a class="close-link"><i class="fa fa-close"></i></a>
+                          </li> -->
+                        </ul>
+                        <div class="clearfix"></div>
+                      </div>
+                      <div class="x_content">
+                        <!-- start accordion -->
+                        <div class="accordion" id="accordion" role="tablist" aria-multiselectable="true">
+                          <div class="panel">
+                            <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                              <div class="panel-body">
+                                <div class="col-xs-12">
+                                      <p class="lead">{% block detial_title %}{% endblock %}</p>
+                                      <div class="table-responsive">
+                                          {% block detail_info %}{% endblock %}
+                                      </div>
+                                    </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- end of accordion -->
+                      </div>
+                    </div>
+                </div>
+                {% block ystep %}{% endblock %}
+             </div>
+        </div>
+        <div class="col-md-4 col-sm-4 col-xs-12">
+            <div class="row">
+            {% block logs_include %}{% include 'cijenkins/buildhistory.html' %}{% endblock %}
+{#            {% block communication_include %}{% include 'communication.html' %}{% endblock %}#}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block ext_script %}
+    <!-- 引入ystep插件 -->
+    <script src="{% static 'js/ystep.js' %}"></script>
+    <script>
+    $(".comment_maxlenght").each(function(){
+        var box_id = this.id;
+        var box_com = document.getElementById(box_id);
+        var text_com = box_com.innerHTML;
+        var newBox_com = document.createElement("div");
+        var btn_com = document.createElement("a");
+        newBox_com.innerHTML = text_com.substring(0,100);
+        btn_com.innerHTML = text_com.length > 100 ? "...显示全部" : "";
+        btn_com.href = "###";
+        btn_com.className = "btn btn-link";
+        btn_com.onclick = function(){
+            if (btn_com.innerHTML == "...显示全部"){
+                btn_com.innerHTML = "收起";
+                newBox_com.innerHTML = text_com;
+            }else{
+                btn_com.innerHTML = "...显示全部";
+                newBox_com.innerHTML = text_com.substring(0,200);
+            }
+        };
+        box_com.innerHTML = "";
+        box_com.appendChild(newBox_com);
+        box_com.appendChild(btn_com);
+    });
+    $(".approval .btn-success,.approval .btn-primary").click(function(){
+        $(this).attr("disabled","disabled");//让button无法再次点击
+        sleep(500);
+        $(this).removeAttr("disabled");
+    });
+    </script>
+    {% block ext_script_add %}{% endblock %}
+{% endblock %}

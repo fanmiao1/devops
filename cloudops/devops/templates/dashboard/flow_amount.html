@@ -1,0 +1,203 @@
+<div class="row tile_count">
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 工作流总量</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="top_five_id">{{ workflow_total_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 立项申请</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="workflow_project_flow_count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 项目变更</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="workflow_project_releaseflow_count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 数据库变更</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="workflow_database_release_count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 项目成员变更</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="workflow_project_userflow_count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 计划任务变更</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="workflow_cronflow_count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head" style="padding-bottom: 25px;">
+                    <Icon type="ios-pricetags-outline"></Icon> <b>工作流分类统计</b>
+                    <div class="pull-right">
+                        <date-picker :value="workflow_start_date_value" type="daterange" @on-change="workflow_datarange_change" :options="workflow_date_range" placement="bottom-end" placeholder="选择时间范围" style="width: 200px"></date-picker>
+                    </div>
+                </div>
+                <div class="ivu-card-body" style="height: 300px;">
+                    <div class="ivu-spin ivu-spin-fix" id="workflow_by_type_line_loading" style="display: none;">
+                        <div class="ivu-spin-main">
+                            <span class="ivu-spin-dot"></span>
+                            <div class="ivu-spin-text"></div>
+                            <div>数据加载中</div>
+                        </div>
+                    </div>
+                    <div class="col-md-9 col-sm-9 col-xs-12">
+                      <div id="flow_amount_line" style="width: 100%;height: 300px;"></div>
+                    </div>
+                    <div class="col-md-3 col-sm-3 col-xs-12 bg-white">
+                      <div class="x_title">
+                        <h2>执行状态统计</h2>
+                        <div class="clearfix"></div>
+                      </div>
+
+                      <div class="col-md-12 col-sm-12 col-xs-6">
+                        <div>
+                          <p>已完成 <span id="through_flow"></span></p>
+                          <div class="">
+                            <div class="progress progress_sm" style="width: 76%;">
+                              <div id="through_flow_count_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <p>审批中 <span id="no_approval_flow"></span></p>
+                          <div class="">
+                            <div class="progress progress_sm" style="width: 76%;">
+                              <div id="no_approval_flow_count_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <p>驳回  <span id="no_through_flow"></span></p>
+                          <div class="">
+                            <div class="progress progress_sm" style="width: 76%;">
+                              <div id="no_through_flow_count_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row tile_count">
+    <div class="col-md-6 col-sm-6 col-xs-12">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><Icon type="ios-pricetags-outline"></Icon> 项目</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="ivu-spin ivu-spin-fix" id="workflow_project_source_loading_id" style="display: none;">
+                        <div class="ivu-spin-main">
+                            <span class="ivu-spin-dot"></span>
+                            <div class="ivu-spin-text"></div>
+                            <div>数据加载中</div>
+                        </div>
+                    </div>
+                    <div id="pie_workflow_project" style="width: 100%;height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-sm-6 col-xs-12">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head" style="padding-bottom: 22px;">
+                    <Icon type="ios-pricetags-outline"></Icon>
+                    <b> 项目成员</b>
+                    <div class="pull-right">
+                        <i-select v-model="workflow_select_project_default" filterable @on-change="workflow_select_project" style="width:200px; text-align: left" placeholder="选择项目">
+                            <i-option v-for="item in workflowProjectList" :value="item.id" :key="item.id" :label="item.name"></i-option>
+                        </i-select>
+                    </div>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="ivu-spin ivu-spin-fix" id="workflow_project_user_loading_id" style="display: none;">
+                        <div class="ivu-spin-main">
+                            <span class="ivu-spin-dot"></span>
+                            <div class="ivu-spin-text"></div>
+                            <div>数据加载中</div>
+                        </div>
+                    </div>
+                    <div id="pie_workflow_project_user" style="width: 100%;height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row tile_count">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><Icon type="ios-pricetags-outline"></Icon> 执行状态</p>
+                </div>
+                <div class="ivu-card-body" style="height: 300px;">
+                    <div class="ivu-spin ivu-spin-fix" id="workflow_exec_status_loading_id" style="display: none;">
+                        <div class="ivu-spin-main">
+                            <span class="ivu-spin-dot"></span>
+                            <div class="ivu-spin-text"></div>
+                            <div>数据加载中</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 col-xs-12"><div id="pie_workflow_status_1" style="width: 100%; height: 250px;"></div></div>
+                    <div class="col-md-3 col-sm-6 col-xs-12"><div id="pie_workflow_status_2" style="width: 100%; height: 250px;"></div></div>
+                    <div class="col-md-3 col-sm-6 col-xs-12"><div id="pie_workflow_status_3" style="width: 100%; height: 250px;"></div></div>
+                    <div class="col-md-3 col-sm-6 col-xs-12"><div id="pie_workflow_status_4" style="width: 100%; height: 250px;"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

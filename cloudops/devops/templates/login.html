@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>AUKEY Ops</title>
+    <!-- Bootstrap -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet">
+    <!-- NProgress -->
+    <link href="{% static 'css/nprogress.css' %}" rel="stylesheet">
+    <!-- Animate.css -->
+    <link href="{% static 'css/animate.min.css' %}" rel="stylesheet">
+    <!-- Custom Theme Style -->
+    <link href="{% static 'css/custom.min.css' %}" rel="stylesheet">
+    <!--Main-->
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+    <!-- PNotify -->
+    <link href="{% static 'css/pnotify.css' %}" rel="stylesheet">
+    <link href="{% static 'css/pnotify.buttons.css' %}" rel="stylesheet">
+    <link href="{% static 'css/pnotify.nonblock.css' %}" rel="stylesheet">
+    <style>
+        .login{
+            background-color: #2A3F54;
+            color:#F7F7F7;
+        }
+        .login_content{
+            text-shadow: none;
+        }
+    </style>
+  </head>
+
+  <body class="login">
+    <div>
+      <a class="hiddenanchor" id="signup"></a>
+      <a class="hiddenanchor" id="signin"></a>
+
+      <div class="login_wrapper">
+        <div class="animate form login_form">
+          <section class="login_content">
+            <form method="post" enctype="multipart/form-data">
+              {% block h1_title %}<h1>Login</h1>{% endblock %}
+
+              {% block content %}
+              <div>
+                {% csrf_token %}
+                {{uf.as_p}}
+              </div>
+              {% endblock %}
+
+              {% block button_div %}
+              <div>
+                  <button type="submit" class="btn btn-default submit">{% block sub_button %}Log in{% endblock %}</button>
+              </div>
+              {% endblock %}
+
+              {% block but_link %}
+              <div class="clearfix">
+                  <a href="{% url 'password_reset' %}" style="float: right;color: #FFFFFF;font-weight: normal" class="btn btn-link">忘记密码 ?</a>
+              </div>
+              {% endblock %}
+
+              {% block foot %}
+              <div class="separator">
+{#                <div class="clearfix"></div>#}
+                <br />
+
+                <div>
+                  <h1><i class="fa fa-tasks"></i> AUKEY Ops</h1>
+                  <p>©2018 All Rights Reserved. </p>
+                </div>
+              </div>
+              {% endblock %}
+            </form>
+          </section>
+        </div>
+      </div>
+    </div>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{% static 'js/jquery-1.11.1.min.js' %}"></script>
+    <script src="{% static 'js/aukeyops/main.js' %}"></script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/modernizr.min.js' %}"></script>
+    <script src="{% static 'js/jquery.popupoverlay.min.js' %}"></script>
+    <script src="{% static 'js/jquery.slimscroll.min.js' %}"></script>
+    <script src="{% static 'js/simplify/simplify.js' %}"></script>
+    <script src="{% static 'js/nprogress.js' %}"></script>
+    <script src="{% static 'js/pnotify.js' %}"></script>
+    <script src="{% static 'js/pnotify.buttons.js' %}"></script>
+    <script src="{% static 'js/pnotify.nonblock.js' %}"></script>
+    <script src="{% static 'js/custom.min.js' %}"></script>
+    {% block ext_script %}{% endblock %}
+    <script>
+        $(function()	{
+            $('#lockScreen').modal({
+                show: true,
+                backdrop: 'static'
+            })
+        });
+
+    {% if messages %}
+        {% for message in messages %}
+            new PNotify({
+              title: '{{ message.tags }}',
+              text: '{{ message }}',
+              type: '{{ message.tags }}',
+              styling: 'bootstrap3'
+            });
+        {% endfor %}
+    {% endif %}
+    </script>
+  </body>
+</html>

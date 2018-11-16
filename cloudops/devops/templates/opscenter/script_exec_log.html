@@ -1,0 +1,210 @@
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block table_title %}
+<div class="ivu-btn-group pull-left" style="padding-left: 0;">
+    <span style="color: #495060">脚本执行记录</span>
+</div>
+<div class="pull-right">
+    <a href="{% url 'script_manage' %}">
+        <button id="btn_add" type="button" class="ivu-btn ivu-btn-ghost">返回脚本列表</button>
+    </a>
+</div>
+{% endblock %}
+{% block ext_before %}
+<link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+<style>
+    a {
+        color: #2d8cf0;
+    }
+    a:hover {
+        color: #5A738E;
+    }
+    .ivu-btn {
+        border-radius:0;
+    }
+    .modal-content{
+        border-radius:0;
+    }
+    pre {
+        outline: 1px solid #ccc; 
+        padding: 5px; margin: 5px; 
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }  
+    .string { color: green; }  
+    .number { color: darkorange; }  
+    .boolean { color: blue; }  
+    .null { color: magenta; }  
+    .key { color: red; }
+</style>
+{% endblock %}
+{% block ext_button%}
+    <!-- 查看详情 -->
+    <div class="modal fade" id="detailModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="ivu-spin ivu-spin-fix" id="result_requesting_id" style="display: none">
+                <div class="ivu-spin-main">
+                    <span class="ivu-spin-dot"></span>
+                    <div class="ivu-spin-text"></div>
+                    <div>数据请求中</div>
+                </div>
+            </div>
+            <div class="modal-content">
+                <div class="modal-body roll" style="height: 600px;overflow-y: auto">
+                    <div id="detail_modal_body"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">关闭</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /.查看详情结束 -->
+{% endblock %}
+{% block ext_script %}
+<script src="{% static 'js/aukeyops/currency.js' %}"></script>
+<script type="text/javascript">
+    function initTable() {
+        $('#table').bootstrapTable({
+            method: "get",
+            contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+            dataType: "json",
+            cache: false,
+            url:'/opscenter/script/exec/log/list/?script={{ id }}',
+            toolbar: '#mytab',//指定工具栏
+            striped: true,  //表格显示条纹
+            dataField: "results",
+            pagination: true, //启动分页
+            sortable: true,  //启用排序
+            pageSize: 10,  //每页显示的记录数
+            pageNumber:1, //当前第几页
+            pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+            search: false,  //是否启用查询
+            searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+            searchAlign:'left',	//指定 搜索框 水平方向的位置。’left’ or ‘right’
+            stricSearch:true,
+            showColumns: false,  //显示下拉框勾选要显示的列
+            showRefresh: false,  //显示刷新按钮
+            showSearchButton: false, //显示搜索按钮
+            sidePagination: "server", //表示服务端请求
+            //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+            //设置为limit可以获取limit, offset, search, sort, order
+            queryParamsType : "undefined",
+            clickToSelect: true,//是否启用点击选中行
+            toolbarAlign:'left',//工具栏对齐方式
+            buttonsAlign:'left',//按钮对齐方式,
+            responseHandler: function (res) {
+                res['total'] = res['count'];
+                return res
+            },
+            columns:[
+                {
+                    title:'ID',
+                    field:'id',
+                    sortable:false,
+                },
+                {
+                    title:'脚本名称',
+                    field:'script_name',
+                    sortable:false,
+                    formatter:function(value,row){
+                        var d = '{{ script_name }}';
+                        return d
+                    }
+                    
+                },
+                {
+                    title:'执行结果',
+                    field:'script_result',
+                    sortable:false,
+                    formatter:function(value, row){
+                        var h = '';
+                        if (value) {
+                            h = '<a data-toggle="modal" data-target="#detailModal" data-id='+row.id+'><span>'+value.substring(0,150)+'</span></a>';
+                            if (value.length > 150) {
+                                h += '...'
+                            }
+                        }
+                        return h
+                    }
+                },
+                {
+                    title:'脚本分类',
+                    field:'script_group',
+                    sortable:false,
+                    formatter:function(value,row){
+                        var d = '{{ script_group }}';
+                        return d
+                    }
+                },
+                {
+                    title:'执行人',
+                    field:'script_user',
+                    sortable:false
+                },
+                {
+                    title:'执行时间',
+                    field:'datetime',
+                    sortable:false,
+                    formatter:function(value,row){
+                        var d = '';
+                        if (value) {
+                            d =  new Date(value).toLocaleString();
+                        }
+                        return d
+                    }
+                },
+            ],
+            queryParams: function queryParams(params) {   //设置查询参数
+                var param = {
+                    page: params.pageNumber,
+                    size: params.pageSize,
+                    ordering:params.sortName
+                };
+                return param;
+            },
+
+        });
+    }
+    $(document).ready(function () {
+        //调用函数，初始化表格
+        $("#opscenter_menu_id").css("display","block");
+        $("#script_manage").addClass('current-page');
+        initTable();
+    });
+
+    function delete_sql(){
+        if(confirm("确定要删除吗")){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    $('#detailModal').on('show.bs.modal', function (event) {
+        var id = $(event.relatedTarget).data('id');
+        $('#result_requesting_id').show()
+        $.ajax({
+            url: '/opscenter/script/exec/log/detail/'+id+'/',
+            type: 'get',
+            success: function (result) {
+                try {
+                    var s = eval("["+result['script_result']+"]")[0];
+                    var detail_res = '<pre>'+JsonFormat(s)+'</pre>'
+                    $('#result_requesting_id').hide()
+                } catch (err) {
+                    console.log(err)
+                    var detail_res = result['script_result']
+                }
+                $('#detail_modal_body').html(detail_res)
+            },
+            error: function (result) {
+                MyMessage(0, result['responseText'])
+                $('#detail_modal_body').html('请求失败！')
+            }
+        })
+    });
+</script>
+{% endblock %}

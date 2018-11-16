@@ -1,0 +1,147 @@
+{% extends 'form.html' %}
+{% load staticfiles %}
+{% block page_title %}项目成员变更{% endblock %}
+{% block table_title %}申请{% endblock %}
+{% block page_form %}
+    {% for field in projectform %}
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ field.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+            {{ field }}
+            </div>
+        </div>
+        {% if field.label == "项目经理" %}
+        <input name="doublebox" multiple="multiple" hidden id="id_doublebox">
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">选择成员</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+                <div id="app">
+                    <transfer
+                        :data="data1"
+                        :target-keys="targetKeys1"
+                        :list-style="listStyle"
+                        filterable
+                        :render-format="render1"
+                        :operations="['To left','To right']"
+                        not-found-text="请选择项目和成员类型"
+                        @on-change="handleChange1"></transfer>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+{% endblock %}
+{% block ext_script %}
+    <!-- import Vue.js -->
+    <script src="{% static 'vuejs/vue.min.js' %}"></script>
+    <!-- import iView -->
+    <script src="{% static 'vuejs/iview.min.js' %}"></script>
+    <script>
+    $(function () {
+        let mockData = [];
+        var TargetKeys = [];
+        $('#project_user_type').change(function () {
+            mockData.splice(0,mockData.length);
+            TargetKeys.splice(0,TargetKeys.length);
+            if ($(this).val() == ''){
+                return false
+            }
+            if ($('#project_name').val() == ''){
+                return false
+            }
+            $.get('/get_group_user_'+$('#project_name').val() +'_'+ $(this).val() + '/', function (dict) {
+                $.each(dict.data2, function (index, item) {
+                    mockData.push({
+                        key: item[0],
+                        label: item[1],
+                        description: item[1],
+                        disabled: false
+                    });
+                });
+                $.each(dict.data1, function (index, item) {
+                    TargetKeys.push(item[0]);
+                });
+                document.getElementById("id_doublebox").value=TargetKeys;
+            });
+        });
+        $('#project_name').change(function () {
+            mockData.splice(0,mockData.length);
+            TargetKeys.splice(0,TargetKeys.length);
+            if($(this).val() == ''){
+                return false
+            }
+            $.get('/get_project_manager_' + $(this).val() + '/', function (dict) {
+                county = $('#project_manager');
+                $.each(dict.data, function (index, item) {
+                    county.val("");
+                    county.val(county.val()+item[0]);
+                })
+            });
+            if ($('#project_user_type').val() == ''){
+                return false
+            }
+            $.get('/get_group_user_'+$(this).val() +'_'+ $('#project_user_type').val() + '/', function (dict) {
+                $.each(dict.data2, function (index, item) {
+                    mockData.push({
+                        key: item[0],
+                        label: item[1],
+                        description: item[1],
+                        disabled: false
+                    });
+                });
+                $.each(dict.data1, function (index, item) {
+                    TargetKeys.push(item[0]);
+                });
+                document.getElementById("id_doublebox").value=TargetKeys;
+            });
+        });
+        var Main = {
+            data () {
+                return {
+                    data1: mockData,
+                    targetKeys1: TargetKeys,
+                    listStyle: {
+                    width: '40%',
+                    height: '300px'
+                }
+                }
+            },
+            methods: {
+                render1 (item) {
+                    return item.label;
+                },
+                handleChange1 (newTargetKeys, direction, moveKeys) {
+                    document.getElementById("id_doublebox").value=newTargetKeys;
+                    this.targetKeys1 = newTargetKeys;
+                }
+            }
+        }
+        var Component = Vue.extend(Main);
+        new Component().$mount('#app')
+    });
+    </script>
+    <script type="text/javascript">
+        $(function () {
+            //获取项目经理
+            $('#project_name').change(function () {
+                if($(this).val() == ''){
+                    return false
+                }
+                $.get('/get_project_manager_' + $(this).val() + '/', function (dict) {
+                    county = $('#project_manager');
+                    county.empty();
+                    $.each(dict.data, function (index, item) {
+                        county.append('<option value=' + item[0] + '>' + item[1] + '</option>');
+                    })
+                });
+                if ($('#project_user_type').val() == ''){
+                    return false
+                }
+            });
+        });
+    </script>
+    <script type="text/javascript">
+    $("#flow").css("display","block");
+    $("#project_member_manage").addClass('current-page');
+    </script>
+{% endblock %}

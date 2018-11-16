@@ -1,0 +1,77 @@
+{% extends 'main.html' %}
+{% load staticfiles %}
+{% block right_col %}
+{% block ext_before %}
+<style type="text/css">
+.mail_list_column, .mail_view{border-left:none;}
+.message_meta span{color: #999;font-size:10px;margin-top: 20px;}
+</style>
+{% endblock %}
+    <div class="page-title">
+      <div class="title_left" style="margin-bottom: 10px;">
+        <h3>
+            {% block page_title %}消息中心{% endblock %}
+        </h3>
+      </div>
+    </div>
+    <div class="clearfix"></div>
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+          <div class="x_title">
+            <h2>{% block table_title %}详情{% endblock %}</h2>
+            <ul class="nav navbar-right panel_toolbox">
+              <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li>
+              <li><a class="close-link"><i class="fa fa-close"></i></a>
+              </li>
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+              {% for line in list %}
+              <div class="col-sm-12 mail_view">
+                <div class="inbox-body">
+                  <div class="mail_heading row">
+                    <div class="col-md-8">
+                      <div class="btn-group">
+                        <a href="javascript:history.back(-1)"><button class="btn btn-sm btn-primary" type="button"><i class="fa fa-reply"></i> 返回</button></a>
+                        <a href="{% url 'message_delete' line.id %}"><button class="btn btn-sm btn-danger" onclick="return delete_sql()" type="button" data-placement="top" data-toggle="tooltip" data-original-title="Trash"><i class="fa fa-trash-o"></i></button></a>
+                      </div>
+                    </div>
+                    <div class="col-md-12" style="text-align: center;">
+                        <h4> 
+                            <span>{{ line.title }}</span>
+                            <div class="message_meta">
+                                <span>消息类型:{{ line.type }}</span>
+                                <span> 时间:{{ line.time }}</span>
+                            </div>
+                        </h4>
+                        
+                    </div>
+                  </div>
+                  <div class="view-mail" style="margin-left:10%">
+                    <br>
+                    <span><h5>{{ line.content }}</h5></span>
+                    <br>
+                    <a href="{{ line.url }}"><button type="button" class="btn btn-primary btn-xs">前往查看</button></a>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+          </div>
+        </div>
+  </div>    
+{% endblock %}
+{% block ext_script%}
+<script type="text/javascript">
+    $("#usercenter_menu_id").css("display","block");
+    $("#messages_center").addClass('current-page');
+    function delete_sql(){
+        if(confirm("确定要删除吗")){
+            return true;
+        }else{
+            return false;
+        }
+    }
+</script>
+{% endblock %}

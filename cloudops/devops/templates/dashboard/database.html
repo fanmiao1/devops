@@ -1,0 +1,278 @@
+<div class="row" style="margin-bottom: 10px;">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered" style="height: 100%;">
+                <div class="ivu-card-head" style="padding-bottom: 25px;">
+                    <Icon type="ios-pricetags-outline"></Icon> <b>数据库实例概览</b>
+                    <div id="my_monitor_1" class="pull-right" style="background: #fff; cursor: pointer;padding-left: 5px; padding-right:5px; border: 1px solid #ccc; height: 35px;line-height:35px;">
+                        <i class="glyphicon glyphicon-calendar fa fa-calendar" style="top: 0;"></i>
+                        <span style="color: #495060;"></span> <b class="caret"></b>
+                    </div>
+                    <div class="pull-right ivu-btn-group" style="margin-right:10px;" id="range_div_id">
+                        <button type="button" class="ivu-btn ivu-btn-default pull-left" onclick="refresh()"><span class="glyphicon glyphicon-refresh" style="color: #495060"></span></button>
+                        <button id="range_最近1小时_id" type="button" class="ivu-btn ivu-btn-primary"
+                                onclick="range_trans('最近1小时')">最近1小时
+                        </button>
+                        <button id="range_今日_id" type="button" class="ivu-btn ivu-btn-ghost"
+                                onclick="range_trans('今日')">今日
+                        </button>
+                        <button id="range_昨日_id" type="button" class="ivu-btn ivu-btn-ghost"
+                                onclick="range_trans('昨日')">昨日
+                        </button>
+                        <button id="range_最近7日_id" type="button" class="ivu-btn ivu-btn-ghost"
+                                onclick="range_trans('最近7日')">最近7日
+                        </button>
+                        <button id="range_最近30日_id" type="button" class="ivu-btn ivu-btn-ghost"
+                                onclick="range_trans('最近30日')">最近30日
+                        </button>
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12" id="monitor_no_data"
+                         style="border-bottom:1px solid #D7DEE5;">无数据
+                    </div>
+                </div>
+                <div class="ivu-card-body" style="height: 350px;">
+                    <div class="x_content" id="monitor_div_id">
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="num_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="num" class="san_line"></div>
+                        </div>
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid;">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="tps_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="tps" class="san_line"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ivu-card-body" style="height: 350px;">
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="qps_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="qps" class="san_line"></div>
+                        </div>
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="iops_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="iops" class="san_line"></div>
+                        </div>
+                </div>
+                <div class="ivu-card-body" style="height: 350px;">
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="recv_k_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="recv_k" class="san_line"></div>
+                        </div>
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="sent_k_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="sent_k" class="san_line"></div>
+                        </div>
+                </div>
+                <div class="ivu-card-body" style="height: 350px;">
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="com_read_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="com_read" class="san_line"></div>
+                        </div>
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="com_update_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="com_update" class="san_line"></div>
+                        </div>
+                </div>
+                <div class="ivu-card-body" style="height: 350px;">
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="com_delete_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="com_delete" class="san_line"></div>
+                        </div>
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="com_insert_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="com_insert" class="san_line"></div>
+                        </div>
+                </div>
+                <div class="ivu-card-body" style="height: 350px;">
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="read_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="readed" class="san_line"></div>
+                        </div>
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="update_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="updated" class="san_line"></div>
+                        </div>
+                </div>
+                <div class="ivu-card-body" style="height: 350px;">
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="delete_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="deleted" class="san_line"></div>
+                        </div>
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="insert_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="inserted" class="san_line"></div>
+                        </div>
+                </div>
+                <div class="ivu-card-body" style="height: 350px;">
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="log_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="log" class="san_line"></div>
+                        </div>
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="active_session_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="active_session" class="san_line"></div>
+                        </div>
+                </div>
+                <div class="ivu-card-body" style="height: 350px;">
+                        <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="total_session_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="total_session" class="san_line"></div>
+                        </div>
+                         <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="cpu_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="cpu" class="san_line"></div>
+                        </div>
+                </div>
+                <div class="ivu-card-body" style="height: 350px;">
+                         <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="mem_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="mem" class="san_line"></div>
+                        </div>
+                         <div class="col-md-6 col-sm-6 col-xs-12 monitor_line_div_class"
+                             style="border-right: 1px #D7DEE5 solid">
+                            <div class="ivu-spin ivu-spin-fix my_monitor_line" id="size_line_loading_id">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div id="size" class="san_line"></div>
+                        </div>
+                </div>
+                    </div>
+                </div>
+            </div>
+        </div>

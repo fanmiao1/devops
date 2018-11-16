@@ -1,0 +1,101 @@
+{% extends 'cijenkins/base.html' %}
+{% load staticfiles %}
+{% block page_title %}{% if jenkins_env == 100 %}生产构建详情{% else %}测试构建详情{% endif %}{% endblock %}
+{% block table_title %}详情{% endblock %}
+{% block detail_info %}
+    <table class="table">
+      <tbody>
+        <tr>
+          <th style="width:20%">模块名:</th>
+          <td>{{ job_name }}</td>
+        </tr>
+
+        <tr>
+          <th style="width:20%">描述:</th>
+          <td>{{ description }}</td>
+        </tr>
+
+        <tr>
+          <th style="width:20%">最后一次构建号:</th>
+          <td>{{ lastbuild }}</td>
+        </tr>
+
+        <tr>
+          <th style="width:20%">构建状态:</th>
+          <td>{{ status }}</td>
+        </tr>
+
+        <tr>
+          <th style="width:20%">修改记录:</th>
+          <td>{% autoescape off %}{{ changes }}{% endautoescape %}</td>
+        </tr>
+
+        <tr>
+          <th style="width:20%">是否正在构建:</th>
+          <td id="onbuild">{{ onbuild }}</td>
+        </tr>
+
+        <tr>
+          <th style="width:20%">构建执行人:</th>
+          <td> {{ deployuser }} </td>
+        </tr>
+
+      </tbody>
+    </table>
+{% endblock %}
+{% block ystep %}
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="approval">
+            <a href="{% if jenkins_env == 100 %}{% url 'job_configure_pro' jenkins_env job_name %}{% else %}{% url 'job_configure_qa' jenkins_env job_name %}{% endif %}">
+                <button type="button" class="btn btn-dark" style="float:left;"> 配置 </button>
+            </a>
+            <a href="{% if jenkins_env == 100 %}{% url 'cancel_build_pro' jenkins_env job_name %}{% else %}{% url 'cancel_build_qa' jenkins_env job_name %}{% endif %}" style="color: inherit; display: none;" class="pull-left" id="cancel_build">
+                <button type="button" class="btn btn-danger" style="width: 130px;">
+                    取消构建
+                </button>
+            </a>
+            <a href="{% if jenkins_env == 100 %}{% url 'job_rollback_pro' jenkins_env job_name %}{% else %}{% url 'job_rollback_qa' jenkins_env job_name %}{% endif %}" style="color: inherit">
+                <button type="button" class="btn btn-warning pull-left" style="width: 130px;">
+                    立即回滚
+                </button>
+            </a>
+            <a href="{% if jenkins_env == 100 %}{% url 'console_pro' jenkins_env job_name lastbuild %}{% else %}{% url 'console_qa' jenkins_env job_name lastbuild %}{% endif %}">
+                <button type="button" class="btn btn-info" style="float:left;"> 控制台输出 </button>
+            </a>
+            <a href="{% if jenkins_env == 100 %}{% url 'job_deploy_pro' jenkins_env job_name %}{% else %}{% url 'job_deploy_qa' jenkins_env job_name %}{% endif %}" style="color: inherit; display: none;" class="pull-left" id="start_build">
+                <button type="button" class="btn btn-primary" style="width: 130px;">
+                    立即构建
+                </button>
+            </a>
+            <a href="javascript: history.back(-1)"><button type="button" class="btn btn-default"> 返回 </button></a>
+        </div>
+    </div>
+
+<script>
+  var count =0;
+  var timer =  setInterval(function () {
+        if (count===100) {
+            clearInterval(timer);
+        }
+        $.ajax({
+            type:"POST",
+            url:"{% if jenkins_env == 100 %}{% url 'job_details_pro' jenkins_env job_name %}{% else %}{% url 'job_details_qa' jenkins_env job_name %}{% endif %}",
+            success:function (res) {
+                count++;
+                var status = res['result']['onbuild'];
+                document.getElementById('onbuild').innerText = status;
+                if (status == 'False'){
+                    $('#cancel_build').css('display','none');
+                    $('#start_build').css('display', 'block');
+                    $('#job_rollback').css('display', 'block');
+                    $('#job_configure').css('display', 'block');
+                }else{
+                    $('#cancel_build').css('display','block');
+                    $('#start_build').css('display', 'none');
+                    $('#job_rollback').css('display', 'none');
+                }
+            }
+        });
+    },1500);
+</script>
+{% endblock %}

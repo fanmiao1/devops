@@ -1,0 +1,384 @@
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}{% if type == 'public' %}公有云{% else%}私有云{% endif %}{% endblock %}
+{% block table_title %}列表{% endblock %}
+{% block ext_button %}
+    <div id="toolbar" class="btn-group pull-right" style="margin-bottom: 10px;">
+        <a href="{% url 'cloud_server_list' 'private' %}">
+            <button id="btn_add" type="button" class="btn btn-default {% if type == 'private' %}active{% endif %}">
+                <span class="glyphicon glyphicon-cloud" aria-hidden="true"></span> 私有云
+            </button>
+        </a>
+        <a href="{% url 'cloud_server_list' 'public' %}">
+            <button id="btn_add" type="button" class="btn btn-default {% if type == 'public' %}active{% endif %}" style="margin-right: 50px;">
+                <span class="glyphicon glyphicon-cloud" aria-hidden="true"></span> 公有云
+            </button>
+        </a>
+        <a href="{% if type == 'public' %}{% url 'public_cloud_server_add' %}{% else%}{% url 'private_cloud_server_add' %}{% endif %}">
+            <button id="btn_add" type="button" class="btn btn-default">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 添加
+            </button>
+        </a>
+    </div>
+{% endblock %}
+{% block table %}
+    <script type="text/javascript">
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "post",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:'{% if type == 'public' %}{% url 'cloud_server_list' 'public' %}{% else%}{% url 'cloud_server_list' 'private' %}{% endif %}',
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                dataField: "rows",
+                pagination: true, //启动分页
+                sortable: true,  //启用排序
+                pageSize: 15,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+                search: true,  //是否启用查询
+                searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+                searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+                showColumns: true,  //显示下拉框勾选要显示的列
+                showRefresh: true,  //显示刷新按钮
+                showSearchButton: false, //显示搜索按钮
+                showExport: true,//显示导出按钮
+                exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                sidePagination: "server", //表示服务端请求
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined",
+                clickToSelect: true,//是否启用点击选中行
+                toolbarAlign:'right',//工具栏对齐方式
+                buttonsAlign:'left',//按钮对齐方式
+                columns:
+                {% if type == 'public' %}
+                    [
+                        {
+                            title:'全选',
+                            field:'select',
+                            //复选框
+                            checkbox:true,
+                            width:25,
+                            align:'center',
+                            valign:'middle'
+                        },
+                        {
+                            title:'ID',
+                            field:'id',
+                            sortable:false
+                        },
+                        {
+                            title:'实例名',
+                            field:'instance_name',
+                            sortable:true
+                        },
+                        {
+                            title:'平台',
+                            field:'platform',
+                            sortable:true
+                        },
+                        {
+                            title:'平台账号',
+                            field:'platform_account',
+                            sortable:true
+                        },
+                        {
+                            title:'规格型号',
+                            field:'asset_size_and_model',
+                            sortable:false
+                        },
+                        {
+                            title:'操作系统',
+                            field:'os',
+                            sortable:true
+                        },
+                        {
+                            title:'创建时间',
+                            field:'create_date',
+                            sortable:true
+                        },
+                        {
+                            title:'到期时间',
+                            field:'expire_date',
+                            sortable:true
+                        },
+                        {
+                            title:'对接人',
+                            field:'contact_people',
+                            sortable:true
+                        },
+                        {
+                            title:'项目组',
+                            field:'project_group',
+                            sortable:true
+                        },
+                        {
+                            title:'区域',
+                            field:'area',
+                            sortable:true
+                        },
+                        {
+                            title:'IP地址',
+                            field:'ip',
+                            sortable:true
+                        },
+                        {
+                            title:'状态',
+                            field:'status',
+                            sortable:true
+                        },
+                        {
+                            title:'操作',
+                            field:'id',
+                            align:'center',
+                            //列数据格式化
+                            //formatter:operateFormatter
+                            formatter:function(value,row,gitflow){
+                                var c = '<a href="/opscenter/connect_ssh" target="_blank"><button type="button" class="btn btn-info btn-xs" onclick="Values('+row.id+')"><span class="fa fa-desktop" aria-hidden="true"></span> 连接 </button></a> ';
+                                var w = '<a href="/cmdb/asset_manage/public_cloud_server/public_cloud_server_detail/'+ row.id +'/"><button type="button" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 查看详情</button></a> ';
+                                var e = '<a href="/cmdb/asset_manage/public_cloud_server/public_cloud_server_modify/'+ row.id +'/"><button type="button" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> 编辑</button></a> ';
+                                var d = '<a href="/cmdb/asset_manage/cloud_server/cloud_server_delete/public_'+ row.id +'/" onclick="return delete_sql();"><button type="button" id="btn_submit1" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> 删除</button></a> ';
+                                return c+w+e+d;
+                            }
+                        }
+                    ]
+                {% else%}
+                            [
+                        {
+                            title:'全选',
+                            field:'select',
+                            //复选框
+                            checkbox:true,
+                            width:25,
+                            align:'center',
+                            valign:'middle'
+                        },
+                        {
+                            title:'ID',
+                            field:'id',
+                            sortable:false
+                        },
+                        {
+                            title:'实例名',
+                            field:'instance_name',
+                            sortable:true
+                        },
+                        {
+                            title:'云类型',
+                            field:'cloud_type',
+                            sortable:true
+                        },
+                        {
+                            title:'宿主机IP',
+                            field:'physical_host_ip',
+                            sortable:true
+                        },
+                        {
+                            title:'规格型号',
+                            field:'asset_size_and_model',
+                            sortable:false
+                        },
+                        {
+                            title:'操作系统',
+                            field:'os',
+                            sortable:true
+                        },
+                        {
+                            title:'创建时间',
+                            field:'create_date',
+                            sortable:true
+                        },
+                        {
+                            title:'对接人',
+                            field:'contact_people',
+                            sortable:true
+                        },
+                        {
+                            title:'项目组',
+                            field:'project_group',
+                            sortable:true
+                        },
+                        {
+                            title:'IP地址',
+                            field:'ip',
+                            sortable:false
+                        },
+                        {
+                            title:'状态',
+                            field:'status',
+                            sortable:true
+                        },
+                        {
+                            title:'操作',
+                            field:'id',
+                            align:'center',
+                            //列数据格式化
+                            //formatter:operateFormatter
+                            formatter:function(value,row,gitflow){
+                                var c = '<a href="/opscenter/connect_ssh" target="_blank"><button type="button" class="btn btn-info btn-xs" onclick="Values('+row.id+')"><span class="fa fa-desktop" aria-hidden="true"></span> 连接 </button></a> ';
+                                var w = '<a href="/cmdb/asset_manage/private_cloud_server/private_cloud_server_detail/'+ row.id +'/"><button type="button" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 查看详情</button></a> ';
+                                var e = '<a href="/cmdb/asset_manage/private_cloud_server/private_cloud_server_modify/'+ row.id +'/"><button type="button" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> 编辑</button></a> ';
+                                var d = '<a href="/cmdb/asset_manage/cloud_server/cloud_server_delete/private_'+ row.id +'/" onclick="return delete_sql();"><button type="button" id="btn_submit1" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> 删除</button></a> ';
+                                return c+w+e+d;
+                            }
+                        }
+                    ]
+                {% endif %},
+                queryParams: function queryParams(params) {   //设置查询参数
+                    var param = {
+                        csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                        pageNumber: params.pageNumber,
+                        pageSize: params.pageSize,
+                        search:params.searchText,
+                        order:params.sortOrder,
+                        sort:params.sortName
+                    };
+                    return param;
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            //调用函数，初始化表格
+            initTable();
+            //当点击查询按钮的时候执行
+            $("#search").bind("click", initTable);
+        });
+
+        function delete_sql(){
+            if(confirm("确定要删除吗")){
+                return true;
+            }else{
+                return false;
+            }
+        }
+    </script>
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">SSH连接</h4>
+                </div>
+                <form method="post" id="connect_form" class="form-horizontal form-label-left">
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <input type="hidden" id="con_host_id" name="con_host_id" value="">
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12"></label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                        <input type="radio" name="con_ip" value="int_ip"> &nbsp; 内部IP &nbsp;
+                                    </label>
+                                    <label class="btn btn-primary" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                        <input type="radio" name="con_ip" value="ext_ip"> 外部IP
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12">Username <span class="required">*</span>
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                <input id="con_username" class="date-picker form-control col-md-7 col-xs-12" required="required" type="text">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12">Password <span class="required">*</span>
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                <input id="con_password" class="date-picker form-control col-md-7 col-xs-12" required="required" type="password">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12">Port <span class="required">*</span>
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                <input id="con_port" class="date-picker form-control col-md-7 col-xs-12" required="required" type="text">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="btn_conn" class="btn btn-primary ladda-button" data-style="expand-left">
+                            <span class="ladda-label"> 连接 </span>
+                        </button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div><!-- /.模态框结束 -->
+{% endblock %}
+{% block ext_script %}
+    <script src="{% static 'bootstrap/js/spin.min.js' %}"></script>
+    <script src="{% static 'bootstrap/js/ladda.min.js' %}"></script>
+    <script>
+
+        function Values(ID) {
+            $("#con_host_id").val(ID);
+        }
+
+    <!-- enter username and password connect-->
+        $(function() {
+            $('#btn_conn').click(function () {
+                var l = Ladda.create(this);
+                l.start();
+                var port_data = {
+                    "con_id":document.getElementById("con_host_id").value,
+                    "con_ip":$('input:radio[name="con_ip"]:checked').val(),
+                    "con_username":document.getElementById("con_username").value,
+                    "con_password":document.getElementById("con_password").value,
+                    "con_port":document.getElementById("con_port").value
+                };
+                var new_url='';
+                $.ajax({
+                    type: "post",
+                    url: "{% url 'check_connect' %}",
+                    dataType: "json",
+                    data: JSON.stringify(port_data),
+                    success: function(con_status) {
+                        if(con_status['con_status'] == "true"){
+                            new_url = "/opscenter/connect_ssh/";
+                            $("#myModal").modal('hide');
+                            new PNotify({
+                              title: 'SUCCESS',
+                              text: con_status['message'],
+                              type: 'success',
+                              styling: 'bootstrap3'
+                            });
+                            if(new_url.length>0){
+                                window.open(new_url,"_blank");
+                                var str= JSON.stringify(con_status['connect_arg']);
+                                sessionStorage.setItem('connarg',str);
+                                var sendconnarg = sessionStorage.getItem('connarg');
+                                console.log(JSON.parse(sendconnarg));
+                            }
+                        }else{
+                            new PNotify({
+                              title: 'ERROR',
+                              text: con_status['message'],
+                              type: 'error',
+                              styling: 'bootstrap3'
+                            });
+                            return false
+                        }
+                    }
+                }).always(function (){l.stop();});
+            });
+        });
+    <!-- end enter username and password connect-->
+
+        $('#myModal').on('hide.bs.modal', function () {
+            $('#con_host_id').val("");
+            $("input:radio[name='con_ip']").removeAttr('checked');
+            $('#con_username').val("");
+            $('#con_password').val("");
+            $('#con_port').val("");
+        });
+    </script>
+{% endblock %}

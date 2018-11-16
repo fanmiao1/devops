@@ -1,0 +1,73 @@
+{% extends 'form.html' %}
+{% load staticfiles %}
+{% block ext_before %}
+<link href="{% static 'vendors/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+<link href="{% static 'build/css/custom.min.css' %}" rel="stylesheet">
+<style type="text/css">
+    #id_type li{list-style-type:none;float: left;margin-right: 15px;margin-top: 10px;}
+    #id_type{padding-left: 0}
+    .stepContainer{max-height: 20px;}
+    #id_priority li{list-style-type:none;float: left;margin-right: 15px;margin-top: 10px;}
+    #id_priority{padding-left: 0}
+</style>
+{% endblock %}
+{% block right_col %}
+    <div class="page-title">
+      <div class="title_left" style="margin-bottom: 10px;">
+        <h3>
+            {% block page_title %}{% if jenkins_env == 100 %}生产版本回滚{% else %}测试版本回滚{% endif %}{% endblock %}
+        </h3>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-8 col-sm-8 col-xs-12">
+        <div class="x_panel">
+          <div class="x_title">
+            <h2>
+                {% block table_title %}模块名称: {{ job_name }}{% endblock %}
+            </h2>
+            <ul class="nav navbar-right panel_toolbox">
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <br />
+            {% block change_form %}
+    <div class="col-md-12 col-sm-12 col-xs-12 pull-left">
+    <form id="demo-form2" data-parsley-validate class="form-horizontal form-label-left" method="post"
+          action="{% if jenkins_env == 100 %}{% url 'rollback_version_pro' jenkins_env job_name %}{% else %}{% url 'rollback_version_qa' jenkins_env job_name %}{% endif %}">
+        {% csrf_token %}
+        {% block page_form %}
+            {% for field in rollback_version_form %}
+                <div class="form-group">
+                    <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ field.label }}</label>
+                    <div class="col-md-8 col-sm-8 col-xs-12">
+                    {{ field }}
+                    </div>
+                </div>
+        {% endfor %}
+        {% endblock %}
+        <div class="ln_solid"></div>
+        <div class="form-group">
+        <div class="col-md-8 col-sm-8 col-xs-12 col-md-offset-3">
+                {% block review_button %}{% endblock %}
+                <button type="submit" class="btn btn-warning pull-left" style="width: 110px;">
+                    立即回滚
+                </button>
+            <a href="javascript: history.back(-1)"><button type="button" class="btn btn-default pull-right"> 返回 </button></a>
+        </div>
+
+        </div>
+    </form>
+    </div>
+
+{% endblock %}
+          </div>
+            {% block review_result %} {% endblock %}
+        </div>
+      </div>
+    <div class="col-md-4 pull-right">
+        {% include 'cijenkins/buildhistory.html' %}
+    </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'form.html' %}
+{% load staticfiles %}
+{% block page_title %}计划任务变更{% endblock %}
+{% block table_title %}申请{% endblock %}
+{% block ext_before %}
+<!-- import stylesheet -->
+<link rel="stylesheet" href="{% static 'vuejs/iview.css' %}">
+<style type="text/css">
+    #app{padding: 32px;}
+</style>
+{% endblock %}
+{% block page_form %}
+<div class="form-group">
+    <label class="control-label col-md-3 col-sm-3 col-xs-12"></label>
+    <div class="col-md-6 col-sm-6 col-xs-12">
+        <div id="app">
+            <transfer
+                :data="data1"
+                :target-keys="targetKeys1"
+                filterable
+                :render-format="render1"
+                :operations="['To left','To right']"
+                @on-change="handleChange1"></transfer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block ext_script %}
+    <!-- import Vue.js -->
+    <script src="{% static 'vuejs/vue.min.js' %}"></script>
+    <!-- import iView -->
+    <script src="{% static 'vuejs/iview.min.js' %}"></script>
+    <script>
+    console.log(Math.random() * 3 < 1);
+    var Main = {
+        data () {
+            return {
+                data1: this.getMockData(),
+                targetKeys1: this.getTargetKeys(),
+            }
+        },
+        methods: {
+            getMockData () {
+                let mockData = [];
+                for (let i = 1; i <= 20; i++) {
+                    mockData.push({
+                        key: i.toString(),
+                        label: 'Content ' + i,
+                        description: 'The desc of content  ' + i,
+                        disabled: Math.random() * 3 < 1
+                    });
+                }
+                return mockData;
+            },
+            getTargetKeys () {
+                return this.getMockData()
+                        .filter(() => Math.random() * 2 > 1)
+                        .map(item => item.key);
+            },
+            render1 (item) {
+                return item.label;
+            },
+            handleChange1 (newTargetKeys, direction, moveKeys) {
+                console.log(newTargetKeys);
+                console.log(direction);
+                console.log(moveKeys);
+                this.targetKeys1 = newTargetKeys;
+            }
+        }
+    }
+
+    var Component = Vue.extend(Main);
+    new Component().$mount('#app')
+    </script>
+{% endblock %}

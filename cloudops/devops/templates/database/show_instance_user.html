@@ -1,0 +1,415 @@
+
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}实例管理{% endblock %}
+{% block table_title %}{% endblock %}
+{% block ext_before %}
+    <link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+{% endblock %}
+
+{% block right_col %}
+    <div class="page-title">
+        <div class="title_left" style="margin-bottom: 10px;">
+            <h3></h3>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+    <div class="row" id="detail_row">
+        <div class="col-md-12 col-sm-12 col-xs-12" id="table_row_id">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h1>{{ instance_name }}</h1>
+                    <h2>
+                        <div class="ivu-btn-group pull-left" style="padding-left: 0; padding-bottom: 5px;">
+                            <a href="{% url 'instance_detail' instance_id %}">
+                                <button type="button" class="ivu-btn ivu-btn-ghost">基本信息</button>
+                            </a>
+                            <a href="#">
+                                <button type="button" class="ivu-btn ivu-btn-primary">账户管理</button>
+                            </a>
+                            <a href="#">
+                                <button type="button" class="ivu-btn ivu-btn-ghost">参数设置</button>
+                            </a>
+                            <a href="#">
+                                <button type="button" class="ivu-btn ivu-btn-ghost">备份恢复</button>
+                            </a>
+                            <a href="{% url 'show_operation_log' instance_id %}">
+                                <button type="button" class="ivu-btn ivu-btn-ghost">操作日志</button>
+                            </a>
+                        </div>
+                        <div id="asset_bt_group" class="pull-right">
+                            <a href="{% url 'show_privileges' instance_id %}">
+                                <button type="button" class="ivu-btn ivu-btn-default pull-left">
+                                    <span class="glyphicon glyphicon-refresh" style="color: #495060"></span></button>
+                            </a>
+                            <a href="{% url 'instances' %}">
+                                <button id="view1_id" type="button" class="ivu-btn ivu-btn-default"><i
+                                        class="ivu-icon ivu-icon-chevron-left"></i> 返回实例列表
+                                </button>
+                            </a>
+                        </div>
+                    </h2>
+                    <ul class="nav navbar-right panel_toolbox"></ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="x_panel row_panel">
+                                    <div class="x_title header_title">
+                                        <span class="header_title_span">基本信息</span>
+                                        <div class="clearfix"></div>
+                                    </div>
+                                    <div class="x_content">
+                                        <table id="table" class="table table-no-bordered"></table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "post",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:'{% url "show_privileges" instance_id %}',
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                dataField: "rows",
+                pagination: true, //启动分页
+                sortable: true,  //启用排序
+                pageSize: 10,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+                search: true,  //是否启用查询
+                searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+                searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+                showColumns: true,  //显示下拉框勾选要显示的列
+                showRefresh: false,  //显示刷新按钮
+                showSearchButton: false, //显示搜索按钮
+                showExport: true,//显示导出按钮
+                exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                sidePagination: "server", //表示服务端请求
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined",
+                clickToSelect: true,//是否启用点击选中行
+                toolbarAlign:'right',//工具栏对齐方式
+                buttonsAlign:'left',//按钮对齐方式
+                columns:[
+                    {
+                        title:'user',
+                        field:'user',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'权限',
+                        field:'privs',
+                    },
+                    {
+                        title:'操作',
+                        field:'user',
+                        align:'center',
+                        //列数据格式化
+                        formatter:function(value,row){
+                            var user = row.user.replace(/'/g,"").replace(/%/,"%25").replace(/@/,"%40");
+                            var c = '<button type="button" class="btn btn-link btn-xs" data-toggle="modal" data-target="#resetModal" data-id="\''+user+'\'">重置密码</button> ';
+                            var m = '<button type="button" class="btn btn-link btn-xs" data-toggle="modal" data-target="#privChangeModal" data-id="\''+user+'\'">权限回收</button>';
+                            var d = '<button type="button" id="btn_submit1" class="btn btn-link btn-xs" onclick="return Delete(\''+user+'\')"> 删除</button> ';
+                            return c+m+d;
+                        }
+                    }
+                ],
+                queryParams: function queryParams(params) {   //设置查询参数
+                    var param = {
+                        //加上csrf
+                        csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                        pageNumber: params.pageNumber,
+                        search: params.searchText,
+                        pageSize: params.pageSize,
+                        order:params.sortOrder,
+                        sort:params.sortName
+                    };
+                    return param;
+                },
+
+            });
+        }
+        $(document).ready(function () {
+            //调用函数，初始化表格
+            initTable();
+
+            //当点击查询按钮的时候执行
+            $("#search").bind("click", initTable);
+        });
+
+        function Delete(USER){
+            $.confirm({
+                title: '提示！',
+                content: '确定要删除吗？',
+                closeIcon: true,
+                confirmButtonClass:'btn-danger',
+                cancelButtonClass: 'btn-default ',
+                confirmButton: '删除!',
+                cancelButton: '取消',
+                confirm: function(){
+                    $.ajax({
+                        type: "get",
+                        url: "/database/instance/show_privileges/"+ {{ instance_id }} + "/" + USER ,
+                        dataType: "json",
+                        success: function(result) {
+                            if(result['result'] == 'true'){
+                                        new PNotify({
+                                          title: 'SUCCESS',
+                                          text: '删除成功!',
+                                          type: 'success',
+                                          styling: 'bootstrap3'
+                                        });
+                                // 刷新表格
+                                $('#table').bootstrapTable("refresh");
+                            }else{
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        console.log('{{ message }}');
+                                        new PNotify({
+                                            title: '{{ message.tags }}',
+                                            text: '{{ message }}',
+                                            type: '{{ message.tags }}',
+                                            styling: 'bootstrap3'
+                                        });
+                                    {% endfor %}
+                                {% endif %}
+                            }
+                        },
+                        error: function() {
+                             new PNotify({
+                                          title: 'ERROR',
+                                          text: '很抱歉，没有权限进行此操作！',
+                                          type: 'error',
+                                          styling: 'bootstrap3'
+                                        });
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+       <!-- 修改密码工单模态框 -->
+    <div class="modal fade" id="resetModal" tabindex="-1" role="dialog" aria-labelledby="resetModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="resetModalLabel">重置密码</h4>
+                </div>
+                <form method="post" id="passwd_form" class="form-horizontal form-label-left">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="col-md-3 col-sm-3 col-xs-12">新密码：</label>
+                        <div class="col-md-9 col-sm-9 col-xs-12">
+                            <input class="form-group" type="password" name="passwd" id="passwd" maxlength="20" required="">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-3 col-sm-3 col-xs-12">确认密码：</label>
+                        <div class="col-md-9 col-sm-9 col-xs-12">
+                            <input class="form-group" type="password" name="repasswd" id="repasswd" maxlength="20" required="">
+                        </div>
+                    </div>
+                </div>
+                 </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal"> 取消</button>
+                        <button type="submit" class="btn btn-primary" id="reset_password_id"> 修改</button>
+                    </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div><!-- 修改密码工单模态框 -->
+
+    <!-- 组织结构模态框 -->
+    <div class="modal fade" id="privChangeModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041; width: 80%; height: 70%">
+            <div class="modal-content" style="width: 100%; height: 100%">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">回收权限</h4>
+                </div>
+                <form id="select_priv_form_id" action="#" >
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="col-md-12 col-sm-12 col-xs-12" id="app_p_div"></div>
+                        </div>
+                    </div>
+                </form>
+                <div class="modal-footer">
+                    <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left"
+                            onclick="Revoke()">
+                        <span class="ladda-label"> 回收 </span>
+                    </button>
+                    <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+<!-- /.组织结构模态框结束 -->
+{% endblock %}
+{% block ext_script %}
+    <script src="{%static 'js/aukeyops/searchTable.js' %}"></script>
+    <script src="{%static 'js/aukeyops/currency.js' %}"></script>
+    <script src="{%static 'js/prism.js' %}"></script>
+    <script src="{% static 'ztree/js/jquery.ztree.core.js' %}"></script>
+    <script src="{% static 'vuejs/vue.min.js' %}"></script>
+    <script src="{% static 'vuejs/iview.min.js' %}"></script>
+    <script type="text/javascript" src={% static 'js/jquery.validate.js' %}></script>
+     <script>
+         var change_server_list;
+        $().ready(function () {
+            $("#passwd_form").validate({
+                rules: {
+                    passwd: {
+                        required: true,
+                        minlength: 8,
+                    },
+                    repasswd: {
+                        required: true,
+                        minlength: 8,
+                        equalTo: "#passwd"
+                    }
+                }
+            })
+        });
+
+        $('#privChangeModal').on('show.bs.modal', function (e) {
+            var btn = $(e.relatedTarget);
+            var user = btn.data("id");
+            $('#priv_catch_id').show();
+            var a_html  = '<div id="app"><transfer :data="data1"'+
+                ':target-keys="targetKeys1"'+
+                ':list-style="listStyle"'+
+                'filterable="" '+
+                ':render-format="render1"'+
+                ':operations="[\'移出\',\'移入\']"'+
+                'not-found-text=""'+
+                '@on-change="handleChange1"></transfer>'+
+            '</div>';
+            $('#app_p_div').html(a_html);
+            var mockData = [];
+            var TargetKeys = [];
+            var Main = {
+                data () {
+                    return {
+                        data1: mockData,
+                        targetKeys1: TargetKeys,
+                        listStyle: {
+                        width: '45%',
+                        height: '485px'
+                    }
+                    }
+                },
+                methods: {
+                    render1 (item) {
+                        return item.label;
+                    },
+                    handleChange1 (newTargetKeys, direction, moveKeys) {
+                        change_server_list = newTargetKeys;
+                        this.targetKeys1 = newTargetKeys;
+                    }
+                }
+            };
+            var Component = Vue.extend(Main);
+            new Component().$mount('#app');
+            $.ajax({
+                url: "/database/instance/get/privs/" + {{ instance_id }} +"/" + user.replace(/'/g, "") ,
+                type: 'post',
+                success: function (result) {
+                    for (i in result) {
+                        mockData.push({
+                            key: result[i],
+                            label: result[i],
+                            description: result[i],
+                            disabled: false
+                        });
+                    }
+                    $('#priv_catch_id').hide()
+                }
+            });
+        });
+
+
+        $('#resetModal').on('show.bs.modal', function (e) {
+            var btn = $(e.relatedTarget);
+            var user = btn.data("id");
+            document.getElementById('reset_password_id').setAttribute('onclick', 'ResetPasswd(' + user + ')');
+        });
+
+        function Revoke() {
+            if (change_server_list) {
+                if (change_server_list.length > 0) {
+                    $.ajax({
+                        url: "/database/instance/revoke/privs/" + {{ instance_id }} +"/",
+                        type: 'post',
+                        data: {"privs": change_server_list.join(',')},
+                        success: function (result) {
+                            if (result['code'] == 1) {
+                                new PNotify({
+                                    title: 'SUCCESS',
+                                    text: '权限回收成功！',
+                                    type: 'success',
+                                    styling: 'bootstrap3'
+                                });
+                                // 刷新表格
+                                $('#table').bootstrapTable("refresh");
+                            } else {
+                                new PNotify({
+                                    title: 'ERROR',
+                                    text: '权限回收失败！',
+                                    type: 'error',
+                                    styling: 'bootstrap3'
+                                });
+                            }
+                        }
+                    });
+                    $('#privChangeModal').modal('hide');
+                }
+            }
+        }
+
+        function ResetPasswd(USER) {
+            $('#resetModal').modal('hide');
+            var passwd = $("#passwd").val();
+            $.ajax({
+                type: "post",
+                url: "/database/instance/reset/passwd/" + {{ instance_id }} +"/" + USER ,
+                dataType: "json",
+                data: {"passwd": passwd},
+                success: function (result) {
+                    if (result['code'] == 1) {
+                        new PNotify({
+                            title: 'SUCCESS',
+                            text: '密码重置成功！',
+                            type: 'success',
+                            styling: 'bootstrap3'
+                        });
+                        // 刷新表格
+                        $('#table').bootstrapTable("refresh");
+                    } else {
+                        new PNotify({
+                            title: 'ERROR',
+                            text: '密码重置失败！',
+                            type: 'error',
+                            styling: 'bootstrap3'
+                        });
+                    }
+                }
+            });
+        }
+    </script>
+{% endblock %}

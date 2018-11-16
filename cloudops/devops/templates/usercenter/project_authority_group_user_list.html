@@ -1,0 +1,164 @@
+{% extends 'detail.html' %}
+{% load staticfiles %}
+{% block page_title %}业务用户组管理{% endblock %}
+{% block table_title %}包含的用户{% endblock %}
+{% block communication_include %}{% endblock %}
+{% block detail_info %}
+    <table class="table table-striped table-bordered dt-responsive nowrap" id="table"></table>
+    <script type="text/javascript">
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "post",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:"{% url 'project_authority_group_user_list' id %}",
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                dataField: "rows",
+                pagination: true, //启动分页
+                pageSize: 15,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+{#                            search: true,  //是否启用查询#}
+{#                            showColumns: true,  //显示下拉框勾选要显示的列#}
+                showRefresh: false,  //显示刷新按钮
+                showSearchButton: false,
+                sidePagination: "server", //表示服务端请求
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined",
+                clickToSelect: true,//是否启用点击选中行
+                toolbarAlign:'left',//工具栏对齐方式
+                buttonsAlign:'left',//按钮对齐方式
+                columns:[
+                    {
+                        title:'ID',
+                        field:'id',
+                        sortable:false
+                    },
+                    {
+                        title:'用户名',
+                        field:'user_name',
+                        sortable:false
+                    },
+                    {
+                        title:'名字',
+                        field:'name',
+                        sortable:false
+                    },
+                    {
+                        title:'所属项目',
+                        field:'project',
+                        sortable:false
+                    },
+                    {
+                        title:'状态',
+                        field:'is_active',
+                        sortable:false
+                    }
+                ],
+                queryParams: function queryParams(params) {   //设置查询参数
+                    var param = {
+                        //加上csrf
+                        csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                        pageNumber: params.pageNumber,
+                        pageSize: params.pageSize,
+                        search:$(" input[ name='search_text' ] ").val(),
+                    };
+                    return param;
+                },
+
+            });
+        }
+        $(document).ready(function () {
+            //调用函数，初始化表格
+            initTable();
+        });
+    </script>
+{% endblock %}
+{% block ystep %}
+    <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal" style="float: left">
+        修改用户
+    </button>
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="approval">
+            <a href="{% url 'project_authority_group_list' %}"><button type="button" class="btn btn-default"> 返回 </button></a>
+        </div>
+    </div>
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog" style="min-width:800px;z-index: 2041;">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                  <h4 class="modal-title" id="myModalLabel">修改用户</h4>
+              </div>
+              <form method="post" id="connect_form" class="form-horizontal form-label-left" action="{% url 'project_group_user_change' id %}">
+                  <div class="modal-body">
+                      {% csrf_token %}
+                      <input type="hidden" id="con_host_id" name="con_host_id" value="">
+                      <div class="form-group">
+                          <select name="doublebox" class="demo" multiple="multiple" size="10" id="double_id"></select>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="submit" id="btn_conn" class="btn btn-primary ladda-button" data-style="expand-left">
+                          <span class="ladda-label"> 修改 </span>
+                      </button>
+                      <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                  </div>
+              </form>
+          </div><!-- /.modal-content -->
+      </div>
+  </div>
+{% endblock %}
+{% block ext_script_add %}
+    <script type="text/javascript" src="{% static 'bootstrap/js/doublebox-bootstrap.js' %}"></script>
+    <script type="text/javascript">
+    // 二级联动
+    $('#myModal').on('shown.bs.modal', function () {
+        $.get('/usercenter/get_project_group_user_' + {{ id }} + '/', function (dict) {
+            $('#double_id').empty();
+            var select = [];
+            var select_list = "";
+            var noselect = [];
+            var noselect_list = "";
+            $.each(dict.data1, function (index, item) {
+                select.push({"moduleId": item[0] ,"moduleName": item[1]});
+            });
+            select_list = JSON.stringify(select);
+            $.each(dict.data2, function (index, item) {
+                noselect.push({"moduleId": item[0], "moduleName": item[1]});
+            });
+            noselect_list = JSON.stringify(noselect);
+            console.log(eval(noselect_list));
+            var demo2 = $('.demo').doublebox({
+                nonSelectedListLabel: '选择用户',
+                selectedListLabel: '加入该组的用户',
+                preserveSelectionOnMove: 'moved',
+                moveOnSelect: false,
+                nonSelectedList:eval(noselect_list),
+                selectedList:eval(select_list),
+                optionValue:"moduleId",
+                optionText:"moduleName",
+                doubleMove:true
+            });
+        });
+    });
+    $(document).ready(function() {
+         var demo2 = $('.demo').doublebox({
+             nonSelectedListLabel: '选择用户',
+             selectedListLabel: '加入该组的用户',
+             preserveSelectionOnMove: 'moved',
+             moveOnSelect: false,
+             nonSelectedList: [{"moduleId": '', "moduleName": ''}],
+             selectedList: [{"moduleId": '', "moduleName": ''}],
+             optionValue: "moduleId",
+             optionText: "moduleName",
+             doubleMove: true
+         });
+    });
+    $("#usercenter_menu_id").css("display","block");
+    $("#project_authority_group_manage").addClass('current-page');
+  </script>
+{% endblock %}

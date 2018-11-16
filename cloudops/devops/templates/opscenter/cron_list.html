@@ -1,0 +1,1306 @@
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_before %}
+<link href="{% static 'css/prism-coy.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'jedate/jedate.css' %}" rel="stylesheet" />
+<link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+<style type="text/css">
+    #select_exec_type_id .active, #select_status_id .active, #server_type_id .active {
+        background: #2d8cf0;
+        color: #333;
+    }
+    .ivu-btn, .modal-content, .panel, .panel-heading {
+        border-radius:0;
+    }
+    .radiocheck {
+        margin-bottom: 5px;
+    }
+    #bootstrap-cron-div-id .row, #myTabContent {
+        margin-top: 5px;
+    }
+    #table .running_span i {
+        background-position: -61px -4px;
+    }
+    #table .disable_span i {
+        background-position: -61px -28px;
+    }
+    #table i {
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        vertical-align: middle;
+        border-radius: 16px;
+        margin-top: -1px;
+        background-repeat: no-repeat;
+        background-image: url("{% static 'images/ecs-icons.png' %}");
+        margin-right: 5px;
+    }
+    pre {
+        /*outline: 1px solid #ccc; */
+        padding: 5px; margin: 5px; 
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }  
+    .string { color: green; }  
+    .number { color: darkorange; }  
+    .boolean { color: blue; }  
+    .null { color: magenta; }  
+    .key { color: red; } 
+</style>
+{% endblock %}
+{% block table_title %}
+<div class="pull-left" style="padding-left: 0;">
+    <button type="button" class="ivu-btn ivu-btn-default pull-left" onclick="refresh_table()"><span class="glyphicon glyphicon-refresh" style="color: #495060"></span></button>
+    <button type="button" class="ivu-btn ivu-btn-default pull-left" onclick="cron_status_change('running')"><i class="ivu-icon ivu-icon-play"></i> 启动</button>
+    <button type="button" class="ivu-btn ivu-btn-default pull-left" onclick="cron_status_change('disable')"><i class="ivu-icon ivu-icon-stop"></i> 停止</button>
+</div>
+<div class="pull-right">
+    <button type="button" class="ivu-btn ivu-btn-primary pull-left" data-toggle="modal" data-target="#changeModal">添加</button>
+    <button type="button" class="ivu-btn ivu-btn-primary pull-left" data-toggle="modal" data-target="#changeModal" data-id='1'>编辑</button>
+    <button type="button" class="ivu-btn ivu-btn-primary pull-left" onclick="confirmDelete()">删除</button>
+    <button type="button" class="ivu-btn ivu-btn-primary pull-left" data-toggle="modal" data-target="#batchDeleteModal">批量删除</button>
+</div>
+{% endblock %}
+{% block ext_button %}
+<!-- 搜索栏 -->
+<form class="form-horizontal" action="#" id="searchFormId">
+    <div class="col-md-10 col-sm-10 col-xs-12">
+        <div id="asset_search">
+            <input hidden name="id__in" id="hidden_id_in">
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">名称</label></div>
+                <div class="col-md-8"><input class="ivu-input" type="text" name="name" placeholder="" autocomplete="off"></div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">类型</label></div>
+                <div class="col-md-8">
+                    <select class="selectpicker show-tick form-control" name="type">
+                        <option></option>
+                        <option value=0>执行指令</option>
+                        <option value=1>执行脚本</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">实例</label></div>
+                <div class="col-md-8">
+                    <select class="selectpicker show-tick form-control" data-live-search="true" id="search_server_id" name="server"></select>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">项目</label></div>
+                <div class="col-md-8"><input class="ivu-input" type="text" name="project" placeholder="" autocomplete="off"></div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">操作人</label></div>
+                <div class="col-md-8">
+                    <input class="ivu-input" type="text" name="user" autocomplete="off">
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">状态</label></div>
+                <div class="col-md-8">
+                    <select class="selectpicker show-tick form-control" id="search_status_id" name="status">
+                        <option></option>
+                        <option value='running'>运行中</option>
+                        <option value='disable'>已停止</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 col-xs-12" style="min-width: 482px;">
+                <div class="col-md-2"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">创建日期</label></div>
+                <div class="col-md-4">
+                    <input class="ivu-input create_time_0" type="text" name="create_time_0" autocomplete="off">
+                </div>
+                <div class="col-md-2" style="padding:0; width: 10px;"><span style="line-height: 34px;">-</span></div>
+                <div class="col-md-4" style="padding-left: 0">
+                    <input class="ivu-input create_time_1" type="text" name="create_time_1" autocomplete="off">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-2 col-xs-12">
+        <div class="col-md-12">
+        <a href="javascript:void(0);" id="searchBtnId" class="ivu-btn ivu-btn-circle ivu-btn-primary ivu-btn-circle-outline" style="margin-bottom: 5px;">
+            <i class="fa fa-search"></i> 搜索 </a>
+        <a href="javascript:;" class="ivu-btn ivu-btn-circle ivu-btn-ghost ivu-btn-circle-outline" onclick="formReset()" style="margin-bottom: 5px;">
+            <i class="fa fa-print"></i> 重置 </a>
+        </div>
+    </div>
+</form>
+<!-- /.搜索栏结束 -->
+<!-- 添加/修改 -->
+<div class="modal fade" id="changeModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="z-index: 2041; width: 700px;">
+        <div class="ivu-spin ivu-spin-fix" id="changing_loading_id" style="display: none;">
+            <div class="ivu-spin-main">
+                <span class="ivu-spin-dot"></span>
+                <div class="ivu-spin-text"></div>
+                <div>请求中</div>
+            </div>
+        </div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="change_h4_id">添加定时任务</h4>
+            </div>
+            <form id="change_form" action="#" class="form-horizontal form-label-left">
+                <div class="modal-body roll" style="max-height: 600px; overflow-y: auto">
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">名称 <span class="required">*</span>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input name="name" class="ivu-input is_required" required="required" type="text" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="form-group" id="any_server_select">
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">实例类型 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <div class="btn-group" data-toggle="buttons" id="server_type_id">
+                                    <label class="btn ivu-btn-ghost active" data-toggle-class="ivu-btn-primary" data-toggle-passive-class="btn-default"><input type="radio" name="server_type" value=1 onchange="serverTChange()" checked>Windows</label>
+                                    <label class="btn ivu-btn-ghost" data-toggle-class="ivu-btn-primary" data-toggle-passive-class="btn-default"><input type="radio" name="server_type" value=0 onchange="serverTChange()">Linux</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">实例 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <div class="ivu-spin ivu-spin-fix" id="server_catch_id" style="display: none;">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>实例抓取中</div>
+                                    </div>
+                                </div>
+                                <div id="app_p_div"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="one_server_select" style="display: none;">
+                        <label class="ivu-form-item-label pull-left col-md-2">实例 <span class="required">*</span>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select class="selectpicker show-tick form-control" data-live-search="true" id="cron_server_id" name="one_server_select"></select>
+                        </div>
+                    </div>
+                    <input hidden="hidden" name="server_list">
+                    <input hidden="hidden" name="server">
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">项目</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select class="selectpicker show-tick form-control" data-live-search="true" id="cron_project_id" name="project"></select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="linux_form_id" style="display: none;">
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">触发时间 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <div class="ivu-input-wrapper ivu-input-type ivu-input-group ivu-input-group-with-prepend ivu-input-group-with-append ivu-input-hide-icon">
+                                    <input class="ivu-input" id="transCron" name="transCron" required="required" type="text" autocomplete="off" placeholder="请使用cron格式">
+                                    <div class="ivu-input-group-append" style="">
+                                        <button type="button" class="ivu-btn ivu-btn-icon-only" data-toggle="modal" data-target="#cronSelectModal">
+                                            <i class="ivu-icon ivu-icon-ios-grid-view"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="windows_form_id">
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">触发时间 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <select class="selectpicker show-tick form-control" id="cron_frequency" name="frequency">
+                                    <option value=""></option>
+                                    <option value="daily">每天</option>
+                                    <option value="weekly">每周</option>
+                                    <option value="monthly">每月</option>
+                                    <option value="time">一次</option>
+                                    <option value="boot">计算机启动时</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" id="start_div_id" style="display: none;">
+                            <label class="ivu-form-item-label pull-left col-md-2">开始时间 <span class="required">*</span></label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input class="ivu-input" type="text" name="start_time" id="start_time" readonly="readonly" placeholder="点击选择">
+                            </div>
+
+{#                        <div class="form-group">#}
+                            <label class="ivu-form-item-label pull-left col-md-2" style="padding-right: 0;">重复任务间隔:</label>
+                            <div class="col-md-3 col-sm-3 col-xs-12" style="padding-left: 0;">
+                                <div class="ivu-input-wrapper ivu-input-type ivu-input-group ivu-input-group-with-prepend ivu-input-group-with-append ivu-input-hide-icon">
+                                <input class="ivu-input" name="repetition_number" id="repetition_number">
+                                    <div class="ivu-input-group-append" style="">
+                                        <select style="background: transparent; border: 0;" name="repetition_unit" id="repetition_unit">
+                                            <option value="M">分钟</option>
+                                            <option value="H">小时</option>
+                                            <option value="D">天</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+{#                        </div>#}
+                        </div>
+                        <div class="form-group" id="daily" style="display: none;">
+                            <div class="col-md-2"></div>
+                            <label class="ivu-form-item-label pull-left" style="padding-left:10px;">每隔</label>
+                            <div class="col-md-2 col-sm-2 col-xs-12">
+                                <input class="ivu-input" type="text" name="detach_day" id="detach_day">
+                            </div>
+                            <span style="line-height: 30px;">天执行一次</span>
+                        </div>
+                        <div class="form-group" id="weekly" style="display: none;">
+                            <div class="col-md-2"></div>
+                            <label class="ivu-form-item-label pull-left" style="padding-left:10px;">每隔</label>
+                            <div class="col-md-2 col-sm-2 col-xs-12">
+                                <input class="ivu-input" type="text" name="detach_week" id="detach_week">
+                            </div>
+                            <span class="col-md-1" style="line-height: 30px; padding-left: 0; padding-right: 0;">周的</span>
+                            <div class="col-md-5" style="padding-left: 0;">
+                                <select class="selectpicker show-tick form-control" multiple id="days_of_week_list">
+                                    <option value="monday">星期一</option>
+                                    <option value="tuesday">星期二</option>
+                                    <option value="wednesday">星期三</option>
+                                    <option value="thursday">星期四</option>
+                                    <option value="friday">星期五</option>
+                                    <option value="saturday">星期六</option>
+                                    <option value="sunday">星期日</option>
+                                </select>
+                            </div>
+                            <span class="col-md-1" style="line-height: 30px; padding-left: 0; padding-right: 0;">执行</span>
+                        </div>
+
+                        <div class="form-group" id="monthly" style="display: none;">
+                            <div class="form-group">
+                                <div class="col-md-2"></div>
+                                <label class="ivu-form-item-label pull-left" style="padding-left:10px;">月 <span class="required">*</span></label>
+                                <div class="col-md-8 col-sm-8 col-xs-12">
+                                    <select class="selectpicker show-tick form-control" multiple id="months_of_year_list">
+                                        <option value="january">一月</option>
+                                        <option value="february">二月</option>
+                                        <option value="march">三月</option>
+                                        <option value="april">四月</option>
+                                        <option value="may">五月</option>
+                                        <option value="june">六月</option>
+                                        <option value="july">七月</option>
+                                        <option value="august">八月</option>
+                                        <option value="september">九月</option>
+                                        <option value="october">十月</option>
+                                        <option value="november">十一月</option>
+                                        <option value="december">十二月</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-2"></div>
+                                <label class="ivu-form-item-label pull-left" style="padding-left:10px;">天 <span class="required">*</span></label>
+                                <div class="col-md-8 col-sm-8 col-xs-12">
+                                    <select class="selectpicker show-tick form-control" multiple id="days_of_month_list">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                        <option value="9">9</option>
+                                        <option value="10">10</option>
+                                        <option value="11">11</option>
+                                        <option value="12">12</option>
+                                        <option value="13">13</option>
+                                        <option value="14">14</option>
+                                        <option value="15">15</option>
+                                        <option value="16">16</option>
+                                        <option value="17">17</option>
+                                        <option value="18">18</option>
+                                        <option value="19">19</option>
+                                        <option value="20">20</option>
+                                        <option value="21">21</option>
+                                        <option value="12">22</option>
+                                        <option value="23">23</option>
+                                        <option value="24">24</option>
+                                        <option value="25">25</option>
+                                        <option value="26">26</option>
+                                        <option value="27">27</option>
+                                        <option value="28">28</option>
+                                        <option value="29">29</option>
+                                        <option value="30">30</option>
+                                        <option value="31">31</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">触发器 <span class="required">*</span></label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <div class="ivu-input-wrapper ivu-input-type ivu-input-group ivu-input-group-with-prepend ivu-input-group-with-append ivu-input-hide-icon">
+                                <textarea class="ivu-input is_required" name="trigger" id="trigger_id" placeholder="点击生成按钮" readonly="readonly" style="background: #dddee1; font-size: 12px;"></textarea> 
+                                <div class="ivu-input-group-append" style="">
+                                    <button type="button" class="ivu-btn ivu-btn-icon-only" onclick="produ_trigger()">
+                                        <span>生成</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">执行类型 <span class="required">*</span></label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <div class="btn-group" data-toggle="buttons" id="select_exec_type_id">
+                                <label class="btn ivu-btn-ghost active" data-toggle-class="ivu-btn-primary" data-toggle-passive-class="btn-default"><input type="radio" name="type" value=0 onchange="sTChange()" checked>执行指令</label>
+                                <label class="btn ivu-btn-ghost" data-toggle-class="ivu-btn-primary" data-toggle-passive-class="btn-default"><input type="radio" name="type" value=1 onchange="sTChange()">执行脚本</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="order_form_id">
+                        <label class="ivu-form-item-label pull-left col-md-2">指令 <span class="required">*</span></label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input class="ivu-input" id="cron_order_id" name="order">
+                        </div>
+                    </div>
+                    <div class="form-group"  id="script_form_id" style="display: none;">
+                        <label class="ivu-form-item-label pull-left col-md-2">脚本 <span class="required">*</span></label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select class="selectpicker show-tick form-control" id="cron_script_id" name="script"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">描述</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea name="describe" class="ivu-input" type="text" autocomplete="off"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">状态 <span class="required">*</span></label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <div class="btn-group" data-toggle="buttons" id="select_status_id">
+                                <label class="btn ivu-btn-ghost active" data-toggle-class="ivu-btn-primary" data-toggle-passive-class="btn-default">
+                                    <input type="radio" name="status" value="running" checked>启用</label>
+                                <label class="btn ivu-btn-ghost" data-toggle-class="ivu-btn-primary" data-toggle-passive-class="btn-default">
+                                    <input type="radio" name="status" value="disable">禁用</label>
+                            </div>
+                        </div>
+                    </div>
+                    <input hidden="hidden" name="user" id="cron_user_id" value="{% if user.last_name or user.first_name %}{{ user.last_name }}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" onclick="change(-1)" id="change_submit_btn">
+                        <span class="ladda-label"> 确认 </span>
+                    </button>
+                    <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                </div>
+            </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+<!-- /. 添加 / 修改结束 -->
+
+<!-- 批量删除 -->
+<div class="modal fade" id="batchDeleteModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="z-index: 2041;width: 700px;">
+        <div class="ivu-spin ivu-spin-fix" id="batch_delete_loading">
+            <div class="ivu-spin-main">
+                <span class="ivu-spin-dot"></span>
+                <div class="ivu-spin-text"></div>
+                <div>数据抓取中</div>
+            </div>
+        </div>
+        <div class="ivu-spin ivu-spin-fix" id="deleting_loading" style="display: none;">
+            <div class="ivu-spin-main">
+                <span class="ivu-spin-dot"></span>
+                <div class="ivu-spin-text"></div>
+                <div>执行中</div>
+            </div>
+        </div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">批量删除</h4>
+            </div>
+            <form id="batch_delete_form" action="#" class="form-horizontal form-label-left">
+                <div class="modal-body">
+                    <input name="delete_list" id="delete_list_id" hidden>
+                    <div class="form-group">
+                        <div class="col-md-12 col-sm-12 col-xs-12" id="batch_delete_input"></div>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" onclick="batch_delete_submit_btn()">
+                    <span class="ladda-label"> 确认 </span>
+                </button>
+                <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+<!-- /.批量删除 -->
+
+<!-- cron选择器 -->
+<div class="modal fade" id="cronSelectModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="z-index: 2041; width: 1200px;">
+        {% include 'opscenter/bootstrap-cron.html' %}
+    </div>
+</div>
+<!-- /. cron选择器结束 -->
+{% endblock %}
+{% block ext_script %}
+<script src="{% static 'Cron/bootstrap-cron/spinner/jquery.spinner.min.js' %}"></script>
+<script src="{% static 'jedate/jedate.js' %}"></script>
+<script src="{% static 'js/aukeyops/currency.js' %}"></script>
+<script src="{% static 'js/aukeyops/searchTable.js' %}"></script>
+<script src="{%static 'js/prism-coy.js' %}"></script>
+<script src="{% static 'vuejs/vue.min.js' %}"></script>
+<script src="{% static 'vuejs/iview.min.js' %}"></script>
+<script type="text/javascript">
+    var select_server_os = 999;
+
+    // 搜索按钮触发
+    $("#searchBtnId").on("click", function () {
+        searchTable('table','searchFormId')
+    });
+
+    // 搜索重置
+    function formReset() {
+        document.getElementById("searchFormId").reset();
+        $(".selectpicker").selectpicker('refresh');
+    }
+
+    // Linux计划任务选择器点确定按钮
+    function fiSelectCron() {
+        $('#cronSelectModal').modal('hide');
+        var cron = $("#cron").val();
+        $('#transCron').val(cron);
+    }
+
+    // 打开添加/修改模态框
+    $('#changeModal').on('show.bs.modal', function (event) {
+        var id = $(event.relatedTarget).data('id');
+        var form = $('#change_form');
+        if (id) {
+            var select = getSelectRow();
+            if (select && select.id) {
+                $('#any_server_select').hide();
+                $('#one_server_select').show();
+                $('#change_h4_id').html('修改计划任务');
+                $('#change_submit_btn').attr('onclick','change('+select.id+')');
+                form.find("[name='name']").val(select.name);
+                form.find("[name='describe']").val(select.describe);
+                if (select.server) {
+                    $('#cron_server_id').selectpicker('val',select.server.id);
+                    form.find("[name='server']").val(select.server.id);
+                    select_server_os = select.server.os;
+                    if (select_server_os == 0) {
+                        $('#windows_form_id').hide();
+                        $('#linux_form_id').show();
+                    } else {
+                        $('#linux_form_id').hide();
+                        $('#windows_form_id').show();
+                    }
+                }
+                if (select.project) {
+                    $('#cron_project_id').selectpicker('val', select.project);
+                }
+                form.find("[name='order']").val(select.order);
+                $('#select_exec_type_id :radio[name="type"]').removeAttr('checked');
+                $('#select_exec_type_id :radio[name="type"]').parent('label').removeClass('active');
+                $('#select_exec_type_id :radio[name="type"][value=' + select.type + ']').get(0).checked=true;
+                $('#select_exec_type_id :radio[name="type"][value=' + select.type + ']').parent('label').addClass('active');
+                sTChange()
+                form.find("[name='trigger']").val(select.trigger);
+                if (select.script) {
+                    $('#cron_script_id').selectpicker('val', select.script.id);
+                }
+                $('#select_status_id :radio[name="status"]').removeAttr('checked');
+                $('#select_status_id :radio[name="status"]').parent('label').removeClass('active');
+                $('#select_status_id :radio[name="status"][value=' + select.status + ']').get(0).checked=true;
+                $('#select_status_id :radio[name="status"][value=' + select.status + ']').parent('label').addClass('active');
+            } else {
+                MyMessage(0, '请选择要修改的记录！');
+                return false
+            }
+        } else {
+            select_server_os = 1;
+            $('#one_server_select').hide();
+            $('#any_server_select').show();
+            $('#select_exec_type_id :radio[name="type"][value="0"]').get(0).checked=true;
+            $('#select_status_id :radio[name="status"][value="running"]').get(0).checked=true;
+            $('#change_form :radio').parent('label').removeClass('active');
+            $('#change_form :radio[name="server_type"][value="1"]').parent('label').addClass('active');
+            $('#change_form :radio[name="type"][value="0"]').parent('label').addClass('active');
+            $('#change_form :radio[name="status"][value="running"]').parent('label').addClass('active');
+            $('#change_h4_id').html('添加计划任务');
+            $('#change_submit_btn').attr('onclick','change(-1)');
+            trans_data('change_form', 1)
+        }
+    });
+
+    // 添加计划任务穿梭框
+    function trans_data(FormId, ServerType='') {
+        $('#server_catch_id').show();
+        var form = $('#'+FormId);
+        var a_html  = '<div id="app"><transfer :data="data1"'+
+            ':target-keys="targetKeys1"'+
+            ':list-style="listStyle"'+
+            'filterable="" '+
+            ':render-format="render1"'+
+            ':operations="[\'移出\',\'移入\']"'+
+            'not-found-text=""'+
+            '@on-change="handleChange1"></transfer>'+
+        '</div>';
+        $('#app_p_div').html(a_html);
+        var mockData = [];
+        var TargetKeys = [];
+        var Main = {
+            data () {
+                return {
+                    data1: mockData,
+                    targetKeys1: TargetKeys,
+                    listStyle: {
+                        width: '40%',
+                        height: '300px'
+                    }
+                }
+            },
+            methods: {
+                render1 (item) {
+                    return item.label;
+                },
+                handleChange1 (newTargetKeys, direction, moveKeys) {
+                    form.find("[name='server_list']").val(newTargetKeys);
+                    this.targetKeys1 = newTargetKeys;
+                }
+            }
+        };
+        var Component = Vue.extend(Main);
+        new Component().$mount('#app');
+        $.ajax({
+            url: '/opscenter/server/all/list/?os='+ServerType,
+            type: 'get',
+            success: function (result) {
+                for (i in result) {
+                    mockData.push({
+                        key: result[i]['id'],
+                        label: result[i]['name'],
+                        description: result[i]['name'],
+                        disabled: false
+                    });
+                }
+                $('#server_catch_id').hide()
+            }
+        });
+    }
+
+    $('#batchDeleteModal').on('show.bs.modal', function (event) {
+        $('#delete_list_id').val('');
+        batch_delete_trans_data();
+    });
+
+    // 批量删除穿梭框
+    function batch_delete_trans_data() {
+        $('#batch_delete_loading').show();
+        var a_html  = '<div id="batch_delete_app"><transfer :data="data1"'+
+            ':target-keys="targetKeys1"'+
+            ':list-style="listStyle"'+
+            'filterable="" '+
+            ':render-format="render1"'+
+            ':operations="[\'移出\',\'移入\']"'+
+            'not-found-text=""'+
+            '@on-change="handleChange1"></transfer>'+
+        '</div>';
+        $('#batch_delete_input').html(a_html);
+        var mockData = [];
+        var TargetKeys = [];
+        var Main = {
+            data () {
+                return {
+                    data1: mockData,
+                    targetKeys1: TargetKeys,
+                    listStyle: {
+                        width: '40%',
+                        height: '300px'
+                    }
+                }
+            },
+            methods: {
+                render1 (item) {
+                    return item.label;
+                },
+                handleChange1 (newTargetKeys, direction, moveKeys) {
+                    $('#delete_list_id').val(newTargetKeys);
+                    this.targetKeys1 = newTargetKeys;
+                }
+            }
+        };
+        var Component = Vue.extend(Main);
+        new Component().$mount('#batch_delete_app');
+        $.ajax({
+            url: '/opscenter/cron/all/list/',
+            type: 'get',
+            success: function (result) {
+                for (i in result) {
+                    if (result[i]['server']) {
+                        var label = result[i]['name'] +' - '+ result[i]['server']['name']
+                    } else {
+                        var label = result[i]['name']
+                    }
+                    mockData.push({
+                        key: result[i]['id'],
+                        label: label,
+                        description: result[i]['name'],
+                        disabled: false
+                    });
+                }
+                $('#batch_delete_loading').hide()
+            }
+        });
+    }
+
+    // 关闭添加/修改模态框
+    $('#changeModal').on('hidden.bs.modal', function () {
+        select_server_os = 999;
+        cleanErrorAlert('change_form');
+        document.getElementById("change_form").reset();
+        $('.selectpicker').selectpicker('refresh');
+        $('#daily').hide();
+        $('#weekly').hide();
+        $('#monthly').hide();
+        $('#start_div_id').hide();
+        $('#linux_form_id').hide();
+        $('#windows_form_id').show();
+    });
+
+    // 打开Cron选择器模态框
+    $('#cronSelectModal').on('shown.bs.modal', function () {
+        var instr = $("#transCron").val();
+        if (instr) {
+            $("#cron").val(instr);
+            reverseExp();
+        }
+    });
+
+    // Windows计划任务选择触发器后触发
+    $('#cron_frequency').change(function () {
+        if ($(this).val() == 'daily') {
+            $('#weekly').hide();
+            $('#monthly').hide();
+            $('#start_div_id').show();
+            $('#daily').show();
+        } else if ($(this).val() == 'weekly') {
+            $('#monthly').hide();
+            $('#daily').hide();
+            $('#start_div_id').show();
+            $('#weekly').show();
+        } else if ($(this).val() == 'monthly') {
+            $('#daily').hide();
+            $('#weekly').hide();
+            $('#start_div_id').show();
+            $('#monthly').show();
+        } else if ($(this).val() == 'time') {
+            $('#daily').hide();
+            $('#weekly').hide();
+            $('#monthly').hide();
+            $('#start_div_id').show();
+        } else {
+            $('#daily').hide();
+            $('#weekly').hide();
+            $('#monthly').hide();
+            $('#start_div_id').hide();
+        }
+    });
+
+    // 添加计划任务时选择实例类型后触发
+    function serverTChange() {
+        $('#change_form').find("[name='server_list']").val('');
+        var sel = $("#server_type_id input[name='server_type']:checked").val();
+        select_server_os = sel;
+        if (sel == 0) {
+            $('#windows_form_id').hide();
+            $('#linux_form_id').show();
+        } else {
+            $('#linux_form_id').hide();
+            $('#windows_form_id').show();
+        }
+        trans_data('change_form', sel);
+    }
+
+    // 编辑计划任务时选择实例后触发
+    $('#cron_server_id').change(function () {
+        $('#change_form').find("[name='server']").val($(this).val());
+        $.ajax({
+            url: '/opscenter/server/detail/'+$(this).val()+'/',
+            type: 'get',
+            success: function (result) {
+                select_server_os = result['os']
+                if (result['os'] == 0) {
+                    $('#windows_form_id').hide();
+                    $('#linux_form_id').show();
+                } else {
+                    $('#linux_form_id').hide();
+                    $('#windows_form_id').show();
+                }
+            }
+        })
+    });
+
+    // 添加/编辑选择执行指令或脚本后触发
+    function sTChange() {
+        var sel = $("#select_exec_type_id input[name='type']:checked").val();
+        if (sel == 0) {
+            $('#script_form_id').hide();
+            $('#order_form_id').show();
+        } else {
+            $('#order_form_id').hide();
+            $('#script_form_id').show();
+        }
+    }
+
+    // 时间选择器
+    jeDate("#start_time",{
+        format:"YYYY-MM-DD hh:mm:ss",
+        isTime:true,
+        minDate:"2000-01-01 00:00:00"
+    });
+
+    jeDate(".create_time_0",{
+        format:"YYYY-MM-DD",
+        isTime:false,
+        minDate:"2000-01-01"
+    });
+
+    jeDate(".create_time_1",{
+        format:"YYYY-MM-DD",
+        isTime:false,
+        minDate:"2000-01-01"
+    });
+
+    // 初始化表格数据
+    function initTable() {
+        $('#table').bootstrapTable({
+            method: "get",  //使用post请求到服务器获取数据
+            contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+            dataType: "json",
+            cache: false,
+            url:'/opscenter/cron/list/',
+            toolbar: '#toolbar',//指定工具栏
+            striped: true,  //表格显示条纹
+            dataField: "results",
+            pagination: true, //启动分页
+            sortable: true,  //启用排序
+            pageSize: 15,  //每页显示的记录数
+            pageNumber:1, //当前第几页
+            pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+            searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+            searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+            showExport: false,//显示导出按钮
+            singleSelect: true,
+            exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+            sidePagination: "server", //表示服务端请求
+            queryParamsType : "undefined",
+            clickToSelect: true,//是否启用点击选中行
+            detailView:true,
+            responseHandler: function (res) {
+                res['total'] = res['count'];
+                return res
+            },
+            columns:[
+                {
+                    title:'',
+                    checkbox:true,
+                    align:'center',
+                    valign:'middle'
+                },
+                {
+                    title:'ID',
+                    field:'id',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'名称',
+                    field:'name',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'类型',
+                    field:'type',
+                    align:'center',
+                    sortable:true,
+                    formatter:function(value,row,gitflow){
+                        if (value == 0){
+                            value = '执行指令'
+                        } else if (value == 1) {
+                            value = '执行脚本'
+                        }
+                        return value
+                    }
+                },
+                {
+                    title:'实例',
+                    field:'server',
+                    align:'center',
+                    sortable:true,
+                    formatter:function(value){
+                        if (value.public_ip) {
+                            var ip = '「'+value.public_ip+'」'
+                        } else {
+                            var ip = ''
+                        }
+                        if (value){
+                            return '<a href="/opscenter/server_detail/'+value.id+'/" style="color:#337ab7">'+value.name + ip+'</a>'
+                        } else {
+                            return value
+                        }
+                    }
+                },
+                {
+                    title:'项目',
+                    field:'project',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'操作人',
+                    field:'user',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'创建时间',
+                    field:'create_time',
+                    align:'center',
+                    sortable:true,
+                    formatter:function(value,row){
+                        var d = '';
+                        if (value) {
+                            d =  new Date(value).toLocaleString();
+                        }
+                        return d
+                    }
+                },
+                {
+                    title:'状态',
+                    field:'status',
+                    align:'center',
+                    sortable:true,
+                    formatter: function(value, row) {
+                        if (value == 'running') {
+                            a_html = '<span class="running_span"><i></i><span style="color:#090">运行中</span></span>'
+                        } else if (value == 'disable') {
+                            a_html = '<span class="disable_span"><i></i><span style="color:red">已停止</span></span>'
+                        } else if (value == 'loading') {
+                            a_html = '<span class="blue"><img src="{%static 'images/loadding-n.gif' %}"> 请求中</span>'
+                        } else {
+                            a_html = value
+                        }
+                        return a_html 
+                    }
+                },
+                {
+                    title:'操作',
+                    field:'id',
+                    align:'center',
+                    formatter:function(value,row,gitflow){
+                        var r = '<a class="detail-icon" href="#"> 更多 </a>';
+                            return r;
+                    }
+                }
+            ],
+            queryParams: function queryParams(params) {   //设置查询参数
+                if (params.sortOrder == 'desc') {
+                    params.sortName = '-'+params.sortName
+                }
+                var param = {
+                    page: params.pageNumber,
+                    size: params.pageSize,
+                    ordering:params.sortName
+                };
+                return param;
+            },
+            detailFormatter:function (index, row) {
+                if (row.type == 1) {
+                    var t = '执行脚本「'+row.script.script_name+'」:';
+                    var exec_action = row.script.script_content
+                } else {
+                    var t = '执行指令:';
+                    var exec_action = row.order;
+                }
+                var log_result = '';
+                $.ajax({
+                    url: '/opscenter/revision_log/list/?content_type={{ content_type_id }}&object_id='+row.id,
+                    type: 'get',
+                    async: false,
+                    success: function(result) {
+                        var res = result['results'];
+                        for (i in res) {
+                            log_result += '<tr><td>'+res[i]['user']['username']+'</td><td>'+new Date(res[i]['datetime']).toLocaleString()+'</td><td>'+res[i]['content']+'</td></tr>'
+                        }
+                    },
+                    error: function(result) {
+                        MyMessage(0, result.responseText)
+                    }
+                })
+                if (log_result) {
+                    var log_html = '<table class="table table-striped table-bordered dt-responsive nowrap">' +
+                        '<thead><tr><th>操作人</th><th>操作时间</th><th>操作内容</th></tr></thead><tbody>'+log_result+'</tbody></table>'
+                } else {
+                    var log_html = '无修改记录'
+                }
+                if (row.describe) {
+                    var desc = row.describe
+                } else {
+                    var desc = '无更多描述'
+                }
+                var res_html = '<div class="" role="tabpanel" data-example-id="togglable-tabs">'+
+                    '<ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist">'+
+                        '<li role="presentation" class="active">'+
+                            '<a href="#tab_content1_'+row.id+'" role="tab" id="profile-tab" data-toggle="tab" aria-expanded="true">触发器</a>'+
+                        '</li>'+
+                        '<li role="presentation" class="">'+
+                            '<a href="#tab_content2_'+row.id+'" id="home-tab" role="tab" data-toggle="tab" aria-expanded="false">执行动作</a>'+
+                        '</li>'+
+                        '<li role="presentation" class="">'+
+                            '<a href="#tab_content3_'+row.id+'" id="home-tab" role="tab" data-toggle="tab" aria-expanded="false">描述</a>'+
+                        '</li>'+
+                        '<li role="presentation" class="">'+
+                            '<a href="#tab_content4_'+row.id+'" id="home-tab" role="tab" data-toggle="tab" aria-expanded="false">操作记录</a>'+
+                        '</li>'+
+                    '</ul>'+
+                    '<div id="myTabContent" class="tab-content">'+
+                        '<div role="tabpanel" class="tab-pane fade active in" id="tab_content1_'+row.id+'" aria-labelledby="profile-tab">'+
+                            '<div class="col-md-12">'+JsonFormat(eval(row.trigger)[0])+'</div>'+
+                        '</div>'+
+                        '<div role="tabpanel" class="tab-pane fade" id="tab_content2_'+row.id+'" aria-labelledby="home-tab">'+
+                            '<div class="col-md-12">'+
+                                '<pre class="language-bash"><code class="language-bash">'+t+'\n\n'+exec_action+'</code></pre>'+
+                            '</div>'+
+                        '</div>'+
+                        '<div role="tabpanel" class="tab-pane fade" id="tab_content3_'+row.id+'" aria-labelledby="home-tab">'+
+                            '<pre class="language-bash"><code class="language-bash">'+desc+'</code></pre>'+
+                        '</div>'+
+                        '<div role="tabpanel" class="tab-pane fade" id="tab_content4_'+row.id+'" aria-labelledby="home-tab">'+
+                            '<div class="col-md-12">'+ log_html +'</div>'+
+                        '</div>'+
+                    '</div>'+
+                '</div>';
+                return res_html
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        //调用函数，初始化表格
+        initTable();
+        $(".selectpicker").selectpicker({
+            noneSelectedText : ''
+        });
+        $.ajax({
+            url: '/opscenter/server/all/list/',
+            type: 'get',
+            success: function (result) {
+                $('#cron_server_id.selectpicker').append('<option value=""></option>');
+                $('#search_server_id.selectpicker').append('<option value=""></option>');
+                for (i in result) {
+                    if (result[i]['os'] == 1) {
+                        var os = 'windows'
+                    } else {
+                        var os = 'linux'
+                    }
+                    
+                    $('#cron_server_id.selectpicker').append('<option value=' + result[i]['id'] + '>' + result[i]['name'] + '('+os+')</option>');
+                    $('#search_server_id.selectpicker').append('<option value=' + result[i]['id'] + '>' + result[i]['name'] + '('+os+')</option>');
+                }
+                $('#cron_server_id').selectpicker('refresh');
+                $('#search_server_id').selectpicker('refresh');
+            },
+            error: function(result) {
+                MyMessage(0, result.responseText)
+            }
+        });
+
+        $.ajax({
+            url: '/opscenter/script/all/list/',
+            type: 'get',
+            success: function (result) {
+                $('#cron_script_id.selectpicker').append('<option value=""></option>');
+                for (i in result) {
+                   $('#cron_script_id.selectpicker').append('<option value=' + result[i]['id'] + '>' + result[i]['script_name'] + '</option>');
+                }
+                $('#cron_script_id').selectpicker('refresh');
+            }
+        });
+
+        $.ajax({
+            url: '/flow/project/all/list/',
+            type: 'get',
+            success: function (result) {
+                $('#cron_project_id.selectpicker').append('<option value=""></option>');
+                for (i in result) {
+                   $('#cron_project_id.selectpicker').append('<option value=' + result[i]['project'] + '>' + result[i]['project'] + '</option>');
+                }
+                $('#cron_project_id').selectpicker('refresh');
+            }
+        });
+
+        $('.timeselect_input').daterangepicker({
+            minDate: '01/01/2000',    //最小时间
+            showDropdowns : true,
+            showWeekNumbers : false, //是否显示第几周
+            timePicker : false, //是否显示小时和分钟
+            timePickerIncrement : 1440, //时间的增量，单位为分钟
+            timePicker12Hour : false, //是否使用12小时制来显示时间
+            opens : 'right', //日期选择框的弹出位置
+            buttonClasses : [ 'ivu-btn' ],
+            applyClass : 'ivu-btn-primary',
+            cancelClass : 'ivu-btn-ghost',
+            format : 'YYYY-MM-DD', //控件中from和to 显示的日期格式
+            separator : 'to',
+            autoUpdateInput: false,
+            locale : {
+              format : 'YYYY-MM-DD',
+              separator: '~',
+              applyLabel : '确定',
+              cancelLabel : '取消',
+              resetLabel: "重置",
+              fromLabel : '起始时间',
+              toLabel : '结束时间',
+              customRangeLabel : '自定义',
+              daysOfWeek : [ '日', '一', '二', '三', '四', '五', '六' ],
+              monthNames : [ '一月', '二月', '三月', '四月', '五月', '六月',
+                      '七月', '八月', '九月', '十月', '十一月', '十二月' ],
+              firstDay : 1
+            }
+        })
+    });
+
+    // 触发器生成cron执行参数
+    function produ_trigger() {
+        if (select_server_os == 999) {
+            MyMessage(0, '请先选择实例');
+            return false
+        }
+        var triggers;
+        if (select_server_os == 0){  // Linux
+            var txt = $("#transCron").val();
+            if (txt) {
+                var regs = txt.split(' ');
+                triggers = {
+                    'minute': regs[0],
+                    'hour': regs[1],
+                    'day': regs[2],
+                    'month': regs[3],
+                    'week': regs[4],
+                }
+            }
+        } else {  // Windows
+            var start_time = $('#start_time').val();
+            var repetition_number = $('#repetition_number').val();
+            var repetition_unit = $('#repetition_unit').val();
+            if ($('#cron_frequency').val() == 'daily') {
+                triggers = {
+                    'type': $('#cron_frequency').val(),
+                    'start_boundary': start_time,
+                    'days_interval': $('#detach_day').val(),
+                };
+                if (repetition_number) {
+                    triggers['repetition'] = {'interval': 'PT'+repetition_number+repetition_unit}
+                }
+            } else if ($('#cron_frequency').val() == 'weekly') {
+                triggers = {
+                    'type': $('#cron_frequency').val(),
+                    'days_of_week': ($('#days_of_week_list').val()).join(','),
+                    'start_boundary': start_time,
+                    'weeks_interval': $('#detach_week').val()
+                };
+                if (repetition_number) {
+                    triggers['repetition'] = {'interval': 'PT'+repetition_number+repetition_unit}
+                }
+            } else if ($('#cron_frequency').val() == 'monthly') {
+                triggers = {
+                    'type': $('#cron_frequency').val(),
+                    'months_of_year': ($('#months_of_year_list').val()).join(','),
+                    'days_of_month': ($('#days_of_month_list').val()).join(','),
+                    'start_boundary': start_time,
+                };
+                if (repetition_number) {
+                    triggers['repetition'] = {'interval': 'PT'+repetition_number+repetition_unit}
+                }
+            } else if ($('#cron_frequency').val() == 'time') {
+                triggers = {
+                    'type': $('#cron_frequency').val(),
+                    'start_boundary': start_time,
+                };
+                if (repetition_number) {
+                    triggers['repetition'] = {'interval': 'PT'+repetition_number+repetition_unit}
+                }
+            } else if ($('#cron_frequency').val() == 'boot') {
+                triggers = {
+                    'type': $('#cron_frequency').val(),
+                }
+            }
+        }
+        if (triggers) {
+            var triggers_list = [triggers];
+            $('#trigger_id').val(JSON.stringify(triggers_list));
+        }
+    }
+
+    // 添加/修改动作
+    function change (id) {
+        $('#changing_loading_id').show();
+        {% if user.last_name or user.first_name %}
+            $('#cron_user_id').val("{{ user.last_name }}{{ user.first_name }}");
+        {% else %}
+            $('#cron_user_id').val("{{ user.username }}");
+        {% endif %}
+        cleanErrorAlert('change_form');
+        var re = checkRequired('change_form');
+        if (!re) {
+            $('#changing_loading_id').hide();
+            return false
+        }
+        if ($('#change_form').find("[name='name']").val())
+        if (id > 0) {
+            var url = '/opscenter/cron/detail/'+id+'/';
+            var type = 'put'
+        } else {
+            var url ='/opscenter/cron/create_cron/';
+            var type = 'post'
+        }
+        change_request(url, type)
+    }
+
+    // 启动 / 停止
+    function cron_status_change (status) {
+        var select = getSelectRow();
+        if (select && select.id) {
+            if (status == select.status){
+                MyMessage(2, '已经是'+status+'状态！');
+                return false;
+            } else if (select.status == 'loading') {
+                MyMessage(2, '该计划任务正在请求中，请稍后再操作！');
+                return false;
+            }
+            var this_bt = $(event.target)
+            this_bt.addClass('ivu-btn-loading');
+            var i_el = $(event.target).find("i");
+            var old_i = i_el.attr("class");
+            i_el.attr("class","ivu-icon ivu-load-loop ivu-icon-load-c");
+            $.ajax({
+                url: '/opscenter/cron/detail/'+select.id+'/',
+                type: 'PUT',
+                data: {'id': select.id, 'name': select.name, 'server': select.server.id, 'status': status},
+                dataType: 'json',
+                success: function(result) {
+                    MyMessage(1, '操作成功！');
+                    $('#table').bootstrapTable("refresh");
+                    this_bt.removeClass('ivu-btn-loading');
+                    i_el.attr("class", old_i);
+                },
+                error: function(result) {
+                    MyMessage(0, result.responseText);
+                    this_bt.removeClass('ivu-btn-loading');
+                    i_el.attr("class", old_i);
+                }
+            })
+        } else {
+            MyMessage(0, '请选择计划任务！');
+        }
+    }
+
+    // 删除
+    function confirmDelete(){
+        var select = getSelectRow();
+        if (select && select.id) {
+            var url = '/opscenter/cron/detail/'+select.id+'/';
+            $.confirm({
+                title: '提示！',
+                content: '确定要删除计划任务「'+select.name+'」吗？',
+                closeIcon: true,
+                confirmButtonClass:'btn-danger',
+                cancelButtonClass: 'btn-default ',
+                confirmButton: '删除!',
+                cancelButton: '取消',
+                confirm: function(){
+                    $.ajax({
+                        url: url,
+                        type: 'PUT',
+                        data: {'id': select.id, 'server': select.server.id, 'status': 'delete'},
+                        dataType: 'json',
+                        success: function (result) {
+                            MyMessage(1, '操作成功！');
+                            $('#table').bootstrapTable("refresh");
+                        },
+                        error: function (result) {
+                            MyMessage(0, result.responseText);
+                        }
+                    })
+                }
+            });
+        } else {
+            MyMessage(0, '请选择实例！');
+            return false;
+        }
+    }
+
+    // 批量删除
+    function batch_delete_submit_btn(){
+        $('#deleting_loading').show();
+        var delete_list = $('#delete_list_id').val();
+        $.ajax({
+            url: '/opscenter/cron/batch_delete/',
+            type: 'POST',
+            data: {'delete_list': delete_list},
+            dataType: 'json',
+            success: function (result) {
+                MyMessage(1, '操作成功！');
+                $('#table').bootstrapTable("refresh");
+            },
+            error: function (result) {
+                MyMessage(0, result.responseText);
+            },
+            complete: function(){
+                $('#deleting_loading').hide();
+                $('#batchDeleteModal').modal('hide');
+            }
+        })
+    }
+
+    function WebSocketTest() {
+        if ("WebSocket" in window) {
+            //console.log("您的浏览器支持 WebSocket!");
+            var ws = new WebSocket("ws://codeops.aukeyit.com/websocket/chart/ws_public/{{ user.id }}/");
+            ws.onopen = function() {
+                ws.send("{'group':['cron']}")
+            };
+            ws.onmessage = function (evt) {
+                var received_msg = evt.data;
+                if (received_msg == 'complete') {
+                    $('#table').bootstrapTable("refresh");
+                    MyMessage(1, '请求完成！');
+                } else {
+                    MyMessage(1, received_msg);
+                }
+            };
+            ws.onclose = function() {
+                //console.log("连接已关闭...");
+            };
+        }
+        else {
+            //console.log("您的浏览器不支持 WebSocket!");
+        }
+    }
+    WebSocketTest();
+</script>
+{% endblock %}

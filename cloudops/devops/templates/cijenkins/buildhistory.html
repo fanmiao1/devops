@@ -1,0 +1,29 @@
+<div class="col-md-12 col-sm-12 col-xs-12" style="height: 100%">
+  <div class="x_panel" style="height: 100%">
+    <div class="x_title">
+      <h2>构建历史</h2>
+      <ul class="nav navbar-right panel_toolbox">
+      </ul>
+      <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+      <div class="dashboard-widget-content" style="height: 100%">
+        <ul class="list-unstyled timeline widget roll" style="max-height: 400px; overflow-y: auto">
+          {% if time_date %}
+          {% for line in time_date %}
+          <li>
+            <div class="block">
+              <div class="block_content">
+                <h5 class="title">
+                      <a>构建号: {{ line.number }} Time: {{ line.time }} Status: {{ line.result }}</a>
+                  </h5>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

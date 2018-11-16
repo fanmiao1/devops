@@ -1,0 +1,82 @@
+{% extends 'table.html' %}
+{% block page_title %}业务权限管理{% endblock %}
+{% block table_title %}修改记录{% endblock %}
+{% block ext_button %}
+    <div id="toolbar" class="btn-group pull-right" style="margin-bottom: 10px;">
+        <a href="{% url 'module_modify' id %}" style="color: #333333">
+            <button id="btn_add" type="button" class="btn btn-default" style="float: right">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 修改
+            </button>
+        </a>
+    </div>
+{% endblock %}
+{% block table %}
+    <script type="text/javascript">
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "post",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:"/flow/module_manage/module_change_history_{{ id }}/",
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                dataField: "rows",
+                pagination: true, //启动分页
+                pageSize: 10,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+{#                            search: true,  //是否启用查询#}
+{#                            showColumns: true,  //显示下拉框勾选要显示的列#}
+                showRefresh: false,  //显示刷新按钮
+                sidePagination: "server", //表示服务端请求
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined",
+                clickToSelect: true,//是否启用点击选中行
+                toolbarAlign:'right',//工具栏对齐方式
+                buttonsAlign:'left',//按钮对齐方式
+                columns:[
+                    {
+                        title:'ID',
+                        field:'id',
+                        sortable:false
+                    },
+                    {
+                        title:'权限名称',
+                        field:'module',
+                        sortable:false
+                    },
+                    {
+                        title:'修改内容',
+                        field:'content',
+                        sortable:false
+                    },
+                    {
+                        title:'修改时间',
+                        field:'datetime',
+                        sortable:false
+                    }
+                ],
+                queryParams: function queryParams(params) {   //设置查询参数
+                    var param = {
+                        //加上csrf
+                        csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                        pageNumber: params.pageNumber,
+                        pageSize: params.pageSize,
+                        orderNum : $("#orderNum").val()
+                    };
+                    return param;
+                },
+
+            });
+        }
+        $(document).ready(function () {
+            //调用函数，初始化表格
+            initTable();
+        });
+    $("#usercenter_menu_id").css("display","block");
+    $("#project_moudle_manage").addClass('current-page');
+    </script>
+{% endblock %}
+{% block ext_script %}{% endblock %}

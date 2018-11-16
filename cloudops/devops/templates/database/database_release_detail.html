@@ -1,0 +1,406 @@
+{% extends 'detail.html' %}
+{% load staticfiles %}
+{% block page_title %}数据库变更{% endblock %}
+{% block table_title %}详情{% endblock %}
+{#{% block detial_title %}详情{% endblock %}#}
+{% block tinymce_js %}
+        <script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+    <link rel="=stylesheet" href="{% static 'codemirror/lib/codemirror.css'%}">
+    <link href="{% static 'codemirror/lib/codemirror.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'codemirror/theme/seti.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'codemirror/theme/neat.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'codemirror/addon/display/fullscreen.css' %}" rel="stylesheet" type="text/css">
+    <!-- 引入CodeMirror核心文件 -->
+    <script type="text/javascript" src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+
+    <!-- CodeMirror支持不同语言，根据需要引入JS文件 -->
+    <script type="text/javascript" src="{% static 'codemirror/mode/sql/sql.js' %}"></script>
+
+    <!-- 下面分别为显示行数、括号匹配和全屏插件 -->
+    <script type="text/javascript" src="{% static 'codemirror/addon/selection/active-line.js' %}"></script>
+    <script type="text/javascript" src="{% static 'codemirror/addon/edit/matchbrackets.js' %}"></script>
+    <script type="text/javascript" src="{% static 'codemirror/addon/display/fullscreen.js' %}"></script>
+
+    <!--支持代码折叠-->
+    <link rel="stylesheet" href="{% static 'codemirror/addon/fold/foldgutter.css' %}"/>
+    <script src="{% static 'codemirror/addon/fold/foldcode.js' %}"></script>
+    <script src="{% static 'codemirror/addon/fold/foldgutter.js' %}"></script>
+    <script src="{% static 'codemirror/addon/fold/brace-fold.js' %}"></script>
+    <script src="{% static 'codemirror/addon/fold/comment-fold.js' %}"></script>
+
+    <!--自动补全-->
+    <link rel="stylesheet" href="{% static 'codemirror/addon/hint/show-hint.css' %}"/>
+    <script src="{% static 'codemirror/addon/hint/show-hint.js' %}"></script>
+    <script src="{% static 'codemirror/addon/hint/anyword-hint.js' %}"></script>
+
+    <!--自动刷新-->
+    <script src="{% static 'codemirror/addon/display/autorefresh.js' %}"></script>
+
+{% endblock %}
+ {% block review_include %} {% if review_result != '' and review_result != 'ok' %}{% include 'database/db_logs.html' %}{% endif %} {% endblock %}
+{% block communication_include %}{% endblock %}
+{% block detail_info %}
+    <style type="text/css">
+        .CodeMirror{
+            font-size: 17px;
+        }
+    </style>
+    <table class="table">
+      <tbody>
+        <tr>
+          <th style="width:20%">申请人:</th>
+          <td>
+            {% if line.appliant.last_name or line.appliant.first_name %}
+                {{ line.appliant.last_name }}{{ line.appliant.first_name }}
+            {% else %}
+                {{ line.appliant }}
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>项目:</th>
+          <td>{{ line.project }}</td>
+        </tr>
+        <tr>
+          <th>实例:</th>
+          <td>{{ line.instance}}</td>
+        </tr>
+        <tr>
+          <th>项目经理:</th>
+            <td>{% for pm in project_manager %}{{ pm }} ，{% endfor %}</td>
+        </tr>
+        <tr>
+          <th>运维DBA:</th>
+          <td>
+            {% if line.ops_user.last_name or line.ops_user.first_name %}
+                {{ line.ops_user.last_name }}{{ line.ops_user.first_name }}
+            {% else %}
+                {{ line.ops_user }}
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>申请说明:</th>
+          <td><div id="desc_maxlenght" style="word-break: break-all;">{% autoescape off %}{{ line.application_content }}{% endautoescape %}</div></td>
+        </tr>
+        <tr>
+          <th>执行SQL:</th>
+          <td>
+            {% if line.application_status == 1 or line.application_status == 0 %}
+                {% if line.appliant == request.user  and line.application_type == 3 %}
+                    <input type="button" class="btn btn-primary btn-xs" data-toggle="modal"
+                       data-target="#SQL_Modal" value="编辑 SQL">
+                {% else %}
+                    <input type="button" class="btn btn-primary btn-xs" data-toggle="modal"
+                       data-target="#SQL_Modal" value="查看 SQL">
+                {% endif %}
+            {% else %}
+                <input type="button" class="btn btn-primary btn-xs" data-toggle="modal"
+                       data-target="#SQL_Modal" value="查看 SQL">
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>执行结果:</th>
+          <td>
+            {% if line.application_status == 0 or line.application_status == 3 or line.application_status == 4 %}
+                {% if line.execute_result %}
+                    <input type="button" class="btn btn-primary btn-xs" data-toggle="modal"
+                           data-target="#myModal" value="查看执行结果">
+                {% else %}
+                    <a>未执行</a>
+                {% endif %}
+            {% elif line.application_status == 5 %}
+                <a>执行中</a>
+            {% else %}
+                <a>未审批</a>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>申请时间:</th>
+          <td>{{ line.application_time | date:"Y-m-d H:i:s" }}</td>
+        </tr>
+        <tr>
+          <th>执行时间:</th>
+          <td>{{ line.execute_time | date:"Y-m-d H:i:s" }}</td>
+        </tr>
+        <tr>
+          <th>完成时间:</th>
+          <td>{{ line.finished_time | date:"Y-m-d H:i:s" }}</td>
+        </tr>
+        <tr>
+          <th>审批状态:</th>
+          <td>
+            {% if line.get_application_status_display == '已执行' %}
+            <span style="color:#5CB85C;">{{ line.get_application_status_display }}</span>
+            {% elif line.get_application_status_display == '待审批' %}
+            <span style="color:#5bc0de;">{{ line.get_application_status_display }}</span>
+            {% elif line.get_application_status_display == '驳回' %}
+            <span style="color:#FF0000;">{{ line.get_application_status_display }}</span>
+            {% elif line.get_application_status_display == "运维DBA审批通过" or line.get_application_status_display == "项目经理审批通过" %}
+            <span style="color:#428BCA;">{{ line.get_application_status_display }}</span>
+            {% else %}
+            <span>{{ line.get_application_status_display }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% if line.application_status == 0 %}
+        <tr>
+            <th>驳回建议</th>
+            <td>{{ line.reback_reason }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+{% endblock %}
+{% block ystep %}
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        {% if line.application_status != 0 %}
+        <div class="x_panel">
+          <div class="x_title">
+              <h2>流程</h2>
+            <ul class="nav navbar-right panel_toolbox">
+              <!-- <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li>
+              <li><a class="close-link"><i class="fa fa-close"></i></a>
+              </li> -->
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <div class="ystep1"></div>
+          </div>
+        </div>
+        {% endif %}
+        <!--审批按钮-->
+        <div class="approval">
+            {% if line.application_status == 1  %}
+                <a href="/database/instance/release_flow/release_approval/{{ line.id }}_2/" style="color: inherit">
+                    <button type="button" class="btn btn-success"> 项目经理审批通过 </button>
+                </a>
+            {% endif %}
+            {% if line.application_status == 2 %}
+                <a href="/database/instance/release_flow/release_ops_approval/{{ line.id }}_3/" style="color: inherit">
+                    <button type="button" class="btn btn-success"> 运维DBA审批通过 </button>
+                </a>
+            {% endif %}
+            {% if line.application_status == 3 %}
+                <a href="/database/instance/release_flow/release_implement/{{ line.id }}_4/" style="color: inherit">
+                    <button type="button" class="btn btn-primary" style="width: 130px;"> 执行 </button>
+                </a>
+            {% endif %}
+            {% if line.application_status == 1 or line.application_status == 2 or line.application_status == 3 %}
+                    <input type="button" class="btn btn-danger" data-toggle="modal"
+                                   data-target="#reback_modal" value="驳回">
+            {% endif %}
+            <a href="{% url 'database_release_flow' %}">
+                <button type="button" class="btn btn-default">
+                    返回
+                </button>
+            </a>
+        </div>
+    </div>
+    <!-- 模态框（Modal） -->
+<div class="modal fade" id="reback_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="z-index: 2041;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">驳回意见</h4>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    {% for field in reback %}
+                        <div class="form-group">
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="submit" class="btn btn-primary" > 提交</button>
+                </div>
+            </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+<div class="modal fade" id="SQL_Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="z-index: 2041; width: 60%">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">执行 SQL</h4>
+            </div>
+            <form id="sql_commit" method="post">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    {% for field in sql %}
+                        <div class="form-group">
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+{#                    {% for line in list %}#}
+                        {% if line.application_status == 1 or line.application_status == 0 %}
+                            {% if line.appliant == request.user  and line.application_type == 3 %}
+                                <button type="submit" class="btn btn-primary"> 提交</button>
+                                <script language="JavaScript">
+                                    $("#sqlform").removeAttr("readonly");
+                                </script>
+                            {% else %}
+                                <script language="JavaScript">
+                                $("#sqlform").attr("readonly", "readonly");
+                                </script>
+                            {% endif %}
+                        {% else %}
+                            <script language="JavaScript">
+                                $("#sqlform").attr("readonly", "readonly");
+                            </script>
+                        {% endif %}
+{#                    {% endfor %}#}
+                </div>
+            </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="z-index: 2041; width: 60%">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">执行报告</h4>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="form-group">
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+{#                    {% for line in list %}#}
+                        {% if line.execute_result %}
+                            <script language="JavaScript">
+                                $("#debriefing").attr("readonly", "readonly");
+                            </script>
+                        {% else %}
+                            <button type="submit" class="btn btn-primary"> 提交</button>
+                        {% endif %}
+{#                    {% endfor %}#}
+                </div>
+            </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+{% endblock %}
+{% block ext_script_add %}
+    <!-- Detail-->
+    <script src="{% static 'js/aukeyops/detail.js' %}"></script>
+    <script src="{% static 'js/postbird-img-glass.min.js' %}"></script>
+    <script>
+    PostbirdImgGlass.init({
+        domSelector:"img",
+        animation:true
+    });
+    </script>
+    <script>
+        $("#flow").css("display","block");
+        $("#database_release_flow").addClass('current-page');
+        function send_comment(){
+            $("#comment_form").val($("#editor").html());
+            document.forms[0].submit()
+        }
+        $(".ystep1").loadStep({
+            //ystep的外观大小
+            //可选值：small,large
+            size: "small",
+            //ystep配色方案
+            //可选值：green,blue
+            color: "green",
+            //ystep中包含的步骤
+            steps: [{
+                //步骤名称
+                title: "申请",
+                //步骤内容(鼠标移动到本步骤节点时，会提示该内容)
+                content: "申请发布"
+            }, {
+                title: "项目经理审批",
+                content: "等待测试审批"
+            }, {
+                title: "运维DBA审批",
+                content: "等待项目经理审批"
+            }, {
+                title: "审批完成",
+                content: "审批完成"
+            }, {
+                title: "待执行",
+                content: "执行确认中"
+            }, {
+                title: "执行中",
+                content: "后台执行中"
+            }, {
+                title: "已执行",
+                content: "执行完成"
+            }]
+        });
+        {% if line.application_status == 1 %}
+            $(".ystep1").setStep(2);
+        {% elif line.application_status == 2 %}
+            $(".ystep1").setStep(3);
+        {% elif line.application_status == 3 %}
+            $(".ystep1").setStep(5);
+        {% elif line.application_status == 4 %}
+            $(".ystep1").setStep(7);
+        {% elif line.application_status == 5 %}
+            $(".ystep1").setStep(6);
+        {% endif %}
+    </script>
+    <script>
+
+        var editor = CodeMirror.fromTextArea( document.getElementById("sqlform"), {
+            {#lineNumbers: true,     // 显示行数#}
+            indentUnit: 4,         // 缩进单位为4
+            styleActiveLine: true, // 当前行背景高亮
+            matchBrackets: true,   // 括号匹配
+            mode: 'text/x-mysql',     // SQL模式
+            lineWrapping: true,    // 自动换行
+            theme: 'neat',      // 使用 neat 模版
+            autoRefresh: true,
+            {#foldGutter: true, //代码折叠#}
+            {#gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],#}
+            {#extraKeys:{"Ctrl-Space":"autocomplete"} //ctrl-space唤起智能提示#}
+        });
+        editor.setOption("extraKeys", {
+            "Ctrl-Space":"autocomplete",
+            // Tab键换成4个空格
+            Tab: function (cm) {
+                var spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+                cm.replaceSelection(spaces);
+            },
+            // F11键切换全屏
+            "F11": function (cm) {
+                cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+            },
+            // Esc键退出全屏
+            "Esc": function (cm) {
+                if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
+            }
+        });
+
+        $("sql_commit").on('submit', function (e) {
+            editor.save();
+            // 或者获取数据
+            // var data = editor.getValue();
+        });
+    </script>
+{% endblock %}

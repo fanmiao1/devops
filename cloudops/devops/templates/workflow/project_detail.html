@@ -1,0 +1,293 @@
+{% extends 'detail.html' %}
+{% load staticfiles %}
+{% block page_title %}项目管理{% endblock %}
+{% block table_title %}详情{% endblock %}
+{% block detial_title %}项目详情{% endblock %}
+{% block detail_info %}
+    <table class="table">
+      <tbody>
+      {% for line in list %}
+        <tr>
+          <th style="width:20%">申请人:</th>
+          <td>
+            {% if line.applicant.last_name or line.applicant.first_name %}
+                {{ line.applicant.last_name }}{{ line.applicant.first_name }}
+            {% else %}
+                {{ line.applicant }}
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>项目名:</th>
+          <td>{{ line.project }}</td>
+        </tr>
+        <tr>
+          <th>项目名(Code):</th>
+          <td>{{ line.project_english }}</td>
+        </tr>
+        {% if line.have_parent_project == 1 %}
+        <tr>
+          <th>父项目:</th>
+          <td>
+            「{{ line.parent_project }}」
+          </td>
+        </tr>
+        {% endif %}
+        <tr>
+          <th>来源:</th>
+          <td>{{ line.get_source_display}}</td>
+        </tr>
+      {% endfor %}
+        <tr>
+            <th>项目经理:</th>
+            <td>{% for pm in po_manager %}{{ pm }} ，{% endfor %}</td>
+        </tr>
+        <tr>
+          <th>产品经理:</th>
+          <td>{% for line in po_product_manager %}{{ line }} ，{% endfor %}</td>
+        </tr>
+        <tr>
+          <th>开发人员:</th>
+          <td>{% for line in po_development %}{{ line }} ，{% endfor %}</td>
+        </tr>
+        <tr>
+          <th>测试人员:</th>
+          <td>{% for line in po_test %}{{ line }} ，{% endfor %}</td>
+        </tr>
+        <tr>
+          <th>运维人员:</th>
+          <td>{% for line in po_operations %}{{ line }} ，{% endfor %}</td>
+        </tr>
+        {% for line in list %}
+        <tr>
+          <th>项目描述:</th>
+          <td style="word-break: break-all;"><div id="desc_maxlenght">{% autoescape off %}{{ line.describe }}{% endautoescape %}</div></td>
+        </tr>
+        <tr>
+          <th>状态:</th>
+          <td>
+              {% if line.get_status_display == '执行中' %}
+                <span class="btn btn-xs" style="background:#5CB85C;color:#FFFFFF;">{{ line.get_status_display }}</span>
+                {% elif line.get_status_display == '未审批' %}
+                <span class="btn btn-xs" style="background:#5bc0de;color:#FFFFFF;">{{ line.get_status_display }}</span>
+                {% elif line.get_status_display == '不通过' %}
+                <span class="btn btn-xs" style="background:#ff4850;color:#FFFFFF;">{{ line.get_status_display }}</span>
+                {% elif line.get_status_display == "项目经理审批通过" or line.get_status_display == "CTO审批通过" or line.get_status_display == "采购审批通过" or line.get_status_display == "财务审批通过" %}
+                <span class="btn btn-xs" style="background:#428BCA;color:#FFFFFF;">{{ line.get_status_display }}</span>
+                {% else %}
+                <span>{{ line.get_status_display }}</span>
+              {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>申请时间:</th>
+          <td>{{ line.applicationtime | date:"Y-m-d H:i:s" }}</td>
+        </tr>
+        <tr>
+          <th>审批完成时间:</th>
+          <td>{{ line.approvaltime | date:"Y-m-d H:i:s" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+{% endblock %}
+{% block ystep %}
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        {% for line in list %}
+        {% if line.status != 0 %}
+        <div class="x_panel">
+          <div class="x_title">
+              <h2>流程</h2>
+            <ul class="nav navbar-right panel_toolbox">
+              <!-- <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li>
+              <li><a class="close-link"><i class="fa fa-close"></i></a>
+              </li> -->
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <div class="ystep1"></div>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        <!-- 审批按钮 -->
+        <div class="approval">
+            {% for line in list %}
+            {% if line.status == 1 %}
+            <a href="/flow/project_manage/project_manager_approval/{{ line.id }}_2" style="color: inherit">
+                <button type="button" class="btn btn-success">项目经理审批通过 </button>
+            </a>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModal">驳回 </button>
+            {% elif line.status == 2 %}
+            <a href="/flow/project_manage/cto_approval/{{ line.id }}_{% if line.source == 0 %}3{% elif line.source == 1 %}9{% endif %}" style="color: inherit"> <button type="button" class="btn btn-success">CTO审批通过 </button></a>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModal">驳回 </button>
+            {% elif line.status == 3 %}
+            <a href="/flow/project_manage/purchase_approval/{{ line.id }}_4" style="color: inherit"> <button type="button" class="btn btn-success">采购审批通过 </button></a>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModal">驳回 </button>
+            {% elif line.status == 4 %}
+            <a href="/flow/project_manage/finance_approval/{{ line.id }}_9" style="color: inherit"> <button type="button" class="btn btn-success">财务审批通过 </button></a>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModal">驳回 </button>
+            {% endif %}
+            {% endfor %}
+            <a href="{% url 'project_manage' %}">
+                <button type="button" class="btn btn-default">
+                     返回
+                </button>
+            </a>
+        </div>
+        <!-- ./approval -->
+    </div>
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="myModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width: 900px;z-index:2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel">驳回意见</h4>
+                </div>
+                {% for line in list %}
+                {% if line.status == 1 %}
+                <form method="get" action="/flow/project_manage/project_manager_approval/{{ line.id }}_0">
+                {% elif line.status == 2 %}
+                <form method="get" action="/flow/project_manage/cto_approval/{{ line.id }}_0">
+                {% elif line.status == 3 %}
+                <form method="get" action="/flow/project_manage/purchase_approval/{{ line.id }}_0">
+                {% elif line.status == 4 %}
+                <form method="get" action="/flow/project_manage/finance_approval/{{ line.id }}_0">
+                {% endif %}
+                {% endfor %}
+                {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <textarea class="form-control" id="reject_comment" name="reject_comment"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        <button name="submit" type="submit" class="btn btn-primary"> 提交 </button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div><!-- 模态框 -->
+
+{% endblock %}
+{% block ext_script_add %}
+    <!-- Detail-->
+    <script src="{% static 'js/aukeyops/detail.js' %}"></script>
+    <script src="{% static 'js/postbird-img-glass.min.js' %}"></script>
+    <script>
+    PostbirdImgGlass.init({
+        domSelector:"img",
+        animation:true
+    });
+    </script>
+    <script>
+        $("#flow").css("display","block");
+        $("#project_manage").addClass('current-page');
+        function send_comment(){
+            $("#comment_form").val($("#editor").html());
+        }
+        $(".ystep1").loadStep({
+            //ystep的外观大小
+            //可选值：small,large
+            size: "small",
+            //ystep配色方案
+            //可选值：green,blue
+            color: "green",
+            //ystep中包含的步骤
+            {% for line in list %}
+            steps: [{
+                //步骤名称
+                title: "申请",
+                //步骤内容(鼠标移动到本步骤节点时，会提示该内容)
+                content: "申请新建项目"
+            },{
+                title: "项目经理审批",
+                content: "等待项目审批"
+            },{
+                title: "CTO审批",
+                content: "项目审批完成"
+            },
+            {% if line.source == 0 %}
+            {
+                title: "采购审批",
+                content: "项目审批完成"
+            },{
+                title: "财务审批",
+                content: "项目审批完成"
+            },
+            {% endif %}
+            {
+                title: "审批完成",
+                content: "项目审批完成"
+            },{
+                title: "执行中",
+                content: "项目执行中"
+            },{
+                title: "结项",
+                content: "项目完成"
+            }]
+        });
+
+            //跳转到指定步骤
+            {% if line.source == 1 %}
+                {% if line.status == 1 %}
+                    $(".ystep1").setStep(2);
+                {% elif line.status == 2 %}
+                    $(".ystep1").setStep(3);
+                {% elif line.status == 3 %}
+                    $(".ystep1").setStep(5);
+                {% elif line.status == 9 %}
+                    $(".ystep1").setStep(5);
+                {% endif %}
+            {% endif %}
+            {% if line.source == 0 %}
+                {% if line.status == 1 %}
+                    $(".ystep1").setStep(2);
+                {% elif line.status == 2 %}
+                    $(".ystep1").setStep(3);
+                {% elif line.status == 3 %}
+                    $(".ystep1").setStep(4);
+                {% elif line.status == 4 %}
+                    $(".ystep1").setStep(5);
+                {% elif line.status == 5 %}
+                    $(".ystep1").setStep(7);
+                {% elif line.status == 9 %}
+                    $(".ystep1").setStep(7);
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        function DeleteComment(ID){
+            $.confirm({
+                title: '确定要删除这条记录吗？',
+                closeIcon: true,
+                confirmButtonClass:'btn-danger',
+                cancelButtonClass: 'btn-default ',
+                confirmButton: '删除!',
+                cancelButton: '取消',
+                confirm: function(){
+                    $.ajax({
+                        type: "get",
+                        url: "/flow/project_manage/project_details/delete_comment/"+ ID,
+                        dataType: "json",
+                        success: function(result) {
+                            if(result['result'] == 'true'){
+                                location.reload();
+                            }else{
+                                new PNotify({
+                                  title: 'ERROR',
+                                  text: '您没有权限删除这条记录!',
+                                  type: 'error',
+                                  styling: 'bootstrap3'
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends 'table.html' %}
+{% block page_title %}业务用户管理{% endblock %}
+{% block table_title %}列表{% endblock %}
+{% block ext_button %}
+    <div id="toolbar" class="btn-group pull-right" style="margin-bottom: 10px;">
+        <a href="{% url 'project_user_add' %}" style="color: #333333">
+            <button id="btn_add" type="button" class="btn btn-default" style="float: right">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 新增
+            </button>
+        </a>
+    </div>
+{% endblock %}
+{% block table %}
+    <script type="text/javascript">
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "post",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:'{% url "user_manage" %}',
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                dataField: "rows",
+                pagination: true, //启动分页
+                sortable: true,  //启用排序
+                pageSize: 15,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+                search: true,  //是否启用查询
+                searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+                searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+                showColumns: true,  //显示下拉框勾选要显示的列
+                showRefresh: true,  //显示刷新按钮
+                showSearchButton: false, //显示搜索按钮
+                showExport: true,//显示导出按钮
+                exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                sidePagination: "server", //表示服务端请求
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined",
+                clickToSelect: true,//是否启用点击选中行
+                toolbarAlign:'right',//工具栏对齐方式
+                buttonsAlign:'left',//按钮对齐方式
+                columns:[
+                    // {
+                    //     title:'全选',
+                    //     field:'select',
+                    //     //复选框#}
+                    //     checkbox:true,
+                    //     width:25,
+                    //     align:'center',
+                    //     valign:'middle'
+                    // },
+                    {
+                        title:'ID',
+                        field:'id',
+                        sortable:false
+                    },
+                    {
+                        title:'用户名',
+                        field:'user_name',
+                        sortable:true
+                    },
+                    {
+                        title:'名字',
+                        field:'name',
+                        sortable:true
+                    },
+                    {
+                        title:'Email',
+                        field:'email',
+                        sortable:true
+                    },
+                    {
+                        title:'所属项目',
+                        field:'project_name',
+                        sortable:false
+                    },
+                    {
+                        title:'状态',
+                        field:'is_active',
+                        sortable:true,
+                        formatter :function(value,row,index) {
+                            if(value == "启用") {
+                                var a = '<span class="btn btn-xs" style="background:#5CB85C;color:#FFFFFF;">'+value+'</span>';
+                            }else if(value == "禁用") {
+                                var a = '<span class="btn btn-xs" style="background:#ff4850;color:#FFFFFF;">'+value+'</span>';
+                            }else{
+                                var a = '<span>'+value+'</span>';
+                            }
+                            return a;
+                        }
+                    },
+                    {
+                        title:'操作',
+                        field:'id',
+                        align:'center',
+                        //列数据格式化
+                        //formatter:operateFormatter
+                        formatter:function(value,row,gitflow){
+                            var w = '<a href="/usercenter/user_manage/user_detail/'+ row.id +'"><button type="button" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 查看详情</button></a> ';
+                            var e = '<a href="/usercenter/user_manage/modify/'+ row.id +'/"><button type="button" class="btn btn-warning btn-xs"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> 编辑</button></a> ';
+                            if (row.is_active=='启用'){
+                                var d = '<button type="button" id="btn_submit1" class="btn btn-danger btn-xs" onclick="return Delete('+row.id+',0)"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> 禁用</button> ';
+                            }else if (row.is_active=='禁用'){
+                                var d = '<button type="button" id="btn_submit1" class="btn btn-success btn-xs" onclick="return Delete('+row.id+',1)"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 启用</button> ';
+                            }
+                            return w+e+d;
+                        }
+                    }
+                ],
+                queryParams: function queryParams(params) {   //设置查询参数
+                    var param = {
+                        //加上csrf
+                        csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                        pageNumber: params.pageNumber,
+                        pageSize: params.pageSize,
+                        search:params.searchText,
+                        order:params.sortOrder,
+                        sort:params.sortName
+                    };
+                    return param;
+                },
+
+            });
+        }
+        $(document).ready(function () {
+            //调用函数，初始化表格
+            initTable();
+
+            //当点击查询按钮的时候执行
+            $("#search").bind("click", initTable);
+        });
+        function Delete(ID,STATUS){
+            $.confirm({
+                title: '提示！',
+                content: '确定要修改用户ID为'+ID+'的用户状态吗？',
+                closeIcon: true,
+                confirmButtonClass:'btn-danger',
+                cancelButtonClass: 'btn-default ',
+                confirmButton: '确定!',
+                cancelButton: '取消',
+                confirm: function(){
+                    $.ajax({
+                        type: "get",
+                        url: "/usercenter/user_manage/user_is_active/"+ ID + "_" + STATUS,
+                        dataType: "json",
+                        success: function(result) {
+                            if(result['result'] == 'true'){
+                                        new PNotify({
+                                          title: 'SUCCESS',
+                                          text: '修改ID为'+ result['project_user_id'] +'的用户状态成功!',
+                                          type: 'success',
+                                          styling: 'bootstrap3'
+                                        });
+                                // 刷新表格
+                                $('#table').bootstrapTable("refresh");
+                            }else{
+                                new PNotify({
+                                  title: 'ERROR',
+                                  text: '删除失败!',
+                                  type: 'error',
+                                  styling: 'bootstrap3'
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+{% endblock %}
+{% block ext_script %}{% endblock %}

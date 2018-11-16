@@ -1,0 +1,558 @@
+{% extends 'main.html' %}
+{% load staticfiles %}
+{% block page_title %}{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_before %}
+    <link rel="stylesheet" href="{% static 'ztree/css/metroStyle/metroStyle.css' %}" type="text/css">
+    <link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/prism.css' %}" rel="stylesheet" type="text/css" />
+    <style>
+        .complete{
+            color: #090;
+        }
+        .red{
+            color: red;
+        }
+        .error_input{
+            border-color: #a94442;
+        }
+        .error_alert{
+            color: #a94442;
+            display: block;
+            margin-top: 5px;
+            margin-bottom: 10px;
+        }
+        #detail_row .header_title .header_title_span {
+            font-size: 13px;
+            color: #495060;
+            margin-left: 10px;
+        }
+        .x_title {
+            margin-bottom: 0;
+        }
+        .exec_input {
+            border-bottom: 0;
+        }
+        .x_title span {
+            color: #333;
+        }
+        .modal-content{
+            border-radius:0;
+        }
+        #select_server_type_id .active {
+            background: #2d8cf0;
+            color: #333;
+        }
+        pre {
+            outline: 1px solid #ccc; 
+            padding: 5px; margin: 5px; 
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }  
+        .string { color: green; }  
+        .number { color: darkorange; }  
+        .boolean { color: blue; }  
+        .null { color: magenta; }  
+        .key { color: red; } 
+    </style>
+{% endblock %}
+{% block right_col %}
+<div class="page-title">
+  <div class="title_left" style="margin-bottom: 10px;">
+    <h3></h3>
+  </div>
+</div>
+<div class="clearfix"></div>
+<div class="row" id="detail_row">
+    <div class="col-md-12 col-sm-12 col-xs-12" id="table_row_id">
+        <div class="x_panel">
+            <div class="x_title exec_input">
+                <div class="col-md-12 col-sm-12 col-xs-12" style="padding-left: 0; padding-bottom: 5px;">
+                    <div class="ivu-spin ivu-spin-fix" id="executiong_id" style="display: none;">
+                        <div class="ivu-spin-main">
+                            <span class="ivu-spin-dot"></span>
+                            <div class="ivu-spin-text"></div>
+                            <div>执行中</div>
+                        </div>
+                    </div>
+                    <form class="form-horizontal" id="execFormId">
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <div class="col-md-6 col-sm-6 col-xs-12" style="min-width: 241px;">
+                                <input id="server_id" hidden="hidden" name="server_id">
+                                <div class="col-md-2"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">实例</label></div>
+                                <div class="col-md-10"><input class="ivu-input" type="text" name="s_server" id="server_name" data-toggle="modal" data-target="#serverChangeModal" readonly="readonly" style="cursor: pointer;" placeholder="点击选择实例"></div>
+                            </div>
+                            <div class="col-md-6 col-sm-6 col-xs-12" style="min-width: 241px;">
+                                <div class="col-md-2"><label class="ivu-form-item-label pull-left" style="line-height: 34px;color:#333;">模块</label></div>
+                                <div class="col-md-10">
+                                    <select class="selectpicker show-tick form-control" id="model_id" name="model"></select>
+                                </div>
+                            </div>
+                            <div class="col-md-12 col-sm-12 col-xs-12" style="min-width: 241px;">
+                                <div class="col-md-1"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">参数</label></div>
+                                <div class="col-md-11"><textarea class="ivu-input" type="text" name="param"></textarea></div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-2 col-xs-12" style="min-width: 200px;">
+                            <button type="button" id="exec_btn" class="ivu-btn ivu-btn-primary" onclick="exec()">
+                                <i class="ivu-icon ivu-icon-ios-play-outline" style="font-size:14px;"></i> 执行 </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="x_content">
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="row">
+                            <table id="table" class="table"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 组织结构模态框 -->
+<div class="modal fade" id="serverChangeModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="z-index: 2041;">
+        <div class="ivu-spin ivu-spin-fix" id="server_catch_id">
+            <div class="ivu-spin-main">
+                <span class="ivu-spin-dot"></span>
+                <div class="ivu-spin-text"></div>
+                <div>实例抓取中</div>
+            </div>
+        </div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">选择实例或实例组</h4>
+            </div>
+            <form id="select_server_form_id" action="#" class="form-horizontal form-label-left">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="btn-group" data-toggle="buttons" id="select_server_type_id">
+                                <label class="btn btn-default ivu-btn-ghost active" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default"><input type="radio" name="server" value="server" onchange="sTChange()"> &ensp;实 例&ensp; </label>
+                                <label class="btn btn-primary ivu-btn-ghost" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default"><input type="radio" name="server" value="group" onchange="sTChange()">实例组</label>
+                            </div>
+                        </div>
+                    </div> 
+                    <div class="clearfix" style="height: 5px;border-bottom: 1px #D7DEE5 solid;margin-bottom: 5px;"></div>
+                    <div class="form-group">
+                        <div class="col-md-12 col-sm-12 col-xs-12" id="app_p_div"></div>
+                        <ul id="treeDemo" class="ztree" style="display: none"></ul>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" onclick="finChange()">
+                    <span class="ladda-label"> 确认 </span>
+                </button>
+                <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+<!-- /.组织结构模态框结束 -->
+{% endblock %}
+{% block ext_script %}
+    <script src="{%static 'js/aukeyops/searchTable.js' %}"></script>
+    <script src="{%static 'js/aukeyops/currency.js' %}"></script>
+    <script src="{%static 'js/prism.js' %}"></script>
+    <script src="{% static 'ztree/js/jquery.ztree.core.js' %}"></script>
+    <script src="{% static 'vuejs/vue.min.js' %}"></script>
+    <script src="{% static 'vuejs/iview.min.js' %}"></script>
+    <script type="text/javascript">
+        var change_server_list;
+        $(".selectpicker").selectpicker({
+            noneSelectedText : ' -- 选择模块 -- '//默认显示内容
+        });
+
+        $('#serverChangeModal').on('show.bs.modal', function () {
+            $('server_id').val('');
+            $('#server_catch_id').show();
+            var a_html  = '<div id="app"><transfer :data="data1"'+
+                ':target-keys="targetKeys1"'+
+                ':list-style="listStyle"'+
+                'filterable="" '+
+                ':render-format="render1"'+
+                ':operations="[\'移出\',\'移入\']"'+
+                'not-found-text=""'+
+                '@on-change="handleChange1"></transfer>'+
+            '</div>';
+            $('#app_p_div').html(a_html);
+            var mockData = [];
+            var TargetKeys = [];
+            TargetKeys = eval("["+$('#server_id').val()+"]")
+            var Main = {
+                data () {
+                    return {
+                        data1: mockData,
+                        targetKeys1: TargetKeys,
+                        listStyle: {
+                        width: '40%',
+                        height: '300px'
+                    }
+                    }
+                },
+                methods: {
+                    render1 (item) {
+                        return item.label;
+                    },
+                    handleChange1 (newTargetKeys, direction, moveKeys) {
+                        change_server_list = newTargetKeys;
+                        this.targetKeys1 = newTargetKeys;
+                    }
+                }
+            };
+            var Component = Vue.extend(Main);
+            new Component().$mount('#app');
+            var ip = '';
+            $.ajax({
+                url: '/opscenter/server/all/list/',
+                type: 'get',
+                success: function (result) {
+                    for (i in result) {
+                        if (result[i]['public_ip']){
+                            ip = '(' + result[i]['public_ip'] + ')';
+                        }else if((result[i]['inner_ip'])){
+                            ip = '(' + result[i]['inner_ip'] + ')';
+                        }
+                        mockData.push({
+                            key: result[i]['id'],
+                            label: result[i]['name'] + ip ,
+                            description: result[i]['name'],
+                            disabled: false
+                        });
+                    }
+                    $('#server_catch_id').hide()
+                }
+            });
+        });
+
+        function tranServerGroup() {
+            var nodes = [{'id':0, 'parent_id':0, 'name': "实例分组", 'open': 'true'}];
+            $.ajax({
+                url: '/opscenter/server_group/list/',
+                type: 'get',
+                async: false,
+                success: function (result) {
+                    nodes = nodes.concat(result);
+                }
+            });
+            var setting = {
+                data: {
+                    simpleData: {
+                        enable: true,
+                        idKey: "id",
+                        pIdKey: "parent_id",
+                        rootPId: 0
+                    }
+                },
+                check: {
+                    enable: true
+                },
+                callback: {
+                    onClick: zTreeOnClick
+                }
+            };
+            zTreeObj = $.fn.zTree.init($("#treeDemo"), setting, nodes);
+            function zTreeOnClick(event, treeId, treeNode){
+                $("#org_search_input_id").val(treeNode.name);
+                if (treeNode.id > 0) {
+                    $.ajax({
+                        url: '/opscenter/server_group/detail/'+treeNode.id+'/',
+                        type: 'get',
+                        async: false,
+                        success: function (result) {
+                            if (result['server']) {
+                                change_server_list = eval("["+result['server']+"]")
+                            }
+                        },
+                        error: function (result) {
+                            MyMessage(0, result['responseText']);
+                        }
+                    })
+                } else {
+                    change_server_list = [];
+                }
+            }
+        }
+
+        function sTChange() {
+            var sel = $("#select_server_type_id input[name='server']:checked").val();
+            if (sel == 'group') {
+                $('#app_p_div').hide();
+                tranServerGroup()
+                $('#treeDemo').show();
+            } else {
+                $('#treeDemo').hide();
+                $('#app_p_div').show();
+            }
+        }
+
+        function getModule() {
+            $.ajax({
+                url: '/opscenter/get_ansible_module',
+                type: 'get',
+                success: function(result) {
+                    $('#model_id.selectpicker').append('<option value=""></option>');
+                    for (i in result['module_list']) {
+                        $('#model_id.selectpicker').append('<option value=' + result['module_list'][i] + '>' + result['module_list'][i] + '</option>');
+                    }
+                    $('#model_id').selectpicker('refresh');
+                }
+            })
+        }
+
+        function finChange() {
+            var server_id_value = [];
+            if (change_server_list) {
+                if (change_server_list.length > 0) {
+                    $('#server_id').val(change_server_list.join(','));
+                    $.ajax({
+                        url: '/opscenter/server/all/list/?id__in='+change_server_list.join(','),
+                        type: 'get',
+                        success: function (result) {
+                            for (i in result) {
+                                server_id_value.push(result[i]['name']);
+                            }
+                            $('#server_name').val(server_id_value.join('，'));
+                        },
+                        error: function (result) {
+                            MyMessage(0, result['responseText']);
+                        }
+                    })
+                } else {
+                    $('#server_name').val('');
+                    $('#server_id').val('');
+                }
+            } else {
+                $('#server_name').val('');
+                $('#server_id').val('');
+            }
+            $('#serverChangeModal').modal('hide');
+        }
+
+        function exec () {
+            $('#executiong_id').show();
+            $.ajax({
+                url: '/opscenter/ansible_exec',
+                data: $('#execFormId').serializeArray(),
+                type: 'post',
+                dataType: 'json',
+                success: function (result) {
+                    if (result['code'] == 1) {
+                        MyMessage(1, result['result']);
+                        $('#table').bootstrapTable("refresh");
+                    } else {
+                        MyMessage(0, result['result']);
+                    }
+                    $('#executiong_id').hide();
+                },
+                error: function (result) {
+                    MyMessage(0, result['responseText']);
+                    $('#executiong_id').hide();
+                }
+            })
+        }
+
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "get",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:'/opscenter/ansible_task/list/',
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                minimumCountColumns: 1,
+                dataField: "results",
+                pagination: true, //启动分页
+                sortable: true,  //启用排序
+                pageSize: 15,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+                search: false,  //是否启用查询
+                searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+                searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+                showColumns: false,  //显示下拉框勾选要显示的列
+                showRefresh: false,  //显示刷新按钮
+                showSearchButton: false, //显示搜索按钮
+                showExport: false,//显示导出按钮
+                exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                sidePagination: "server", //分页方式：client客户端分页，server服务端分页（*）
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined", //设置为 'limit' 则会发送符合 RESTFul 格式的参数
+                clickToSelect: true,//是否启用点击选中行
+                singleSelect:true, // 设置 true 将禁止多选
+                checkboxHeader:false, //设置 false 将在列头隐藏全选复选框
+                toolbarAlign:'left',//工具栏对齐方式
+                buttonsAlign:'right',//按钮对齐方式
+                undefinedText: '', //当数据为 undefined 时显示的字符
+                detailView:true,
+                responseHandler: function (res) {
+                    res['total'] = res['count'];
+                    return res
+                },
+                columns:[
+                    {
+                        title:'ID',
+                        field:'id',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'实例',
+                        field:'server_name',
+                        sortable:true,
+                        align:'center',
+                        formatter: function(value, row) {
+                            var h = '';
+                            if (value) {
+                                h = '<span title='+value+'>'+value.substring(0,20)+'</span>'
+                                if (value.length > 20) {
+                                    h += '...'
+                                }
+                            }
+                            return h
+                        }
+                    },
+                    {
+                        title:'模块',
+                        field:'module',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'参数',
+                        field:'parameter',
+                        align:'center',
+                        sortable:true,
+                        formatter:function(value){
+                            var h = '';
+                            if (value) {
+                                h = '<span title='+value+'>'+value.substring(0,20)+'</span>'
+                                if (value.length > 20) {
+                                    h += '...'
+                                }
+                            }
+                            return h
+                        }
+                    },
+                    {
+                        title:'操作人',
+                        field:'operator',
+                        align:'center',
+                        sortable:true,
+                        formatter:function(value,row){
+                            if (row.operator.last_name || row.operator.first_name) {
+                                name = row.operator.last_name + row.operator.first_name
+                            } else {
+                                name = row.operator.username
+                            }
+                            return name
+                        }
+                    },
+                    {
+                        title:'创建时间',
+                        field:'create_time',
+                        align:'center',
+                        sortable:true,
+                        formatter:function(value,row){
+                            var d = '';
+                            if (value) {
+                                d =  new Date(value).toLocaleString();
+                            }
+                            return d
+                        }
+                    },
+                    {
+                        title:'执行时间',
+                        field:'exec_time',
+                        align:'center',
+                        sortable:true,
+                        formatter:function(value,row){
+                            var d = '';
+                            if (value) {
+                                d =  new Date(value).toLocaleString();
+                            }
+                            return d
+                        }
+                    },
+                    {
+                        title:'完成时间',
+                        field:'complete_time',
+                        align:'center',
+                        sortable:true,
+                        formatter:function(value,row){
+                            var d = '';
+                            if (value) {
+                                d =  new Date(value).toLocaleString();
+                            }
+                            return d
+                        }
+                    },
+                    {
+                        title:'状态',
+                        field:'status',
+                        align:'center',
+                        sortable:true,
+                        formatter:function(value) {
+                            var color = '';
+                            var loadding = '';
+                            if (value == '完成') {
+                                color = 'complete';
+                                loadding = '<img src="{%static 'images/accept.png' %}"> '
+                            } else if (value == '执行中') {
+                                color = 'red';
+                                loadding = '<img src="{%static 'images/loadding-n.gif' %}"> '
+                            } else if (value == '队列中') {
+                                loadding = '<img src="{%static 'images/queue-n.gif' %}" style="width: 16px"> '
+                            }
+                            res = '<a class="detail-icon" href="#"><span class="'+color+'">'+loadding+value+'</span></a>';
+                            return res
+                        }
+                    }
+                ],
+                queryParams: function queryParams(params) {   //设置查询参数
+                    if (params.sortOrder == 'desc') {
+                        params.sortName = '-'+params.sortName
+                    }
+                    var param = {
+                        page: params.pageNumber,
+                        size: params.pageSize,
+                        ordering:params.sortName
+                    };
+                    return param;
+                },
+                detailFormatter:function (index, row) {
+                    var detail_res;
+                    $.ajax({
+                        url: '/opscenter/ansible_task/detail/'+row.id+'/',
+                        type: 'get',
+                        async: false,
+                        success: function (result) {
+                            try {
+                                var s = eval("["+result['result']+"]")[0];
+                                detail_res = '<pre>'+JsonFormat(s)+'</pre>'
+                            } catch (err) {
+                                detail_res = result['result']
+                            }
+                        },
+                        error: function (result) {
+                            detail_res = "访问失败：" + result['responseText'];
+                        }
+                    });
+                    return detail_res
+                }
+            });
+        }
+
+        $(document).ready(function(){
+            initTable();
+            getModule();
+        });
+    </script>
+{% endblock %}

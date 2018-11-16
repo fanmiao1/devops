@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load staticfiles %}
+<head>
+	<meta charset="utf-8">
+    {% for line in list %}
+	<title> 业务用户详情 - AUKEY </title>
+    {% endfor %}
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+    <!-- Jquery JS -->
+    <script src="{%static 'js/jquery-3.0.0.min.js' %}"></script>
+
+    <!-- details -->
+    <link href="{% static 'css/details.css' %}" rel="stylesheet">
+
+    <!-- main -->
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Bootstrap-table CSS -->
+    <link href="{%static 'bootstrap/css/bootstrap-table.css' %}" rel="stylesheet" type="text/css">
+
+    <!-- Font Awesome -->
+    <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet">
+
+    <!-- ionicons -->
+    <link href="{% static 'css/ionicons.min.css' %}" rel="stylesheet">
+
+    <!-- Morris -->
+    <link href="{% static 'css/morris.css' %}" rel="stylesheet" />
+
+    <!-- Datepicker -->
+    <link href="{% static 'css/datepicker.css' %}" rel="stylesheet" />
+
+    <!-- Animate -->
+    <link href="{% static 'css/animate.min.css' %}" rel="stylesheet">
+
+    <!-- Owl Carousel -->
+    <link href="{% static 'css/owl.carousel.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/owl.theme.default.min.css' %}" rel="stylesheet">
+
+    <!-- Simplify -->
+    <link href="{% static 'css/simplify.min.css' %}" rel="stylesheet">
+
+    <!-- 引入ystep样式 -->
+    <link href="{% static 'css/ystep.css' %}" rel="stylesheet">
+</head>
+
+<body class="overflow-hidden">
+	<div class="wrapper preload">
+		<!-- 右侧消息 -->
+        {% include 'right_message.html' %}
+
+        <!-- 头部 -->
+        {% include 'head.html' %}
+
+        <!-- 左侧导航栏 -->
+        {% include 'menu.html' %}
+
+		<div class="main-container ">
+			<!-- 面包屑 -->
+			<div class="padding-md">
+				<ul class="breadcrumb">
+					<li>
+						<span class="primary-font">
+							<i class="icon-home"></i>
+						</span>
+                        <a href="{% url 'index' %}">首页</a>
+					</li>
+                    <li><a href="{% url 'user_manage' %}">业务用户管理</a></li>
+                    <li>详情</li>
+				</ul>
+			</div>
+			<!-- ./padding-md -->
+            <!-- table-list -->
+            <div class="table-list">
+                <div class="ant-row title"><h5>详情</h5></div>
+                <div class="info-property">
+                    {% for line in list %}
+                    <dl>
+                        <dt>ID</dt>
+                        <dd>{{ line.id }}</dd>
+                    </dl>
+                    <dl>
+                        <dt>用户名</dt>
+                        <dd>{{ line.user_name }}</dd>
+                    </dl>
+                    <dl>
+                        <dt>名字</dt>
+                        <dd>{{ line.name}}</dd>
+                    </dl>
+                    <dl>
+                        <dt>Email</dt>
+                        <dd>{{ line.email}}</dd>
+                    </dl>
+                    <dl>
+                        <dt>项目</dt>
+                        <dd>{{ line.project }}</dd>
+                    </dl>
+                    {% endfor %}
+                    <dl>
+                        <dt>组</dt>
+                        <dd>{% for group_info in group_info %}【{{ group_info.group }}】, {% endfor %}</dd>
+                    </dl>
+                    <dl>
+                        <dt>角色</dt>
+                        <dd><div id="desc_maxlenght">{% for user_role_info in user_role_info %}【{{ user_role_info.authority_name }}】, {% endfor %}</div></dd>
+                    </dl>
+                    {% for line in list %}
+                    <dl>
+                        <dt>启用/禁用</dt>
+                        {% if line.get_is_active_display == '启用' %}
+                        <span class="btn btn-xs" style="background:#5CB85C;color:#FFFFFF;">{{ line.get_is_active_display }}</span>
+                        {% elif line.get_is_active_display == '禁用' %}
+                        <span class="btn btn-xs" style="background:#ff4850;color:#FFFFFF;">{{ line.get_is_active_display }}</span>
+                        {% else %}
+                        <span>{{ line.get_is_active_display }}</span>
+                        {% endif %}
+                    </dl>
+                    {% endfor %}
+                </div>
+                <br>
+                <div class="approval">
+                    <a href="{% url 'user_manage' %}"><button type="button" class="btn btn-default"> 返回 </button></a>
+                </div>
+            </div>
+            <!-- ./table-list -->
+            <!-- 日志信息 -->
+            {% include 'flow_logs.html' %}
+		</div>
+		<!-- /main-container -->
+
+		<!-- 底部 -->
+        {% include 'foot.html' %}
+	</div>
+	<!-- /wrapper -->
+
+	<a href="#" class="scroll-to-top hidden-print">
+		<i class="fa fa-chevron-up fa-lg"></i>
+	</a>
+
+	<!-- Delete Widget Confirmation -->
+{#	<div class="custom-popup delete-widget-popup delete-confirmation-popup" id="deleteWidgetConfirm">#}
+{#		<div class="popup-header text-center">#}
+{#			<span class="fa-stack fa-4x">#}
+{#				<i class="fa fa-circle fa-stack-2x"></i>#}
+{#				<i class="fa fa-lock fa-stack-1x fa-inverse"></i>#}
+{#			</span>#}
+{#		</div>#}
+{#		<div class="popup-body text-center">#}
+{#			<h5>Are you sure to delete this widget?</h5>#}
+{#			<strong class="block m-top-xs">#}
+{#				<i class="fa fa-exclamation-circle m-right-xs text-danger"></i>This action cannot be undone</strong>#}
+{##}
+{#			<div class="text-center m-top-lg">#}
+{#				<a class="btn btn-success m-right-sm remove-widget-btn">Delete</a>#}
+{#				<a class="btn btn-default deleteWidgetConfirm_close">Cancel</a>#}
+{#			</div>#}
+{#		</div>#}
+{#	</div>#}
+
+	<!-- Le javascript
+	    ================================================== -->
+	<!-- Placed at the end of the document so the pages load faster -->
+
+    <!-- 引入ystep插件 -->
+    <script src="{% static 'js/ystep.js' %}"></script>
+
+	<!-- Bootstrap -->
+	<script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+
+	<!-- Flot -->
+	<script src="{% static 'js/jquery.flot.min.js' %}"></script>
+
+	<!-- Slimscroll -->
+	<script src="{% static 'js/jquery.slimscroll.min.js' %}"></script>
+
+	<!-- Morris -->
+	<script src="{% static 'js/rapheal.min.js' %}"></script>
+	<script src="{% static 'js/morris.min.js' %}"></script>
+
+	<!-- Datepicker -->
+	<script src="{% static 'js/uncompressed/datepicker.js' %}"></script>
+
+	<!-- Sparkline -->
+	<script src="{% static 'js/sparkline.min.js' %}"></script>
+
+	<!-- Skycons -->
+	<script src="{% static 'js/uncompressed/skycons.js' %}"></script>
+
+	<!-- Popup Overlay -->
+	<script src="{% static 'js/jquery.popupoverlay.min.js' %}"></script>
+
+	<!-- Easy Pie Chart -->
+	<script src="{% static 'js/jquery.easypiechart.min.js' %}"></script>
+
+	<!-- Sortable -->
+	<script src="{% static 'js/uncompressed/jquery.sortable.js' %}"></script>
+
+	<!-- Owl Carousel -->
+	<script src="{% static 'js/owl.carousel.min.js' %}"></script>
+
+	<!-- Modernizr -->
+	<script src="{% static 'js/modernizr.min.js' %}"></script>
+
+	<!-- Simplify -->
+	<script src="{% static 'js/simplify/simplify.js' %}"></script>
+	<script src="{% static 'js/simplify/simplify_dashboard.js' %}"></script>
+
+    <!-- Detail-->
+    <script src="{% static 'js/aukeyops/detail.js' %}"></script>
+
+
+	<script>
+        $("#usercenter_menu").css("display","block");
+		$(function () {
+			$('.chart').easyPieChart({
+				easing: 'easeOutBounce',
+				size: '140',
+				lineWidth: '7',
+				barColor: '#7266ba',
+				onStep: function (from, to, percent) {
+					$(this.el).find('.percent').text(Math.round(percent));
+				}
+			});
+
+			$('.sortable-list').sortable();
+
+			$('.todo-checkbox').click(function () {
+
+				var _activeCheckbox = $(this).find('input[type="checkbox"]');
+
+				if (_activeCheckbox.is(':checked')) {
+					$(this).parent().addClass('selected');
+				} else {
+					$(this).parent().removeClass('selected');
+				}
+
+			});
+
+			//Delete Widget Confirmation
+			$('#deleteWidgetConfirm').popup({
+				vertical: 'top',
+				pagecontainer: '.container',
+				transition: 'all 0.3s'
+			});
+		});
+	</script>
+
+</body>
+
+</html>

@@ -1,0 +1,416 @@
+{% extends 'detail.html' %}
+{% load staticfiles %}
+{% block page_title %}项目变更{% endblock %}
+{% block table_title %}详情{% endblock %}
+{% block ext_css %}
+<style>
+    #file {
+    position: relative;
+    display: inline-block;
+    background: transparent;
+    border: 1px solid #CCCCCC;
+    border-radius: 4px;
+    padding: 1px 5px;
+    overflow: hidden;
+    color: #1E88C7;
+    text-decoration: none;
+    text-indent: 0;
+    line-height: 18px;
+
+}
+#file input {
+    position: absolute;
+    font-size: 100px;
+    right: 0;
+    top: 0;
+    opacity: 0;
+    cursor:pointer;
+}
+#file:hover {
+    background: #FFFFFF;
+    border-color: #CCCCCC;
+    color: #004974;
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+{% block detail_info %}
+    <table class="table">
+      <tbody>
+      {% for line in list %}
+        <tr>
+          <th style="width:20%">项目:</th>
+          <td>{{ line.project }}</td>
+        </tr>
+        <tr>
+            <th>项目经理:</th>
+            <td>{% for pm in project_manager %}{{ pm }} ，{% endfor %}</td>
+        </tr>
+        <tr>
+          <th>标题:</th>
+          <td>{{ line.title }}</td>
+        </tr>
+        <tr>
+          <th>发布内容:</th>
+          <td><div id="desc_maxlenght">{% autoescape off %}{{ line.describe }}{% endautoescape %}</div></td>
+        </tr>
+        <tr>
+          <th>版本号:</th>
+          <td>{{ line.version }}</td>
+        </tr>
+        <tr>
+          <th>优先级:</th>
+          <td>{{ line.get_priority_display }}</td>
+        </tr>
+        <tr>
+          <th>类型:</th>
+          <td>{{ type_name_list }}</td>
+        </tr>
+        <tr>
+          <th>申请人:</th>
+          <td>
+            {% if line.applicant.last_name or line.applicant.first_name %}
+                {{ line.applicant.last_name }}{{ line.applicant.first_name }}
+            {% else %}
+                {{ line.applicant }}
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>测试报告:</th>
+          <td>
+              <input type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#myModal" value="{{ remind }}">
+              {% if line.status == 1 %}
+                  <a href="javascript:FileUpload()" class="file btn btn-xs" id="file">上传附件<input type="file" name="file" id="file_upload" accept="application/msword"></a>
+              {% endif %}
+              {% if line.enclosure %}
+                <a href="/media/test_report_enclosure/{{ line.enclosure }}" download class="btn btn-link btn-xs">下载查看附件</a>
+              {% endif %}
+              <div id="progress_div_id" style="display: none">
+                  <span id="percentage"></span>
+                  <div class="progress progress_sm" style="width: 50%;">
+                      <div id="fileupdate_progressbar_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                  </div>
+              </div>
+          </td>
+        </tr>
+        <tr>
+          <th>申请时间:</th>
+          <td>{{ line.applicationtime | date:"Y-m-d H:i:s" }}</td>
+        </tr>
+        <tr>
+          <th>发布时间:</th>
+          <td>{{ line.release_time | date:"Y-m-d H:i:s" }}</td>
+        </tr>
+        <tr>
+          <th>状态:</th>
+          <td>
+            {% if line.get_status_display == '已发布' %}
+            <span class="btn btn-xs" style="background:#5CB85C;color:#FFFFFF;">{{ line.get_status_display }}</span>
+            {% elif line.get_status_display == '待审批' %}
+            <span class="btn btn-xs" style="background:#5bc0de;color:#FFFFFF;">{{ line.get_status_display }}</span>
+            {% elif line.get_status_display == '不通过' %}
+            <span class="btn btn-xs" style="background:#FF0000;color:#FFFFFF;">{{ line.get_status_display }}</span>
+            {% elif line.get_status_display == "待发布" or line.get_status_display == "测试审批通过" or line.get_status_display == "项目经理审批通过" %}
+            <span class="btn btn-xs" style="background:#428BCA;color:#FFFFFF;">{{ line.get_status_display }}</span>
+            {% else %}
+            <span>{{ line.get_status_display }}</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+{% endblock %}
+{% block ystep %}
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        {% for line in list %}
+        {% if line.status != 0 %}
+        <div class="x_panel">
+          <div class="x_title">
+              <h2>流程</h2>
+            <ul class="nav navbar-right panel_toolbox">
+             <!--  <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li>
+              <li><a class="close-link"><i class="fa fa-close"></i></a>
+              </li> -->
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <div class="ystep1"></div>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        <!-- 审批按钮 -->
+        <div class="approval">
+            {% if display == 1 %}
+            {% for line in list %}
+            <a href="/flow/releaseflow_manage/test_approval_project_release/{{ line.id }}_2" style="color: inherit">
+                <button type="button" class="btn btn-success"{% if do_test_approval == 0 and  line.priority == 0 %} disabled="disabled" {% endif %}>
+                    测试审批通过
+                </button>
+            </a>
+            <button type="button" class="btn btn-danger"  data-toggle="modal" data-target="#myModal_reject">
+                驳回
+            </button>
+            {% endfor %}
+            {% endif %}
+
+            {% if display == 2 %}
+            {% for line in list %}
+            <a href="/flow/releaseflow_manage/project_manager_approval_project_release/{{ line.id }}_4" style="color: inherit">
+                <button type="button" class="btn btn-success">
+                    项目经理审批通过
+                </button>
+            </a>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModal_reject">
+                驳回
+            </button>
+            {% endfor %}
+            {% endif %}
+
+            {% if display == 3 %}
+            {% for line in list %}
+            <a href="/flow/releaseflow_manage/implement_project_release/{{ line.id }}_9" style="color: inherit">
+                <button type="button" class="btn btn-primary" style="width: 130px;">
+                    发布
+                </button>
+            </a>
+            {% endfor %}
+            {% endif %}
+            <a href="{% url 'releaseflow_manage' %}">
+                <button type="button" class="btn btn-default">
+                        返回
+                </button>
+            </a>
+        </div>
+        <!-- ./approval -->
+    </div>
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="myModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width: 900px;z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel">测试审批报告</h4>
+                </div>
+                <form method="post">
+                {% csrf_token %}
+                {% if form %}
+                    <div class="modal-body">
+                        <div class="form-group">
+                            {{ form.releasetestreport }}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        {% if display == 1 %}
+                            <button name="submit" type="submit" class="btn btn-primary"> 提交 </button>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- 驳回意见 模态框（Modal） -->
+    <div class="modal fade" id="myModal_reject" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width: 900px;z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel">驳回意见</h4>
+                </div>
+                    {% for line in list %}
+                    {% if display == 1 %}
+                    <form method="get" action="/flow/releaseflow_manage/test_approval_project_release/{{ line.id }}_0">
+                    {% elif display == 2 %}
+                    <form method="get" action="/flow/releaseflow_manage/project_manager_approval_project_release/{{ line.id }}_0">
+                    {% endif %}
+                    {% endfor %}
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">
+                             <textarea class="form-control" id="reject_comment" name="reject_comment"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        <button name="submit" type="submit" class="btn btn-primary"> 提交 </button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div><!-- 模态框 -->
+{% endblock %}
+{% block ext_script_add %}
+    <!-- Detail-->
+    <script src="{% static 'js/aukeyops/detail.js' %}"></script>
+    {% block tinymce_js %}
+    <script src="{% static 'js/tinymce/jquery.tinymce.min.js' %}"></script>
+    <script src="{% static 'js/tinymce/tinymce.min.js' %}"></script>
+    {% for line in list %}
+    {% if line.status == 1 %}
+    <script src="{% static 'js/tinymce/textareas-small.js' %}"></script>
+    {% else %}
+    <script>
+        tinymce.init({
+            theme: "modern",
+            language: "zh_CN",
+            height: "300",
+            readonly:1,
+            mode:"exact",
+            elements:"releasetestreport"
+        });
+    </script>
+    <script src="{% static 'js/tinymce/textareas-reject.js' %}"></script>
+    {% endif %}
+    {% endfor %}
+    {% endblock %}
+    <script src="{% static 'js/postbird-img-glass.min.js' %}"></script>
+    <script>
+    PostbirdImgGlass.init({
+        domSelector:"img",
+        animation:true
+    });
+    </script>
+    <script>
+        $("#flow").css("display","block");
+        $("#releaseflow_manage").addClass('current-page');
+        function send_comment(){
+            $("#comment_form").val($("#editor").html());
+        }
+        $(".ystep1").loadStep({
+            //ystep的外观大小
+            //可选值：small,large
+            size: "small",
+            //ystep配色方案
+            //可选值：green,blue
+            color: "green",
+            //ystep中包含的步骤
+            steps: [{
+                //步骤名称
+                title: "申请",
+                //步骤内容(鼠标移动到本步骤节点时，会提示该内容)
+                content: "申请发布"
+            },{
+                title: "测试审批",
+                content: "等待测试审批"
+            },{
+                title: "项目经理审批",
+                content: "等待项目经理审批"
+            },{
+                title: "审批完成",
+                content: "审批完成"
+            },{
+                title: "待发布",
+                content: "等待发布"
+            },{
+                title: "已发布",
+                content: "发布完成"
+            }]
+        });
+        {% if display == 1 %}
+            $(".ystep1").setStep(2);
+        {% elif display == 2 %}
+            $(".ystep1").setStep(3);
+        {% elif display == 3 %}
+            $(".ystep1").setStep(5);
+        {% elif display == 0 %}
+            $(".ystep1").setStep(6);
+        {% endif %}
+        function DeleteComment(ID){
+            $.confirm({
+                title: '确定要删除这条记录吗？',
+                closeIcon: true,
+                confirmButtonClass:'btn-danger',
+                cancelButtonClass: 'btn-default ',
+                confirmButton: '删除!',
+                cancelButton: '取消',
+                confirm: function(){
+                    $.ajax({
+                        type: "get",
+                        url: "/flow/releaseflow_manage/releaseflow_details/delete_comment/"+ ID,
+                        dataType: "json",
+                        success: function(result) {
+                            if(result['result'] == 'true'){
+                                location.reload();
+                            }else{
+                                new PNotify({
+                                  title: 'ERROR',
+                                  text: '您没有权限删除这条记录!',
+                                  type: 'error',
+                                  styling: 'bootstrap3'
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        // 上传附件
+        $(function() {
+            $("#file").on("change", "input[type='file']", function() {
+                var form_data = new FormData();
+                var file_get = $('#file_upload')[0];
+                var file_info = file_get.files[0];
+                form_data.append("file",file_info);
+                if(file_info==undefined){ //判断是否有附件
+                    alert('你没有选择任何文件');
+                    $(this).val('');
+                    return false
+                }
+                var fileSize = file_info.size;
+                 //35160  计算机存储数据最为常用的单位是字节(B)
+                 //在此处我们限制文件大小为50M
+                if(fileSize==-1){
+                     alert('"您的浏览器暂不支持计算上传文件的大小，确保上传文件不要超过50M，建议使用IE、FireFox、Chrome浏览器。";');
+                     $(this).val('');
+                     return false;
+                 }
+                if(fileSize>50*1024*1024){
+                    new PNotify({
+                        title: 'ERROR',
+                        text: '文件过大, 请上传小于50M的文件！',
+                        type: 'error',
+                        styling: 'bootstrap3'
+                    });
+                    $(this).val('');
+                    return false;
+                }
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {//服务器返回值的处理函数，此处使用匿名函数进行实现
+                    if (xhr.readyState == 4 && xhr.status == 200) {//
+                        var responseText = xhr.responseText;
+                        result_dict = JSON.parse(unescape(responseText.replace(/\\u/g, '%u')));
+                        new PNotify({
+                          title: result_dict.title,
+                          text: result_dict.result,
+                          type: result_dict.status,
+                          styling: 'bootstrap3'
+                        });
+                        old_html = document.getElementById("percentage").innerHTML;
+                        if (result_dict.status == 'success') {
+                            document.getElementById("percentage").innerHTML = old_html + ' <span style="color:green"> '+result_dict.result+'</span>';
+                        }else{
+                            document.getElementById("percentage").innerHTML = '<span style="color:red">'+result_dict.result+'</span>';
+                        }
+                    }
+                };
+                xhr.upload.addEventListener('progress',on_progress,false);     //xhr对象含有一个upload对象，它有一个progress事件，在文件上传过程中会被不断触发，我们为这个事件对应一个处理函数，每当事件触发就会调用这个函数，于是便可利用这个函数来修改当前进度，更多细节可自行查询
+                $("#progress_div_id").css("display","block");
+                xhr.open('POST','{% url 'releaseflow_details_post_annexes' id %}',true);  //请将url改成上传url
+                xhr.setRequestHeader('X-CSRFTOKEN','{{ request.COOKIES.csrftoken }}');   //此处为Django要求，可无视，或者换成相应后台所要求的CSRF防护，不是django用户请去掉
+                xhr.send(form_data);   //发送表单
+
+                function on_progress(evt) {       //看这个函数之前先看upload函数。这个函数可以接收一个evt(event)对象(细节自行查询progress)，他有3个属性lengthComputable，loaded，total，第一个属性是个bool类型的，代表是否支持，第二个代表当前上传的大小，第三个为总的大小，由此便可以计算出实时上传的百分比
+                    if(evt.lengthComputable) {
+                        var percent = Math.round((evt.loaded) * 100 / evt.total);
+                        $('#fileupdate_progressbar_id').attr('data-transitiongoal', percent).progressbar();
+                        document.getElementById("percentage").innerHTML =percent+"%";
+                    }
+                }
+            });
+        })
+    </script>
+{% endblock %}

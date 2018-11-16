@@ -1,0 +1,178 @@
+{% extends 'form.html' %}
+{% load staticfiles %}
+{% block page_title %}项目管理{% endblock %}
+{% block table_title %}申请{% endblock %}
+{% block ext_before %}
+<link href="{% static 'vendors/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+<link href="{% static 'build/css/custom.min.css' %}" rel="stylesheet">
+<style type="text/css">
+#parent_project{font-size:12px;}
+.switchery{margin-top: 5px;}
+.stepContainer{max-height: 20px;}
+#id_source li{list-style-type:none;float: left;margin-right: 15px;margin-top: 10px;}
+#id_source{padding-left: 0}
+</style>
+{% endblock %}
+{% block page_form %}
+    {% for field in projectform %}
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ field.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+            {{ field }}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
+{% block ext_script %}
+    <script src="{% static 'vendors/switchery/dist/switchery.min.js' %}"></script>
+    <script type="text/javascript">
+    $("#flow").css("display","block");
+    $("#project_manage").addClass('current-page');
+    $(document).ready(function() {
+        if (document.getElementById("id_have_parent_project").checked) {
+            $("#parent_project").removeAttr("disabled style");
+        } else {
+            $("#parent_project").prop({disabled:"disabled", style:"background-color:#eee"});
+            var options = document.getElementById('parent_project').children;
+            options[0].selected=true;
+        }
+    });
+    var jsswitch = document.querySelector('.js-switch');
+    jsswitch.onchange = function() {
+       if( jsswitch.checked) {
+           $("#parent_project").removeAttr("disabled style");
+       }else{
+           $("#parent_project").prop({disabled:"disabled", style:"background-color:#eee"});
+            var options = document.getElementById('parent_project').children;
+            options[0].selected=true;
+       }
+
+    };
+    </script>
+{% endblock %}
+{#{% extends 'main.html' %}#}
+{#{% load staticfiles %}#}
+{#{% block ext_before %}#}
+{#    <style>#}
+{#    .ivu-layout{#}
+{#        background: #fff;#}
+{#    }#}
+{#    .layout{#}
+{#        border: 1px solid #d7dde4;#}
+{#        position: relative;#}
+{#        border-radius: 4px;#}
+{#        overflow: hidden;#}
+{#    }#}
+{#    label{#}
+{#        margin-bottom: 0;#}
+{#        font-weight: normal;#}
+{#    }#}
+{#    .menu-item span{#}
+{#        display: inline-block;#}
+{#        overflow: hidden;#}
+{#        width: 69px;#}
+{#        text-overflow: ellipsis;#}
+{#        white-space: nowrap;#}
+{#        vertical-align: bottom;#}
+{#        transition: width .2s ease .2s;#}
+{#    }#}
+{#    .menu-item i{#}
+{#        transform: translateX(0px);#}
+{#        transition: font-size .2s ease, transform .2s ease;#}
+{#        vertical-align: middle;#}
+{#        font-size: 16px;#}
+{#    }#}
+{#    .collapsed-menu span{#}
+{#        width: 0px;#}
+{#        transition: width .2s ease;#}
+{#    }#}
+{#    .collapsed-menu i{#}
+{#        transform: translateX(5px);#}
+{#        transition: font-size .2s ease .2s, transform .2s ease .2s;#}
+{#        vertical-align: middle;#}
+{#        font-size: 22px;#}
+{#    }#}
+{#    .ivu-form .ivu-form-item-label{#}
+{#        font-size: 14px;#}
+{#    }#}
+{#    </style>#}
+{#{% endblock %}#}
+{#{% block right_col %}#}
+{#    <div id="app">#}
+{#        <div class="layout">#}
+{#            <layout>#}
+{#                <i-content :style="{margin: '20px', background: '#fff', minHeight: '220px'}">#}
+{#                    <i-col :xs="24" :sm="24" :md="{ span: 18, offset: 3 }" :lg="{ span: 12, offset: 6 }">#}
+{#                        <i-form :model="formItem" :label-width="100">#}
+{#                            <form-item label="项目名(中文)">#}
+{#                                <i-input v-model="formItem.input" placeholder="填写项目中文名称"></i-input>#}
+{#                            </form-item>#}
+{#                            <form-item label="项目名(英文)">#}
+{#                                <i-input v-model="formItem.input" placeholder="Enter Project Name (English)"></i-input>#}
+{#                            </form-item>#}
+{#                            <form-item label="是否有父项目">#}
+{#                                <i-switch v-model="formItem.switch" size="large">#}
+{#                                    <span slot="open">是</span>#}
+{#                                    <span slot="close">否</span>#}
+{#                                </i-switch>#}
+{#                            </form-item>#}
+{#                            <form-item label="父项目">#}
+{#                                <i-select v-model="formItem.select">#}
+{#                                    <i-option value="beijing">New York</i-option>#}
+{#                                    <i-option value="shanghai">London</i-option>#}
+{#                                    <i-option value="shenzhen">Sydney</i-option>#}
+{#                                </i-select>#}
+{#                            </form-item>#}
+{#                            <form-item label="项目来源">#}
+{#                                <radio-group v-model="formItem.radio">#}
+{#                                    <radio label="male">自建</radio>#}
+{#                                    <radio label="female">外购</radio>#}
+{#                                </radio-group>#}
+{#                            </form-item>#}
+{#                            <form-item label="项目经理">#}
+{#                                <i-select v-model="formItem.select">#}
+{#                                    <i-option value="beijing">New York</i-option>#}
+{#                                    <i-option value="shanghai">London</i-option>#}
+{#                                    <i-option value="shenzhen">Sydney</i-option>#}
+{#                                </i-select>#}
+{#                            </form-item>#}
+{#                            <form-item label="项目描述">#}
+{#                                <i-input v-model="formItem.textarea" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="Enter something..."></i-input>#}
+{#                            </form-item>#}
+{#                            <form-item>#}
+{#                                <i-button type="primary">提交</i-button>#}
+{#                                <i-button type="ghost" style="margin-left: 8px">取消</i-button>#}
+{#                            </form-item>#}
+{#                        </i-form>#}
+{#                    </i-col>#}
+{#                </i-content>#}
+{#            </layout>#}
+{#        </div>#}
+{#    </div>#}
+{#{% endblock %}#}
+{#{% block ext_script %}#}
+{#    <script src="{% static 'vuejs/vue-2.5.17.js' %}"></script>#}
+{#    <script src="{% static 'vuejs/iview-2.14.3.js' %}"></script>#}
+{#    <script>#}
+{#    var Main = {#}
+{#        data () {#}
+{#            return {#}
+{#                formItem: {#}
+{#                    input: '',#}
+{#                    select: '',#}
+{#                    radio: 'male',#}
+{#                    checkbox: [],#}
+{#                    switch: true,#}
+{#                    date: '',#}
+{#                    time: '',#}
+{#                    slider: [20, 50],#}
+{#                    textarea: ''#}
+{#                }#}
+{#            }#}
+{#        }#}
+{#    };#}
+{##}
+{#    var Component = Vue.extend(Main);#}
+{#    new Component().$mount('#app')#}
+{#    </script>#}
+{#{% endblock %}#}

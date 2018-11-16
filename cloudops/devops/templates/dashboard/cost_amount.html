@@ -1,0 +1,87 @@
+<div class="row tile_count">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head" style="padding-bottom: 25px;">
+                    <Icon type="ios-pricetags-outline"></Icon> <b>分类汇总</b>
+                    <!--<div id="cost_amount_range" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;">-->
+                        <!--<i class="glyphicon glyphicon-calendar fa fa-calendar"></i>-->
+                        <!--<span></span> <b class="caret"></b>-->
+                    <!--</div>-->
+                    <div class="pull-right" id="cost_amount_range">
+                        <date-picker :value="cost_start_date_value" type="daterange" @on-change="cost_datarange_change" :options="cost_date_range" placement="bottom-end" placeholder="选择时间范围" style="width: 200px"></date-picker>
+                    </div>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="ivu-card ivu-card-bordered">
+                        <div class="ivu-card-head" style="background-color: #F2F2F2;height: 30px;padding:0;">
+                            <p style="text-align: center;height: 30px;line-height: 30px;font-weight: normal;">部门占比</p>
+                        </div>
+                        <div class="ivu-card-body" style="height: 450px;overflow-y: auto;">
+                            <div class="ivu-spin ivu-spin-fix" id="by_department_amount_loading_id" style="display: none;">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div class="col-md-7 col-sm-7 col-xs-12">
+                              <div id="cost_pillar_by_department_amount" style="width: 100%;height: 400px;"></div>
+                            </div>
+                            <div class="col-md-5 col-sm-5 col-xs-12">
+                              <div id="cost_pie_by_department_amount" style="width: 100%;height: 400px;"></div>
+                            </div>
+                            <a class="pull-left" id="cost_look_all_action" style="color: #2d8cf0;" @click="cost_look_all_action()" v-show="cost_look_all_isShow">点击显示所有部门数据</a>
+                            <a class="pull-left" id="cost_look_section_action" style="color: #2d8cf0;" @click="cost_look_all_action()" v-show="!cost_look_all_isShow" >只显示前10个部门数据</a>
+                            <!--<i-button type="text" v-show="cost_look_all_isShow" >点击显示所有部门数据</i-button>-->
+                        </div>
+                    </div>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="ivu-card ivu-card-bordered">
+                        <div class="ivu-card-head" style="background-color: #F2F2F2;height: 30px;padding:0;">
+                            <p style="text-align: center;height: 30px;line-height: 30px;font-weight: normal;">物品类型占比</p>
+                        </div>
+                        <div class="ivu-card-body" style="height: 350px;">
+                            <div class="ivu-spin ivu-spin-fix" id="by_type_amount_loading_id" style="display: none;">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div class="col-md-7 col-sm-7 col-xs-12">
+                              <div id="cost_pillar_by_type_amount" style="width: 100%;height: 300px;"></div>
+                            </div>
+                            <div class="col-md-5 col-sm-5 col-xs-12">
+                              <div id="cost_pie_by_type_amount" style="width: 100%;height: 300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="ivu-card ivu-card-bordered">
+                        <div class="ivu-card-head" style="background-color: #F2F2F2;height: 30px;padding:0;">
+                            <p style="text-align: center;height: 30px;line-height: 30px;font-weight: normal;">购买类型占比</p>
+                        </div>
+                        <div class="ivu-card-body" style="height: 350px;">
+                            <div class="ivu-spin ivu-spin-fix" id="by_purchase_type_amount_loading_id" style="display: none;">
+                                <div class="ivu-spin-main">
+                                    <span class="ivu-spin-dot"></span>
+                                    <div class="ivu-spin-text"></div>
+                                    <div>数据加载中</div>
+                                </div>
+                            </div>
+                            <div class="col-md-7 col-sm-7 col-xs-12">
+                              <div id="cost_pillar_by_purchase_type_amount" style="width: 100%;height: 300px;"></div>
+                            </div>
+                            <div class="col-md-5 col-sm-5 col-xs-12">
+                              <div id="cost_pie_by_purchase_type_amount" style="width: 100%;height: 300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

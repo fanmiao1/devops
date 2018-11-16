@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title> WebSSH </title>
+    <link href="/static/ssh/img/favicon.png" rel="icon" type="image/png">
+    <link href="/static/ssh/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <link href="/static/ssh/css/xterm.min.css" rel="stylesheet" type="text/css"/>
+    <link href="/static/ssh/css/fullscreen.min.css" rel="stylesheet" type="text/css"/>
+    <style>
+      .row {
+        margin-top: 20px;
+        margin-bottom: 10px;
+      }
+
+      .container {
+        margin-top: 20px;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div id="status" style="color: red;"></div>
+      <div id="terminal"></div>
+    </div>
+
+    <script src="/static/ssh/js/jquery.min.js"></script>
+    <script src="/static/ssh/js/popper.min.js"></script>
+    <script src="/static/ssh/js/bootstrap.min.js"></script>
+    <script src="/static/ssh/js/xterm.min.js"></script>
+    <script src="/static/ssh/js/fullscreen.min.js"></script>
+    <script src="/static/ssh/js/main.js"></script>
+    <script>
+        var connect_arg = {'uid': {{ user.id }},'sid': {{ sid }}, 'inoex': "{{ inoex }}", 'cid': {{ cid }}};
+        WebSocketStart(connect_arg, 'terminal');
+    </script>
+  </body>
+</html>

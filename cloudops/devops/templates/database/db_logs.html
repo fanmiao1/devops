@@ -1,0 +1,34 @@
+<div class="col-md-12 col-sm-12 col-xs-12" style="height: 100%">
+    <div class="x_panel" style="height: 100%">
+        <div class="x_title">
+            <h2>校验信息</h2>
+            <div class="clearfix"></div>
+        </div>
+        <div class="x_content" style="height: 100%" >
+            <div class="dashboard-widget-content roll" style="max-height: 400px; overflow-y: auto">
+                <table id="table" class="table table-striped table-bordered dt-responsive nowrap">
+                    <tr>
+                        <th>ID</th>
+{#                        <th>stage</th>#}
+{#                        <th>errlevel</th>#}
+{#                        <th>stagestatus</th>#}
+                        <th>errormessage</th>
+                        <th>SQL</th>
+                    </tr>
+                    {% if review_result %}
+                        {% for line in review_result %}
+                            <tr>
+                                <td>{{ line.ID }}</td>
+    {#                            <td>{{ line.stage }}</td>#}
+    {#                            <td>{{ line.errlevel }}</td>#}
+    {#                            <td>{{ line.stagestatus }}</td>#}
+                                <td>{{ line.errormessage |slice:":100" }}</td>
+                                <td>{{ line.SQL |slice:":100"}}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

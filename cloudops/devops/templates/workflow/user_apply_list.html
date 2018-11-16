@@ -1,0 +1,196 @@
+{% extends 'table.html' %}
+{% block page_title %}业务用户变更{% endblock %}
+{% block table_title %}列表{% endblock %}
+{% block ext_button %}
+    <div id="toolbar" class="btn-group pull-right" style="margin-bottom: 10px;">
+        <a href="{% url 'user_apply' %}">
+            <button id="btn_add" type="button" class="btn btn-default">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 用户申请
+            </button>
+        </a>
+        <a href="{% url 'user_modify_apply' %}">
+            <button id="btn_add" type="button" class="btn btn-default">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 用户变更
+            </button>
+        </a>
+    </div>
+{% endblock %}
+{% block table %}
+    <script type="text/javascript">
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "post",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:'{% url "user_apply_list" %}',
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                dataField: "rows",
+                pagination: true, //启动分页
+                sortable: true,  //启用排序
+                pageSize: 15,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+                search: true,  //是否启用查询
+                searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+                searchAlign:'left',	//指定 搜索框 水平方向的位置。’left’ or ‘right’
+                showColumns: true,  //显示下拉框勾选要显示的列
+                showRefresh: true,  //显示刷新按钮
+                showSearchButton: false, //显示搜索按钮
+                showExport: true,//显示导出按钮
+                exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                sidePagination: "server", //表示服务端请求
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined",
+                clickToSelect: true,//是否启用点击选中行
+                toolbarAlign:'right',//工具栏对齐方式
+                buttonsAlign:'left',//按钮对齐方式
+                showToggle: true, //是否显示切换视图（table/card）按钮
+                columns:[
+                    {
+                        title:'ID',
+                        field:'id',
+                        sortable:false
+                    },
+                    {
+                        title:'提交人',
+                        field:'submitter',
+                        sortable:true
+                    },
+                    {
+                        title:'申请人',
+                        field:'applicant',
+                        sortable:true
+                    },
+                    {
+                        title:'项目',
+                        field:'project',
+                        sortable:true
+                    },
+                    {
+                        title:'部门',
+                        field:'department',
+                        sortable:true
+                    },
+                    {
+                        title:'申请用户名',
+                        field:'user_name',
+                        sortable:true
+                    },
+                    {
+                        title:'启用/禁用',
+                        field:'is_active',
+                        sortable:true
+                    },
+                    {
+                        title:'类型',
+                        field:'type',
+                        sortable:true
+                    },
+                    {
+                        title:'申请时间',
+                        field:'applicationtime',
+                        sortable:true
+                    },
+                    {
+                        title:'执行时间',
+                        field:'execute_time',
+                        sortable:true
+                    },
+                    {
+                        title:'状态',
+                        field:'status',
+                        sortable:true,
+                        formatter :function(value,row,index) {
+                            if(value == "执行完成") {
+                                var a = '<span style="color:#5CB85C;">'+value+'</span>';
+                            }else if(value == "待执行"){
+                                var a = '<span style="color:#428BCA;">'+value+'</span>';
+                            }else if(value == "待审批"){
+                                var a = '<span style="color:#5bc0de;">'+value+'</span>';
+                            }else if(value == "不通过") {
+                                var a = '<span style="color:#ff4850;">'+value+'</span>';
+                            }else{
+                                var a = '<span>'+value+'</span>';
+                            }
+                            return a;
+                        }
+                    },
+                    {
+                        title:'操作',
+                        field:'id',
+                        align:'center',
+                        //列数据格式化
+                        //formatter:operateFormatter
+                        formatter:function(value,row,gitflow){
+                            var w = '<a href="/flow/user_apply_list/user_apply_details/'+ row.id +'"><button type="button" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 查看详情</button></a> ';
+{#                                        var e = '<a href="#" mce_href="#" onclick="edit(\''+ row.id + '\')"><button type="button" class="btn btn-primary btn-xs">编辑</button></a> ';#}
+                            var d = '<button type="button" id="btn_submit1" class="btn btn-danger btn-xs" onclick="return Delete('+row.id+')"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span> 删除</button> ';
+                                return w+d;
+                        }
+                    }
+                ],
+                queryParams: function queryParams(params) {   //设置查询参数
+                    var param = {
+                        csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                        pageNumber: params.pageNumber,
+                        pageSize: params.pageSize,
+{#                        search:$("input[ name='search_text' ] ").val(),#}
+                        search:params.searchText,
+                        order:params.sortOrder,
+                        sort:params.sortName
+                    };
+                    return param;
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            //调用函数，初始化表格
+            initTable();
+            //当点击查询按钮的时候执行
+            $("#search").bind("click", initTable);
+        });
+
+        function Delete(ID){
+            $.confirm({
+                title: '提示！',
+                content: '确定要删除吗？',
+                closeIcon: true,
+                confirmButtonClass:'btn-danger',
+                cancelButtonClass: 'btn-default ',
+                confirmButton: '删除!',
+                cancelButton: '取消',
+                confirm: function(){
+                    $.ajax({
+                        type: "get",
+                        url: "/flow/user_apply/delete/"+ ID,
+                        dataType: "json",
+                        success: function(result) {
+                            if(result['result'] == 'true'){
+                                new PNotify({
+                                  title: 'SUCCESS',
+                                  text: '删除成功!',
+                                  type: 'success',
+                                  styling: 'bootstrap3'
+                                });
+                                // 刷新表格
+                                $('#table').bootstrapTable("refresh");
+                            }else{
+                                new PNotify({
+                                  title: 'ERROR',
+                                  text: result['result'],
+                                  type: 'error',
+                                  styling: 'bootstrap3'
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+{% endblock %}
+{% block ext_script %}{% endblock %}

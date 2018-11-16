@@ -1,0 +1,365 @@
+{% extends 'worksheet/simple.html' %}
+{% load staticfiles %}
+{% block viewport %}<meta name="viewport" content="width=device-width, initial-scale=1">{% endblock %}
+{% block title_top %}我提交的工单{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_css %}
+    <style>
+        .title{
+            color: #999;
+            font-size:13px;
+            list-style-type:none;
+            white-space:nowrap;
+        }
+        .title .con_a{
+            white-space: pre-line;
+            word-wrap: break-word;
+        }
+        .con_a,.desc_content{
+            color:#000 !important;
+            font-size: 13px !important;
+        }
+        .col-md-4{
+            padding-left:0;
+        }
+        .x_content{
+            color: #999;
+        }
+        pre{
+            background-color: #fff;
+            border:0;
+            padding: 0;
+            font-family:Microsoft YaHei;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .desc_content p{
+            word-break:break-all !important;
+            word-wrap:break-word;
+        }
+        #card0{
+            border: 0 !important;
+        }
+        .steps_class{
+            margin-bottom: 15px;
+        }
+        .demo-upload-list{
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            line-height: 60px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #fff;
+            position: relative;
+            box-shadow: 0 1px 1px rgba(0,0,0,.2);
+            margin-right: 4px;
+            margin-bottom: 2px;
+        }
+        .ivu-upload-drag{
+            height: 60px;
+            display: inline-block;
+            width: 58px;
+        }
+        .message pre p img{
+            display: inline-block;
+            width: 60px;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div id="app0" style="margin: 0 auto;">
+    <row>
+      <i-col span="24">
+          <card id="card0">
+      <div style="margin: 0 auto;margin-left: 15px;">
+        {% if worksheet_obj.status == 0 and not worksheet_obj.f_time %}
+            <steps :current="1" size="small" class="steps_class">
+            {% if worksheet_obj.have_power_change == 1 or worksheet_obj.email %}
+            <step title="待审批" content=""></step>
+            <step title="已关闭" content=""></step>
+            {% else %}
+            <step title="待受理" content=""></step>
+            <step title="已关闭" content=""></step>
+            {% endif %}
+        {% else %}
+            {% if worksheet_obj.have_power_change == 1 or worksheet_obj.email %}
+            <steps :current="{% if worksheet_obj.status == 4 %}0{% elif worksheet_obj.status == 1 %}1{% elif worksheet_obj.status == 2 %}2{% elif worksheet_obj.status == 3 %}3{% else %}4{% endif %}" size="small" class="steps_class">
+                <step title="待审批" content=""></step>
+                <step title="待受理" content=""></step>
+                <step title="待处理" content=""></step>
+                <step title="已处理" content=""></step>
+                <step title="已关闭" content=""></step>
+            {% else %}
+            <steps :current="{% if worksheet_obj.status == 1 %}0{% elif worksheet_obj.status == 2 %}1{% elif worksheet_obj.status == 3 %}2{% else %}3{% endif %}" size="small" class="steps_class">
+                <step title="待受理" content=""></step>
+                <step title="待处理" content=""></step>
+                <step title="已处理" content=""></step>
+                <step title="已关闭" content=""></step>
+            {% endif %}
+        {% endif %}
+        </steps>
+      </div>
+        <div style="margin-bottom: 10px;">
+            <card>
+                <ul style="text-align:left">
+                    <li class="title">问题标题：<a class="con_a">{{ worksheet_obj.title }}</a></li>
+                    <li class="title">工单编号：<a class="con_a">{{ worksheet_obj.wsid }}</a></li>
+                    <li class="title">提交时间：<a class="con_a">{{ worksheet_obj.c_time | date:"Y-m-d H:i:s" }}</a></li>
+                    {% if worksheet_obj.have_power_change == 1 %}
+                    <li class="title">抄送邮箱：<a class="con_a">{{ worksheet_obj.email }}</a></li>
+                    {% endif %}
+                </ul>
+            </card>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <card>
+                <div style="text-align:left">
+                    <span class="title">问题描述：</span><span class="desc_content">{% autoescape off %}{{ worksheet_obj.description }}{% endautoescape %}</span>
+                </div>
+            </card>
+        </div>
+    {% if img %}
+    <div style="margin-bottom: 10px;">
+        <card>
+            <p class="title">图片：</p>
+            <ul style="text-align:left">
+                <li class="title" style="white-space: pre-wrap;word-wrap: break-word;">
+                    {% autoescape off %}{{ img }}{% endautoescape %}
+{#                    {% if worksheet_obj.status != 3 and worksheet_obj.status != 0 %}#}
+{#                    <Upload#}
+{#                        ref="upload"#}
+{#                        :show-upload-list="false"#}
+{#                        :on-success="handleSuccess"#}
+{#                        :format="['jpg','jpeg','png']"#}
+{#                        :max-size="8192"#}
+{#                        :on-format-error="handleFormatError"#}
+{#                        :on-exceeded-size="handleMaxSize"#}
+{#                        type="drag"#}
+{#                        action="{% url 'up_bundfile' 0 worksheet_obj.id %}"#}
+{#                        style="display: inline-block;width:58px;height:58px;">#}
+{#                        <div>#}
+{#                            <Icon type="camera" size="20"></Icon>#}
+{#                        </div>#}
+{#                    </Upload>#}
+{#                    {% endif %}#}
+                </li>
+            </ul>
+        </card>
+    </div>
+    {% endif %}
+{#    {% if file %}#}
+    <div style="margin-bottom: 10px;">
+        <card>
+            <p class="title">附件：</p>
+            <ul style="text-align:left">
+                <li class="title" style="white-space: pre-wrap;word-wrap: break-word;">{% autoescape off %}{{ file }}{% endautoescape %}</li>
+            </ul>
+            {% if worksheet_obj.status != 3 and worksheet_obj.status != 0 %}
+            <div id="appfile">
+                <upload
+                    action="{% url 'up_bundfile' 1 worksheet_obj.id %}"
+                    :max-size="8192"
+                    :on-exceeded-size="handleMaxSize"
+                    :on-success="handleSuccess"
+                    :on-remove="handleRemove"
+                    >
+                    <i-button type="ghost" icon="ios-cloud-upload-outline">添加附件</i-button>
+                </upload>
+            </div>
+            {% endif %}
+        </card>
+    </div>
+{#    {% endif %}#}
+    <div id="app5">
+        <div>
+            <card>
+                <p slot="title">沟通记录</p>
+                    <div style="text-align:left">
+                        <div>
+                            <!-- end of messages -->
+                            <ul class="messages">
+                              {% for line in worksheetcommunicate_obj %}
+                              <li>
+                                <img src="{% if line.pepole == 1 %}{% static 'images/img.jpg' %}{% else %}{{ user_avatar }}{% endif %}" class="avatar" alt="Avatar">
+                                <div class="message_date">
+                                  <!-- <h3 class="date text-info">24</h3> -->
+                                  <p class="month">{{ line.datetime | date:"Y-m-d H:i:s" }}</p>
+                                </div>
+                                <div class="message_wrapper">
+                                  <p class="heading">{% if line.pepole == 1 %}<b style="color:#000">客服人员</b>{% else %}{{ line.worksheet.submitter }}{% endif %}</p>
+                                      <div class="message">
+                                          {% if line.pepole == 1 %}
+                                              <pre style="color:#000">{% autoescape off %}{{ line.content }}{% endautoescape %}</pre>
+                                          {% else %}
+                                              {% if line.type == 1 %}
+                                                  <p>问题是否解决：{{ worksheet_obj.get_result_display }}</p>
+                                                  <p>评价内容：<pre style="color:#999;">{% autoescape off %}{{ line.content }}{% endautoescape %}</pre></p>
+                                              {% else %}
+                                                <pre style="color: #999">{% autoescape off %}{{ line.content }}{% endautoescape %}</pre>
+                                              {% endif %}
+                                          {% endif %}
+                                      </div>
+                                  <br />
+                                </div>
+                              </li>
+                              {% endfor %}
+                            </ul>
+                            <!-- end of messages -->
+                        </div>
+                        {% if worksheet_obj.status != 0 %}
+                        <div class="ln_solid"></div>
+                        <form id="demo-form2" data-parsley-validate class="ivu-form ivu-form-label-right" method="post">
+                        {% csrf_token %}
+                          <div class="ivu-form-item">
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <label class="ivu-form-item-label" style="width: 80px;">{% if worksheet_obj.status == 3 %}我要反馈{% else %}我要回复{% endif %}</label>
+                                <div class="ivu-form-item-content" style="margin-left: 80px;">
+                                    <div class="ivu-input-wrapper ivu-input-type">
+                                        <textarea class="ivu-input" style="height: 52px; min-height: 52px; max-height: 115px;display: none;" name="comm" id="comm" maxlength="500"></textarea>
+                                        <div id="commnew_toolbar" style="border-top: 1px solid #ccc;border-left: 1px solid #ccc;border-right: 1px solid #ccc;background-color: #f1f1f1;"></div>
+                                        <div id="commnew" style="border: 1px solid #ccc;height: 200px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                          </div>
+                          {% if worksheet_obj.status == 3 %}
+                          <div class="ivu-form-item">
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <label class="ivu-form-item-label" style="width: 80px;"></label>
+                                <div class="ivu-form-item-content" style="margin-left: 80px;">
+                                    <div class="ivu-radio-group">
+                                        <label style="margin-right: 10px;"><input type="radio" class="flat" name="solve" value="1"/>已解决</label>
+                                        <label><input type="radio" class="flat" name="solve" value="2" />未解决</label>
+                                    </div>
+                                </div>
+                            </div>
+                          </div>
+                          {% endif %}
+                          <div class="ivu-form-item">
+                            <div class="ivu-form-item-content" style="margin-left: 80px;">
+                                <button type="submit" class="ivu-btn ivu-btn-primary" id="btn-submit"><span>提交</span></button>
+                            </div>
+                          </div>
+                        </form>
+                        {% endif %}
+                    </div>
+                </card>
+            </div>
+        </div>
+                  </card>
+              </i-col>
+    </row></div>
+{% endblock %}
+{% block ext_js %}
+    <script src="{% static 'js/postbird-img-glass.min.js' %}"></script>
+    <script src="{% static 'emoji/emoji.js' %}"></script>
+    <script src="{% static 'js/aukeyops/wangEditor.min.js' %}"></script>
+    <script type="text/javascript">
+        $(".desc_content img").removeAttr("style");
+        $(".desc_content img").css("max-width","100%");
+        var message = new MyMessage.message({
+
+            /*默认参数，下面为默认项*/
+            iconFontSize: "20px", //图标大小,默认为20px
+            messageFontSize: "12px", //信息字体大小,默认为12px
+            showTime: 2000, //消失时间,默认为3000
+            align: "center", //显示的位置类型center,right,left
+            positions: { //放置信息距离周边的距离,默认为10px
+                top: "10px",
+                bottom: "10px",
+                right: "10px",
+                left: "10px"
+            },
+            message: "这是一条消息", //消息内容,默认为"这是一条消息"
+            type: "normal" //消息的类型，还有success,error,warning等，默认为normal
+          });
+{#        var file_list = [];#}
+{#        var Mainfile = {#}
+{##}
+{#        };#}
+{#        var Componentfile = Vue.extend(Mainfile);#}
+{#        new Componentfile().$mount('#appfile');#}
+        var Main0 = {
+            methods:{
+                handleRemove (file) {
+                    file_name = file.name;
+                    $.ajax({
+                        type: "post",
+                        url: "{% url 'delete_wsfile' %}",
+                        dataType: "json",
+                        data:{'file_name':file_name},
+                        success: function(result) {
+                            console.log(result.result);
+                        }
+                    })
+                },
+                handleSuccess (res, file) {
+                     file.url = res.url;
+                     file.name = res.name;
+{#                     location.reload();#}
+                 },
+                handleMaxSize (file) {
+                    message.add("超出文件大小限制，不能超过8M！", "error");
+                 },
+                handleFormatError (file) {
+                    message.add("只能上传jpg、jpeg、png格式的图片！", "error");
+                }
+            }
+        };
+        var Component0 = Vue.extend(Main0);
+        new Component0().$mount('#app0');
+        var Main5 = {
+        };
+        var Component5 = Vue.extend(Main5);
+        new Component5().$mount('#app5');
+
+        PostbirdImgGlass.init({
+            domSelector:"img",
+            animation:true
+        });
+        $('.desc_content').emoji();
+    </script>
+    <script type="text/javascript">
+      var E = window.wangEditor;
+      var editor = new E('#commnew_toolbar', '#commnew');
+      editor.customConfig.uploadImgServer = "{% url 'ws_uploadIMG' %}";
+      editor.customConfig.uploadFileName = 'img';
+      editor.customConfig.uploadImgTimeout = 60000;
+      editor.customConfig.uploadImgMaxLength = 5;
+      editor.customConfig.zIndex = 1;
+      editor.customConfig.uploadImgMaxSize = 10 * 1024 * 1024;
+      editor.customConfig.showLinkImg = false; //隐藏网络图片功能
+      editor.customConfig.pasteFilterStyle = false; //关闭粘贴样式的过滤
+      editor.customConfig.uploadImgHooks = {
+          customInsert: function (insertImg, result, editor) {
+              if (result.url.length == 0){
+                  message.add("贴图失败，请点击上传图片", "error");
+              }else {
+                  var the_url;
+                  for (the_url in result.url) {
+                      insertImg(result.url[the_url])
+                  }
+              }
+          }
+      };
+      var $the_comm = $('#comm');
+      editor.customConfig.onchange = function (html) {
+            // 监控变化，同步更新到 textarea
+            $the_comm.val(html)
+        };
+      editor.customConfig.menus = [
+        'undo',  // 撤销
+        'redo',  // 重复
+        'head',  // 标题
+        'bold',  // 粗体
+        'image'  // 插入图片
+      ];
+      editor.customConfig.customAlert = function (info) {
+        message.add(info, "error");
+      };
+      editor.create();
+    </script>
+{% endblock %}

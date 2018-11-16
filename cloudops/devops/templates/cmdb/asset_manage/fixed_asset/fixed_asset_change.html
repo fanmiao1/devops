@@ -1,0 +1,230 @@
+{% extends 'form.html' %}
+{% load staticfiles %}
+{% block page_title %}固定资产{% endblock %}
+{% block table_title %}添加/修改{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_before %}
+<link href="{% static 'bootstrap-datetimepicker/css/bootstrap-datetimepicker.css' %}" rel="stylesheet" />
+<style type="text/css">
+.stepContainer{max-height: 20px;}
+#id_status li{list-style-type:none;float: left;margin-right: 15px;margin-top: 10px;}
+#id_status{padding-left: 0}
+</style>
+
+{% endblock %}
+{% block change_form %}
+    <div id="wizard" class="form_wizard wizard_horizontal">
+      <ul class="wizard_steps">
+        <li>
+          <a href="#step-1">
+            <span class="step_no">1</span>
+            <span class="step_descr">
+              Step 1<br />
+              <small>基本信息</small>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a href="#step-2">
+            <span class="step_no">2</span>
+            <span class="step_descr">
+              Step 2<br />
+              <small>配置信息</small>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a href="#step-3">
+            <span class="step_no">3</span>
+            <span class="step_descr">
+              Step 3<br />
+              <small>其他信息</small>
+            </span>
+          </a>
+        </li>
+      </ul>
+      <form name="myform" class="form-horizontal form-label-left" method="post">
+      {% csrf_token %}
+        <div id="step-1">
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.asset_number.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.asset_number }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.asset_type.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.asset_type }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.asset_brand.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.asset_brand }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.asset_model_number.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.asset_model_number }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.asset_serial_number.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.asset_serial_number }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.purchased_date.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+                <div class="input-group date" id='datetimepicker1'>
+                    {{ form.purchased_date }}
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.overdue_insurance_date.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+                <div class="input-group date" id='datetimepicker2'>
+                    {{ form.overdue_insurance_date }}
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.applicant.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.applicant }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.applicant_date.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+                <div class="input-group date" id='datetimepicker3'>
+                    {{ form.applicant_date }}
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.project.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.project }}</div>
+          </div>
+        </div>
+        <div id="step-2">
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.cpu_model_number.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.cpu_model_number }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.cpu_kernel_num.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.cpu_kernel_num }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.memory_model_number.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.memory_model_number }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.memory_size.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.memory_size }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.ext_ip.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.ext_ip }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.int_ip.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.int_ip }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.os_version.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.os_version }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.hostname.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.hostname }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.disk_number.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.disk_number }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.disk_size.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.disk_size }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.raid_type.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.raid_type }}</div>
+          </div>
+        </div>
+        <div id="step-3">
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.status.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.status }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.asset_manager.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.asset_manager }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.idc.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.idc }}</div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">{{ form.describe.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ form.describe }}</div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <a href="javascript:history.back(-1)"><button class="btn btn-default"><i class="fa fa-reply"></i> 取消</button></a>
+{% endblock %}
+{% block ext_script %}
+    <!-- jQuery Smart Wizard -->
+    <script src="{% static 'vendors/jQuery-Smart-Wizard/js/jquery.smartWizard.js' %}"></script>
+    <script src="{% static 'bootstrap-datetimepicker/js/moment-with-locales.js' %}"></script>
+    <script src="{% static 'bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js' %}"></script>
+    <script>
+        $("#cmdb_menu_id").css("display","block");
+        $("#asset_manage_menu_id").css("display","block");
+        $("#fixed_asset_menu_id").addClass('current-page');
+        $(function () {
+            $('#datetimepicker1').datetimepicker({
+                format: 'yyyy-mm-dd',//日期格式化，只显示日期
+                language: "cn",      //中文化
+                maxDate: '2020-12-31',//最大日期
+                minDate: '1999-01-01', //最小日期
+                todayBtn: 1,//显示‘今日’按钮
+                clearBtn: 0, //清空按钮
+                weekStart: 1,
+                todayHighlight: 1,
+                autoclose: 1, //选择后自动关闭
+                startView: 2,
+                minView: 2
+            });
+            $('#datetimepicker2').datetimepicker({
+                language: "cn",
+                format: 'yyyy-mm-dd',//日期格式化，只显示日期
+                maxDate: '2020-12-31',//最大日期
+                minDate: '1999-01-01', //最小日期
+                todayBtn: 1,//显示‘今日’按钮
+                clearBtn: 0,
+                weekStart: 1,
+                todayHighlight: 1,
+                autoclose: 1, //选择后自动关闭
+                startView: 2,
+                minView: 2
+            });
+            $('#datetimepicker3').datetimepicker({
+                language: "cn",
+                format: 'yyyy-mm-dd',//日期格式化，只显示日期
+                maxDate: '2020-12-31',//最大日期
+                minDate: '1999-01-01', //最小日期
+                todayBtn: 1,//显示‘今日’按钮
+                clearBtn: 0,
+                weekStart: 1,
+                todayHighlight: 1,
+                autoclose: 1, //选择后自动关闭
+                startView: 2,
+                minView: 2
+            });
+        });
+    </script>
+{% endblock %}

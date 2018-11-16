@@ -1,0 +1,205 @@
+{% extends 'form.html' %}
+{% load staticfiles %}
+{% block page_title %}业务用户变更{% endblock %}
+{% block table_title %}申请修改用户{% endblock %}
+{% block ext_before %}
+<style type="text/css">
+.stepContainer{max-height: 20px;}
+#id_is_active li{list-style-type:none;float: left;margin-right: 15px;margin-top: 10px;}
+#id_is_active{padding-left: 0}
+</style>
+{% endblock %}
+{% block page_form %}
+    {% if projectform %}
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ projectform.project_name.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ projectform.project_name }}</div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ projectform.department.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ projectform.department }}</div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ projectform.applicant.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ projectform.applicant }}</div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12" style="margin-right: 10px;">{{ projectform.user_name.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12 input-group">
+                {{ projectform.user_name }}
+                <span class="input-group-btn">
+                    <button class="btn btn-info" type="button" id="check_user">检查</button>
+                </span>
+            </div>
+        </div>
+        <input name="doublebox" multiple="multiple" hidden id="id_doublebox">
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">选择组</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+                <div id="app">
+                    <transfer
+                        :data="data1"
+                        :target-keys="targetKeys1"
+                        :list-style="listStyle"
+                        filterable
+                        :render-format="render1"
+                        :operations="['To left','To right']"
+                        not-found-text="请点击检查用户名"
+                        @on-change="handleChange1"></transfer>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ projectform.is_active.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+                {{ projectform.is_active }}
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ projectform.remarks.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">{{ projectform.remarks }}</div>
+        </div>
+        {% endif %}
+{% endblock %}
+{% block ext_script %}
+    <!-- import Vue.js -->
+    <script src="{% static 'vuejs/vue.min.js' %}"></script>
+    <!-- import iView -->
+    <script src="{% static 'vuejs/iview.min.js' %}"></script>
+    <script type="text/javascript">
+        //<!-- 二级联动 -->
+        $(function () {
+            $("#department").selectpicker({
+                noneSelectedText : '请先选择项目'
+            });
+
+            $(window).on('load', function() {
+                $('.selectpicker').selectpicker('val', '');
+                $('.selectpicker').selectpicker('refresh');
+            });
+            let mockData = [];
+            var TargetKeys = [];
+            //获取组
+            $('#project_name').change(function () {
+                if ($(this).val() == '') {
+                    return false;
+                }
+                $.get('/get_group_' + $(this).val() + '/', function (dict) {
+                    county2 = $('#department');
+                    county2.empty().append('<option value="">-- 请选择部门 --</option>');
+                    $.each(dict.data2, function (index, item) {
+                        county2.append('<option value=' + item[0] + '>' + item[1] + '</option>');
+                    });
+                    county2.selectpicker('val', '');
+                    county2.selectpicker('refresh');
+                })
+            });
+            $('#check_user').click(function () {
+                if ($('#project_name').val() == ''){
+                    new PNotify({
+                      title: 'ERROR',
+                      text: '请选择项目!',
+                      type: 'error',
+                      styling: 'bootstrap3'
+                    });
+                    return false;
+                } else if ($('#id_user_name').val() == ''){
+                    new PNotify({
+                      title: 'ERROR',
+                      text: '请输入用户名!',
+                      type: 'error',
+                      styling: 'bootstrap3'
+                    });
+                    return false;
+                }
+                $.get('/flow/user_modify_apply_check_user_'+ $('#project_name').val() +'_' + $('#id_user_name').val() + '/', function (dict) {
+                    mockData.splice(0,mockData.length);
+                    TargetKeys.splice(0,TargetKeys.length);
+                    $.each(dict.data3, function (index, item) {
+                        if (item == 'false') {
+                            new PNotify({
+                                title: 'ERROR',
+                                text: '该成员不属于该项目或不存在该用户!',
+                                type: 'error',
+                                styling: 'bootstrap3'
+                            });
+                            return false;
+                        } else {
+                            new PNotify({
+                                title: 'SUCCESS',
+                                text: '已检查到该用户!',
+                                type: 'success',
+                                styling: 'bootstrap3'
+                            });
+                        }
+                        if (item == 0) {
+                            $('#id_is_active_0').attr("checked", "checked");
+                            var targetDivone = document.getElementById('id_is_active_0');
+                            targetDivone.parentNode.className='iradio_flat-green checked';
+                            var targetDivtwo = document.getElementById('id_is_active_1');
+                            targetDivtwo.parentNode.className='iradio_flat-green';
+{#                            $("#radio_id_1").removeClass('active');#}
+{#                            $("#radio_id_0").addClass('active');#}
+                        } else if (item == 1) {
+                            $('#id_is_active_1').attr("checked", "checked");
+                            var targetDivone2 = document.getElementById('id_is_active_1');
+                            targetDivone2.parentNode.className ='iradio_flat-green checked';
+                            var targetDivtwo2 = document.getElementById('id_is_active_0');
+                            targetDivtwo2.parentNode.className ='iradio_flat-green';
+{#                            $("#radio_id_0").removeClass('active');#}
+{#                            $("#radio_id_1").addClass('active');#}
+                        }
+                    });
+                    $.each(dict.data2, function (index, item) {
+                        mockData.push({
+                            key: item[0],
+                            label: item[1],
+                            description: item[1],
+                            disabled: false
+                        });
+                    });
+                    $.each(dict.data1, function (index, item) {
+                        TargetKeys.push(item[0]);
+                    });
+                    document.getElementById("id_doublebox").value=TargetKeys;
+                });
+            });
+            var Main = {
+                data () {
+                    return {
+                        data1: mockData,
+                        targetKeys1: TargetKeys,
+                        listStyle: {
+                        width: '40%',
+                        height: '300px'
+                    }
+                    }
+                },
+                methods: {
+                    render1 (item) {
+                        return item.label;
+                    },
+                    handleChange1 (newTargetKeys, direction, moveKeys) {
+                        document.getElementById("id_doublebox").value=newTargetKeys;
+                        this.targetKeys1 = newTargetKeys;
+                    }
+                }
+            }
+            var Component = Vue.extend(Main);
+            new Component().$mount('#app')
+        });
+    </script>
+    <script type="text/javascript">
+        $("#flow").css("display","block");
+        $("#user_apply").addClass('current-page');
+        $(document).ready(function() {
+            if (document.getElementById("id_is_active_0").checked) {
+                var targetDivone = document.getElementById('id_is_active_0');
+                targetDivone.parentNode.className='iradio_flat-green checked';
+            } else if (document.getElementById("id_is_active_1").checked) {
+                var targetDivtwo = document.getElementById('id_is_active_1');
+                targetDivtwo.parentNode.className='iradio_flat-green checked';
+            }
+        })
+    </script>
+{% endblock %}

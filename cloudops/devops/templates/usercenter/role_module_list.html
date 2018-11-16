@@ -1,0 +1,126 @@
+{% extends 'detail.html' %}
+{% load staticfiles %}
+{% block page_title %}业务用户组管理{% endblock %}
+{% block table_title %}包含的权限{% endblock %}
+{% block communication_include %}{% endblock %}
+{% block detail_info %}
+    <table class="table table-striped table-bordered dt-responsive nowrap" id="table"></table>
+    <script type="text/javascript">
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "post",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:"/flow/role_manage/module_{{ id }}/",
+                toolbar: '#mytab',//指定工具栏
+                striped: true,  //表格显示条纹
+                dataField: "rows",
+                pagination: true, //启动分页
+                pageSize: 15,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+{#                            search: true,  //是否启用查询#}
+{#                            showColumns: true,  //显示下拉框勾选要显示的列#}
+                showRefresh: false,  //显示刷新按钮
+                showSearchButton: false,
+                sidePagination: "server", //表示服务端请求
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined",
+                clickToSelect: true,//是否启用点击选中行
+                toolbarAlign:'left',//工具栏对齐方式
+                buttonsAlign:'left',//按钮对齐方式
+                columns:[
+                    {
+                        title:'ID',
+                        field:'id',
+                        sortable:false
+                    },
+                    {
+                        title:'权限名称',
+                        field:'module_name',
+                        sortable:false
+                    },
+                    {
+                        title:'权限url',
+                        field:'module_url',
+                        sortable:false
+                    }
+                ],
+                queryParams: function queryParams(params) {   //设置查询参数
+                    var param = {
+                        //加上csrf
+                        csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                        pageNumber: params.pageNumber,
+                        pageSize: params.pageSize,
+                        search:$(" input[ name='search_text' ] ").val(),
+                    };
+                    return param;
+                },
+
+            });
+        }
+        $(document).ready(function () {
+            //调用函数，初始化表格
+            initTable();
+        });
+    </script>
+{% endblock %}
+{% block ystep %}
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="approval">
+            <a href="{% url 'role_manage' %}"><button type="button" class="btn btn-default"> 返回 </button></a>
+        </div>
+    </div>
+{% endblock %}
+{% block ext_script_add %}
+    <script type="text/javascript" src="{% static 'bootstrap/js/doublebox-bootstrap.js' %}"></script>
+    <script type="text/javascript">
+    // 二级联动
+    $('#myModal').on('shown.bs.modal', function () {
+        $.get('/usercenter/get_project_group_user_' + {{ id }} + '/', function (dict) {
+            $('#double_id').empty();
+            var select = [];
+            var select_list = "";
+            var noselect = [];
+            var noselect_list = "";
+            $.each(dict.data1, function (index, item) {
+                select.push({"moduleId": item[0] ,"moduleName": item[1]});
+            });
+            select_list = JSON.stringify(select);
+            $.each(dict.data2, function (index, item) {
+                noselect.push({"moduleId": item[0], "moduleName": item[1]});
+            });
+            noselect_list = JSON.stringify(noselect);
+            console.log(eval(noselect_list));
+            var demo2 = $('.demo').doublebox({
+                nonSelectedListLabel: '选择用户',
+                selectedListLabel: '加入该组的用户',
+                preserveSelectionOnMove: 'moved',
+                moveOnSelect: false,
+                nonSelectedList:eval(noselect_list),
+                selectedList:eval(select_list),
+                optionValue:"moduleId",
+                optionText:"moduleName",
+                doubleMove:true
+            });
+        });
+    });
+    $(document).ready(function() {
+         var demo2 = $('.demo').doublebox({
+             nonSelectedListLabel: '选择用户',
+             selectedListLabel: '加入该组的用户',
+             preserveSelectionOnMove: 'moved',
+             moveOnSelect: false,
+             nonSelectedList: [{"moduleId": '', "moduleName": ''}],
+             selectedList: [{"moduleId": '', "moduleName": ''}],
+             optionValue: "moduleId",
+             optionText: "moduleName",
+             doubleMove: true
+         });
+    });
+    $("#usercenter_menu_id").css("display","block");
+    $("#project_role_manage").addClass('current-page');
+  </script>
+{% endblock %}

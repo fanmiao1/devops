@@ -1,0 +1,429 @@
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}数据迁移任务{% endblock %}
+{% block table_title %}申请列表{% endblock %}
+{% block ext_button %}
+    <style>
+        .detail {
+            display: block;
+            height: 0;
+        }
+        .success{
+            background: #4041c3;
+        }
+    </style>
+    <div id="toolbar" class="btn-group pull-right" style="margin-bottom: 10px;">
+        <a href="{% url 'apply_data_migrate' %}" style="color: #333333">
+            <button id="btn_add" type="button" class="btn btn-default" style="float: right">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 新增
+            </button>
+        </a>
+    </div>
+{% endblock %}
+{% block table %}
+    <script type="text/javascript">
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "post",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:'{% url "data_migrate" %}',
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                dataField: "rows",
+                pagination: true, //启动分页
+                sortable: true,  //启用排序
+                pageSize: 15,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+                search: true,  //是否启用查询
+                searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+                searchAlign:'left',	//指定 搜索框 水平方向的位置。’left’ or ‘right’
+                showColumns: true,  //显示下拉框勾选要显示的列
+                showRefresh: true,  //显示刷新按钮
+                showSearchButton: false, //显示搜索按钮
+                showExport: true,//显示导出按钮
+                exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                sidePagination: "server", //表示服务端请求
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined",
+                clickToSelect: true,//是否启用点击选中行
+                toolbarAlign:'right',//工具栏对齐方式
+                buttonsAlign:'left',//按钮对齐方式
+                columns:[
+                    {#{checkbox: true},#}
+                    {
+                        title:'ID',
+                        field:'id',
+                        align:'center',
+                        sortable:true
+                    },
+                     {
+                        title:'申请人',
+                        field:'applicant',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'标题',
+                        field:'title',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'所属项目',
+                        field:'project',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'源实例',
+                        field:'origin_instance',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'目标实例',
+                        field:'target_instance',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'源库',
+                        field:'origin_db',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'目标库',
+                        field:'target_db',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'源表',
+                        field:'origin_tab',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'申请时间',
+                        field:'application_time',
+                        align:'center',
+                        sortable:true
+                    },
+                    {
+                        title:'状态',
+                        field:'application_status',
+                        sortable:true,
+                        sortName :'status',
+                        formatter :function(value,row,index) {
+                            if(value == 5) {
+                                var a = '<span style="color:#5CB85C;">已完成</span>';
+                            }else if (value == 4){
+                                var a = '<span style="color:#5B2C6F;">迁移中</span>';
+                            }else if(value == 1){
+                                var a = '<span style="color:#5bc0de;">待审批</span>';
+                            }else if(value == 0) {
+                                var a = '<span style="color:#FF0000;">驳回</span>';
+                            }else{
+                                var a = '<span style="color:#FFA500;">待迁移</span>';
+                            }
+                            return a;
+                        }
+                    },
+                    {
+                        title:'操作',
+                        field:'id',
+                        align:'center',
+                        //列数据格式化
+                        //formatter:operateFormatter
+                        formatter:function(value,row,gitflow){
+                            var d = '<a href="/database/instance/datamigrate/'+ row.id +'/" mce_href="#" onclick="return delete_sql();"><button type="button" id="btn_submit1" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span> 删除</button></a> ';
+                                return d;
+                        }
+                    }
+                ],
+                queryParams: function queryParams(params) {   //设置查询参数
+                    var param = {
+                        //加上csrf
+                        csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                        pageNumber: params.pageNumber,
+                        search:params.searchText,
+                        pageSize: params.pageSize,
+                        order:params.sortOrder,
+                        sort:params.sortName
+                    };
+                    return param;
+                }
+                {#detailView: true,#}
+                {#onExpandRow: function (index, row, $detail) {#}
+                {#    InitSubTable(index, row, $detail);#}
+
+
+            });
+        }
+
+        {# function InitSubTable(index, row, $detail) {#}
+        {#    var cur_table = $detail.html('<table></table>').find('table');#}
+        {#    $(cur_table).bootstrapTable({#}
+        {#        url: '/database/instance/datamigrate/log/' + row.id + '/',#}
+        {#        method: "post",  //使用post请求到服务器获取数据#}
+        {#        contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有#}
+        {#        dataType: "json",#}
+        {#        cache: false,#}
+        {#        striped: true,  //表格显示条纹#}
+        {#        dataField: "rows",#}
+        {#        pagination: true, //启动分页#}
+        {#        sortable: true,  //启用排序#}
+        {#        pageSize: 5,  //每页显示的记录数#}
+        {#        pageNumber:1, //当前第几页#}
+        {#        pageList: [5, 10, 15, 20, 25],  //记录数可选列表#}
+        {#        sidePagination: "server", //表示服务端请求#}
+        {#        //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder#}
+        {#        //设置为limit可以获取limit, offset, search, sort, order#}
+        {#        queryParamsType : "undefined",#}
+        {#        clickToSelect: true,//是否启用点击选中行#}
+        {#        toolbarAlign:'right',//工具栏对齐方式#}
+        {#        buttonsAlign:'left',//按钮对齐方式#}
+        {#        columns:[#}
+        {##}
+        {#            {#}
+        {#                title:'ID',#}
+        {#                field:'id',#}
+        {#                align:'center',#}
+        {#                sortable:true#}
+        {#            },#}
+        {#             {#}
+        {#                title:'日志',#}
+        {#                field:'content',#}
+        {#                align:'center',#}
+        {#                sortable:true#}
+        {#            },#}
+        {#            {#}
+        {#                title:'时间',#}
+        {#                field:'create_time',#}
+        {#                align:'center',#}
+        {#                sortable:true#}
+        {#            }],#}
+        {#        queryParams: function queryParams(params) {   //设置查询参数#}
+        {#            var param = {#}
+        {#                //加上csrf#}
+        {#                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),#}
+        {#                pageNumber: params.pageNumber,#}
+        {#                search: params.searchText,#}
+        {#                pageSize: params.pageSize,#}
+        {#                order: params.sortOrder,#}
+        {#                sort: params.sortName#}
+        {#            };#}
+        {#            return param;#}
+        {#        }#}
+        {#    });#}
+
+
+        $(document).ready(function () {
+            //调用函数，初始化表格
+            initTable();
+
+            //当点击查询按钮的时候执行
+            $("#search").bind("click", initTable);
+        });
+
+        function delete_sql(){
+            if(confirm("确定要删除吗")){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+    </script>
+       <!-- 关闭工单模态框 -->
+    <div class="modal fade" id="reback_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">驳回</h4>
+                </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <textarea name="reback_reason" id="reback_reason" cols="40" rows="10" class="form-control" placeholder="请填写驳回建议"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal"> 取消</button>
+                        <button type="submit" class="btn btn-primary" id="reback"> 提交</button>
+                    </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div><!-- 关闭工单模态框 -->
+{% endblock %}
+{% block ext_row %}
+        <div class="col-md-4 col-sm-4 col-xs-12" id="detail_row_id" style="display: none">
+            <div class="x_panel">
+              <div class="x_title">
+                  <h2><i class="fa fa-align-left"></i> 迁移详情</h2>
+                <ul class="nav navbar-right panel_toolbox">
+                <li><a id="compress_worksheet_detail_id" style="display: none;"><i class="fa fa-compress"></i></a></li>
+                <li><a id="expand_worksheet_detail_id"><i class="fa fa-expand"></i></a></li>
+                <li><a id="close_worksheet_detail_id"><i class="fa fa-close"></i></a></li>
+                </ul>
+                <div class="clearfix"></div>
+              </div>
+              <div class="x_content roll" style="max-height: 1000px; overflow-y: auto">
+                <!-- start accordion -->
+                <div class="accordion" id="accordion" role="tablist" aria-multiselectable="true">
+                  <div class="panel">
+                    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                      <div class="panel-body">
+                        <div class="col-xs-12">
+                          <p class="lead">详情</p><div id="action_btn"></div>
+                          <div class="table-responsive">
+                              <table class="table">
+                                <tbody id="detail_tbody_id"></tbody>
+                              </table>
+                          </div>
+                            <p class="lead" style="margin-bottom: 0">操作记录</p>
+                          <div>
+                              <ul id="detail_logs_ul_id"></ul>
+                          </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_script %}
+    <script src="{% static 'js/aukeyops/detail.js' %}"></script>
+    <script src="{% static 'js/postbird-img-glass.min.js' %}"></script>
+    <script>
+    PostbirdImgGlass.init({
+        domSelector:"img",
+        animation:true
+    });
+    </script>
+    <script>
+        function Reback(ID) { //指派
+            $('#reback_modal').modal('hide');
+            var reback_reason= $('#reback_reason').val();
+            console.log(reback_reason);
+            $.ajax({
+                type: "post",
+                url: "/database/instance/datamigrate/reback/" + ID + "/",
+                dataType: "json",
+                data:{"reback_reason": reback_reason},
+                success: function (result) {
+                    if (result['code'] == 1) {
+                        new PNotify({
+                            title: 'SUCCESS',
+                            text: result['result'],
+                            type: 'success',
+                            styling: 'bootstrap3'
+                        });
+                        // 刷新表格
+                        $('#table').bootstrapTable("refresh");
+                        watch_detail(ID);
+                        document.getElementById("detail_row_id").style.display = "block";
+                        document.getElementById("table_row_id").className= "col-md-8 col-sm-8 col-xs-12";
+                    } else {
+                        new PNotify({
+                            title: 'ERROR',
+                            text: result['result'],
+                            type: 'error',
+                            styling: 'bootstrap3'
+                        });
+                    }
+                }
+            });
+        }
+     function watch_detail(ID){
+        $.ajax({
+            type: "post",
+            url: "/database/instance/datamigrate/release_detail/" + ID + '/',
+            dataType: "json",
+            success: function(result) {
+                document.getElementById("table_row_id").className= "col-md-8 col-sm-8 col-xs-12";
+                document.getElementById("detail_row_id").style.display= "block";
+                $("#action_btn").html('');
+                var btn_pm = '<a href="/database/instance/datamigrate/release_detail/pm/' + result.id + '_2/" style="color: inherit"> <button type="button" class="btn btn-success btn-xs"> 项目经理审批通过 </button> </a>';
+                var btn_dba = '<a href="/database/instance/datamigrate/release_detail/ops/' +result.id+ '_3/" style="color: inherit"> <button type="button" class="btn btn-success btn-xs"> 运维DBA审批通过 </button> </a>';
+                var btn_exe = '<a href="/database/instance/datamigrate/release_detail/exec/' + result.id + '_4/" style="color: inherit"> <button type="button" class="btn btn-primary btn-xs" style="width: 130px;"> 执行 </button> </a>';
+                var btn_reback = '<input type="button" class="btn btn-danger btn-xs" data-id=' +result.id+ ' data-toggle="modal" data-target="#reback_modal" value="驳回">';
+
+                if (result.application_status == '待审批') {
+                    $("#action_btn").append(btn_pm + btn_reback);
+                } else if (result.application_status == '项目经理审批通过'){
+                    $("#action_btn").append(btn_dba + btn_reback);
+                } else if (result.application_status == '运维DBA审批通过'){
+                    $("#action_btn").append(btn_exe + btn_reback);
+                }
+                var Textaproval = '';
+                var Text = '\
+                <tr><th style="width: 25%">编号:</th><td>'+result.id+'</td></tr>\
+                <tr><th>申请人:</th><td>'+result.applicant+'</td></tr>\
+                <tr><th>标题:</th><td>'+result.title+'</td></tr>\
+                <tr><th>项目:</th><td>'+result.project+'</td></tr>\
+                <tr><th>源实例:</th><td>'+result.origin_instance+'</td></tr>\
+                <tr><th>目标实例:</th><td>'+result.target_instance+'</td></tr>\
+                <tr><th>源库:</th><td style="word-break: break-all;">'+result.origin_db+'</td></tr>\
+                <tr><th>目标库:</th><td style="word-break: break-all;">'+result.target_db+'</td></tr>\
+                <tr><th>源表:</th><td><pre style="white-space: pre-wrap; word-wrap: break-word; word-break: break-all;">'+result.origin_tab+'</pre></td></tr>\
+                <tr><th>新建数据库:</th><td>'+result.is_new_db+'</td></tr>\
+                <tr><th>迁移数据:</th><td>'+result.is_export_data+'</td></tr>\
+                <tr><th>迁移视图:</th><td>'+result.is_export_view+'</td></tr>\
+                <tr><th>迁移存储过程/函数:</th><td>'+result.is_export_routine+'</td></tr>\
+                <tr><th>迁移前备份目标数据:</th><td>'+result.is_export_target+'</td></tr>\
+                <tr><th>状态:</th><td>'+result.application_status+'</td></tr>\
+                <tr><th>申请时间:</th><td>'+result.application_time+'</td></tr>';
+                document.getElementById("detail_tbody_id").innerHTML= Text;
+
+                county = $('#detail_logs_ul_id');
+                county.empty();
+                $.each(result.logs, function (index, item) {
+                    county.append('<li>' + item[0] +'<pre style="white-space: pre-wrap;">'+ item[1] + '</pre></li>');
+                });
+            }
+        });
+     }
+
+     $("#close_worksheet_detail_id").click(function () {
+         document.getElementById("detail_row_id").className = "col-md-4 col-sm-4 col-xs-4";
+         document.getElementById("detail_row_id").style.display = "none";
+         document.getElementById("table_row_id").style.display = "block";
+         document.getElementById("table_row_id").className = "col-md-12 col-sm-12 col-xs-12";
+         document.getElementById("expand_worksheet_detail_id").style.display = "block";
+         document.getElementById("compress_worksheet_detail_id").style.display = "none";
+     });
+     $("#expand_worksheet_detail_id").click(function () {
+         document.getElementById("detail_row_id").className = "col-md-12 col-sm-12 col-xs-12";
+         document.getElementById("table_row_id").style.display = "none";
+         document.getElementById("expand_worksheet_detail_id").style.display = "none";
+         document.getElementById("compress_worksheet_detail_id").style.display = "block";
+     });
+     $("#compress_worksheet_detail_id").click(function () {
+         document.getElementById("detail_row_id").className = "col-md-4 col-sm-4 col-xs-4";
+         document.getElementById("table_row_id").style.display = "block";
+         document.getElementById("table_row_id").className = "col-md-8 col-sm-8 col-xs-12";
+         document.getElementById("expand_worksheet_detail_id").style.display = "block";
+         document.getElementById("compress_worksheet_detail_id").style.display = "none";
+     });
+     $(table).on('click-row.bs.table', function (e, row, element) {
+         watch_detail(row.id);
+         $('.success').removeClass('success');
+         $(element).addClass('success');
+     });
+     $('#reback_modal').on('show.bs.modal', function (e) {
+        var btn = $(e.relatedTarget);
+        var id = btn.data("id");
+        document.getElementById('reback').setAttribute('onclick', 'Reback(' + id + ')');
+    });
+     </script>
+{% endblock %}

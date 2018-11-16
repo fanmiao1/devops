@@ -1,0 +1,71 @@
+{% extends 'form.html' %}
+{% load staticfiles %}
+{% block page_title %}业务用户组管理{% endblock %}
+{% block table_title %}添加/修改{% endblock %}
+{% block page_form %}
+    {% for field in form %}
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ field.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+            {{ field }}
+            </div>
+        </div>
+    {% endfor %}
+    {% if type == 'add' %}
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ field.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+                <select name="doublebox" class="demo" multiple="multiple" size="10" id="double_id"></select>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+{% block ext_script %}
+    {% if type == 'add' %}
+    <script type="text/javascript" src="{% static 'bootstrap/js/doublebox-bootstrap.js' %}"></script>
+    <script type="text/javascript">
+        // 二级联动
+        $('#project_id').change(function () {
+            $("#double_id").find('option').remove();
+            $.get('/usercenter/get_all_project_user_' + $(this).val() + '/', function (dict) {
+                var select = [];
+                var select_list = "";
+                var noselect = [];
+                var noselect_list = "";
+                $.each(dict.data, function (index, item) {
+                    noselect.push({"moduleId": item[0], "moduleName": item[1]});
+                });
+                noselect_list = JSON.stringify(noselect);
+                var demo2 = $('.demo').doublebox({
+                    nonSelectedListLabel: '选择用户',
+                    selectedListLabel: '加入该组的用户',
+                    preserveSelectionOnMove: 'moved',
+                    moveOnSelect: false,
+                    nonSelectedList:eval(noselect_list),
+                    selectedList:[],
+                    optionValue:"moduleId",
+                    optionText:"moduleName",
+                    doubleMove:true
+                });
+            });
+        });
+        $(document).ready(function() {
+             var demo2 = $('.demo').doublebox({
+                 nonSelectedListLabel: '选择用户',
+                 selectedListLabel: '加入该组的用户',
+                 preserveSelectionOnMove: 'moved',
+                 moveOnSelect: false,
+                 nonSelectedList: [{"moduleId": '请选择项目', "moduleName": '请选择项目'}],
+                 selectedList: [{"moduleId": '请选择项目', "moduleName": '请选择项目'}],
+                 optionValue: "moduleId",
+                 optionText: "moduleName",
+                 doubleMove: true
+             });
+        });
+    </script>
+    {% endif %}
+    <script type="text/javascript">
+        $("#usercenter_menu_id").css("display","block");
+        $("#project_authority_group_manage").addClass('current-page');
+    </script>
+{% endblock %}

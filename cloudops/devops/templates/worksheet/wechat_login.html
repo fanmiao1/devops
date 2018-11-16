@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>扫码登录 - 工单系统</title>
+    <link rel="stylesheet" href="{% static 'vuejs/iview.css' %}">
+    <style>
+        html{
+            width: 100%;
+            background-color:rgb(237, 241, 245)
+        }
+        .center-div{
+            width: 100%;
+            margin: 0 auto;
+            text-align:center; /* 文字等内容居中 */
+            position: absolute;
+        }
+        pre{
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="frame_wrap isWin">
+<div class="center-div">
+    <div class="ivu-icon ivu-icon-information-circled" style="width: 43%; margin: 0 auto;margin-bottom: 20px;margin-top:20px;font-size: 15px;">
+        <span class="ivu-alert-message">扫描二维码进行工单登记</span>
+    </div>
+    <div class="ivu-card ivu-card-bordered" style="width: 400px;margin: 0 auto;margin-bottom: 15px;padding-top: 5px;">
+        <div class="ivu-card-body">
+            <div id="wx_reg"></div>
+        </div>
+    </div>
+    <div class="ivu-alert ivu-alert-info ivu-alert-with-icon ivu-alert-with-desc" style="width: 43%; margin: 0 auto;">
+        <span class="ivu-alert-icon" style="top: 15%;"><i class="ivu-icon ivu-icon-ios-lightbulb-outline"></i></span>
+        <span class="ivu-alert-desc">
+            <span style="font-size: 15px;font-family: Consolas,Menlo,Courier,monospace">
+<p>目前提交工单方式有：</p>
+<p style="padding-left: 25px;">1.在<b>企业微信</b>的「工作台」-「信息部客服」-「工单登记」提交工单；</p>
+<p style="padding-left: 25px;">2.发邮件到IT技术支持邮箱：<b>itsupport@aukeys.com</b>；</p>
+<br>
+<p>提交后的工单可在企业微信的「工作台」 -「信息部客服」-「工单记录」中查询工单状态和工单的历史记录。</p>
+<br>
+<p style="float: right">傲基信息部客服</p>
+<br>
+            </span>
+        </span>
+    </div>
+</div>
+<script src="{% static 'js/jquery-3.0.0.min.js' %}"></script>
+<script src="{% static 'js/wwLogin-1.0.0.js' %}"></script>
+<script>
+window.WwLogin({
+    "id" : "wx_reg",
+    "appid" : "{{ appid }}",
+    "agentid" : "{{ agentid }}",
+    "redirect_uri" :"{{ redirect_uri }}",
+    "state" : "STATE",
+    "href" : "data:text/css;base64,LyouaW1wb3dlckJveCAucXJjb2RlIHt3aWR0aDogMjAwcHg7fSovDQovKi5pbXBvd2VyQm94IC50aXRsZSB7ZGlzcGxheTogbm9uZTt9Ki8NCi8qLmltcG93ZXJCb3ggLmluZm8ge3dpZHRoOiAyMDBweDt9Ki8NCi8qLnN0YXR1c19pY29uIHsgZGlzcGxheTogbm9uZSAhaW1wb3J0YW50O30qLw0KLyouaW1wb3dlckJv\
+eCAuc3RhdHVzIHt0ZXh0LWFsaWduOiBjZW50ZXI7fSovDQo="
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{% extends 'worksheet/simple.html' %}
+{% load staticfiles %}
+{% block title_top %}工单系统 - 常见问题{% endblock %}
+{% block custom %}{% endblock %}
+{% block ext_css %}
+<link href="{% static 'css/weui.css' %}" rel="stylesheet">
+<link href="{% static 'css/weui-example.css' %}" rel="stylesheet">
+<style>
+    body{
+        color:#000;
+    }
+    pre{
+        background-color: #fff;
+        border:0;
+        padding: 0;
+        font-family:Microsoft YaHei;
+        white-space: pre-wrap!important;
+        word-wrap: break-word!important;
+        *white-space:normal!important;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container" id="container">
+    <div class="page article js_show">
+        <div class="page__hd" style="padding-left: 15px;">
+            <h1 class="page__title">{{ question }}</h1>
+        </div>
+        <div class="page__bd">
+            <article class="weui-article">
+                <section>
+                    <section>
+                        <p><pre>{% autoescape off %}{{ answer }}{% endautoescape %}</pre></p>
+                    </section>
+                </section>
+            </article>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block ext_js %}{% endblock %}

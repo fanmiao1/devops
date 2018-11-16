@@ -1,0 +1,73 @@
+{% extends 'form.html' %}
+{% load staticfiles %}
+{% block page_title %}实例管理{% endblock %}
+{% block table_title %}添加/修改{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block page_form %}
+    {% for field in instanceform %}
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ field.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+            {{ field }}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
+{% block ext_script %}
+    <script type="text/javascript" src={% static 'js/jquery.validate.js' %}></script>
+
+    <script type="text/javascript">
+        $("#database_menu_id").css("display","block");
+        $("#instances_list").addClass('current-page');
+    </script>
+
+    <script>
+    {#$("#demo-form2").submit(function () {#}
+    {#    $(this).submit(function () {#}
+    {#        return false;#}
+    {#    });#}
+    {#    return true;#}
+    {#{);#}
+
+
+    $('#btn-submit').on('click',function(){
+        $(document.body).append('<div class="loadding_warp"><div class="lodding"></div><img id="loadding_gif" src="{% static 'images/loadding.gif' %}"></div>');
+        setTimeout(function() {
+                $('.loadding_warp').remove();
+            }
+        ,1000)
+    });
+    {#jQuery(function ($) {#}
+    {##}
+    {#    const loadding = $("#loadding");#}
+    {#    $loadding.on("click", function () {#}
+    {#        $(this).prop('disabled', true);#}
+    {##}
+    {#        setTimeout(function () {#}
+    {#            $loadding.prop('disabled', false);#}
+    {#        }, 2000);#}
+    {#    });#}
+    {#{)#}
+
+
+    </script>
+
+    <script>
+        $().ready(function () {
+            $("#demo-form2").validate({
+                rules: {
+                    instance_password: {
+                        required: true,
+                        minlength: 6
+                    },
+                    confirm_password: {
+                        required: true,
+                        minlength: 6,
+                        equalTo: "#instance_password"
+                    }
+                }
+            })
+        });
+    </script>
+{% endblock %}
+

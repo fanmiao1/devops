@@ -1,0 +1,272 @@
+{% extends 'form.html' %}
+{% load staticfiles %}
+{% block page_title %}数据库变更{% endblock %}
+{% block table_title %}申请授权{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_before %}
+    <link href="{% static 'vendors/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+    <link href="{% static 'build/css/custom.min.css' %}" rel="stylesheet">
+    <style>
+        #privileges li{list-style-type:none;float: left;margin-right: 15px;margin-top: 10px;}
+        #privileges{padding-left: 0}
+    </style>
+{% endblock %}
+{% block page_form %}
+    {% for field in applicationform %}
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ field.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+            {{ field }}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
+{% block ext_script %}
+    <script src="{% static 'vendors/switchery/dist/switchery.min.js' %}"></script>
+    <script type="text/javascript">
+        $('#instance_name').selectpicker({
+            noneSelectedText: '请先选择项目'
+        });
+        $('#project_manager').selectpicker({
+            noneSelectedText: '请先选择项目'
+        });
+        $('#database_name').selectpicker({
+            noneSelectedText: '请先选择实例'
+        });
+
+        $('#table_name').selectpicker({
+            noneSelectedText: '请选择数据表，默认赋权所有表'
+        });
+
+        $('#username').selectpicker({
+            noneSelectedText: '请先选择实例'
+        });
+        $('#ops_user').selectpicker({
+            noneSelectedText: '请先选择实例'
+        });
+        $('#privileges').selectpicker({
+            noneSelectedText: '请选择权限'
+        });
+
+        $(window).on('load', function () {
+            $('.selectpicker').selectpicker('val', '');
+            $('.selectpicker').selectpicker('refresh');
+        });
+        $("#flow").css("display","block");
+        $("#database_release_flow").addClass('current-page');
+
+        function getProject(user_id) {
+            $.ajax({
+                type: "post",
+                url: '{% url "get_project" %}',
+                dataType: "json",
+                data: {"user_id": user_id},
+                success: function (dict) {
+                    county = $('#project_name');
+                    county.append('<option value>请选择项目</option>');
+                    $.each(dict.data, function (index, item) {
+                        county.append('<option value=' + item[0] + '>' + item[1] + '</option>');
+                    });
+                    county.selectpicker('val', '');
+                    county.selectpicker('refresh');
+                }
+            });
+        }
+
+        function maxAllowedMultiselect(obj, maxAllowedCount) {
+            let selectedOptions = jQuery('#' + obj.id + " option[value!=\'\']:selected");
+            if (selectedOptions.length >= maxAllowedCount) {
+                if (selectedOptions.length > maxAllowedCount) {
+                    selectedOptions.each(function (i) {
+                        if (i >= maxAllowedCount) {
+                            jQuery(this).prop("selected", false);
+                        }
+                    });
+                }
+                jQuery('#' + obj.id + ' option[value!=\'\']').not(':selected').prop("disabled", true);
+                jQuery('#' + obj.id).selectpicker('refresh');
+            } else {
+                jQuery('#' + obj.id + ' option[value!=\'\']').prop("disabled", false);
+                jQuery('#' + obj.id).selectpicker('refresh');
+            }
+        }
+
+        $(function () {
+            $('#project_name').val("");
+            //获取项目经理
+            $('#project_name').change(function () {
+                $('#database_name').empty();
+                $('#database_name').selectpicker('val', '');
+                $('#database_name').selectpicker('refresh');
+                $('#username').empty();
+                $('#username').selectpicker('val', '');
+                $('#username').selectpicker('refresh');
+                $('#ops_user').empty();
+                $('#ops_user').selectpicker('val', '');
+                $('#ops_user').selectpicker('refresh');
+                project_name = $('#project_name').val();
+                if (project_name != '') {
+                    $.get('/get_project_manager_' + $(this).val() + '/', function (dict) {
+                        county = $('#project_manager');
+                        county.empty();
+                        $.each(dict.data, function (index, item) {
+                            county.append('<option  value=' + item[0] + '>' + item[1] + '</option>');
+                        });
+                        county.selectpicker('val', '');
+                        county.selectpicker('refresh');
+                    });
+                    //获取数据库实例列表
+                    $.get('/database/instance/get_instance/' + $(this).val() + '/', function (dict) {
+                        county = $('#instance_name');
+                        county.empty();
+                        county.append('<option value="">--- 请选择 ---</option>');
+                        {#county.empty().append('<option value="">请选择数据库用户</option>');#}
+                        $.each(dict.data, function (index, item) {
+                            {#county.append('<label><input type="checkbox" value=' + item[0]+ '/>' + item[0] + '</label>');#}
+                            county.append('<option  value=' + item[0] + '>' + item[1] + '</option>');
+                        });
+                        county.selectpicker('val', '');
+                        county.selectpicker('refresh');
+                    });
+                }else{
+                    $('#project_manager').empty();
+                    $('#project_manager').selectpicker('val', '');
+                    $('#project_manager').selectpicker('refresh');
+                    $('#instance_name').empty();
+                    $('#instance_name').selectpicker('val', '');
+                    $('#instance_name').selectpicker('refresh');
+                }
+            });
+
+            //获取数据库用户列表
+            $('#instance_name').change(function () {
+                var instance_name = $('#instance_name').val();
+                if (instance_name != '') {
+                    $.get('/database/instance/get_user/' + $(this).val() + '/', function (dict) {
+                        county = $('#username');
+                        county.empty();
+                        {#county.empty().append('<option value="">请选择数据库用户</option>');#}
+                        $.each(dict.data, function (index, item) {
+                            {#county.append('<label><input type="checkbox" value=' + item[0]+ '/>' + item[0] + '</label>');#}
+                            county.append('<option  value=' + item[0] + '>' + item[0] + '</option>');
+                        });
+                        county.selectpicker('val', '');
+                        county.selectpicker('refresh');
+                    });
+                    //获取数据库列表
+                    $.get('/database/instance/get_database/' + $(this).val() + '/', function (dict) {
+                        county = $('#database_name');
+                        county.empty();
+                        {#county.empty().append('<option value="">请选择数据库</option>');#}
+                        $.each(dict.data, function (index, item) {
+                            {#county.append('<label><input type="checkbox" value=' + item[0]+ '/>' + item[0] + '</label>');#}
+                            county.append('<option  value=' + item[0] + '>' + item[0] + '</option>');
+                        });
+                        county.selectpicker('val', '');
+                        county.selectpicker('refresh');
+                    });
+                    //获取数据库实例运维DBA
+                    $.get('/database/instance/get_instance_dba/' + $(this).val() + '/', function (dict) {
+                        county = $('#ops_user');
+                        county.empty();
+                        {#county.append('<option value>--- 请选择 ---</option>');#}
+                        {#county.empty().append('<option value="">请选择数据库用户</option>');#}
+                        $.each(dict.data, function (index, item) {
+                            {#county.append('<label><input type="checkbox" value=' + item[0]+ '/>' + item[0] + '</label>');#}
+                            county.append('<option  value=' + item[0] + '>' + item[1] + '</option>');
+                        });
+                        county.selectpicker('val', '');
+                        county.selectpicker('refresh');
+                    })
+                }else{
+                    $('#username').empty();
+                    $('#username').selectpicker('val', '');
+                    $('#username').selectpicker('refresh');
+                    $('#database_name').empty();
+                    $('#database_name').selectpicker('val', '');
+                    $('#database_name').selectpicker('refresh');
+                    $('#ops_user').empty();
+                    $('#ops_user').selectpicker('val', '');
+                    $('#ops_user').selectpicker('refresh');
+                }
+            });
+
+              // 获取源表
+             $('#database_name').change(function () {
+                 maxAllowedMultiselect(this, 3);
+                 var instance_name = $('#instance_name').val();
+                 var database_name = $('#database_name').val();
+                 if (database_name != []) {
+                     $.ajax({
+                         type: "post",
+                         url: '{% url "get_database_table" %}',
+                         dataType: "json",
+                         data: {"instance_id": instance_name, "databases": database_name},
+                         success: function (dict) {
+                             county = $('#table_name');
+                             county.empty();
+                             {#county.append('<option value>请选择项目</option>');#}
+                             $.each(dict.data, function (index, item) {
+                                 county.append('<option value=' + item[0] + '>' + item[0] + '</option>');
+                             });
+                             county.selectpicker('val', '');
+                             county.selectpicker('refresh');
+                         }
+                    });
+                 }else{
+                     $('#table_name').empty();
+                     $('#table_name').selectpicker('val', '');
+                     $('#table_name').selectpicker('refresh');
+                 }
+             });
+        })
+    </script>
+
+   <script>
+        $().ready(function () {
+            getProject({{ user.id }});
+            $("#demo-form2").validate({
+                rules: {
+                    instance_name:{
+                       required: true
+                    },
+                    privileges:{
+                       required: true
+                    }
+                }
+            })
+        });
+    </script>
+
+        <script>
+    {#$("#demo-form2").submit(function () {#}
+    {#    $(this).submit(function () {#}
+    {#        return false;#}
+    {#    });#}
+    {#    return true;#}
+    {#{);#}
+
+
+    $('#btn-submit').on('click',function(){
+        $(document.body).append('<div class="loadding_warp"><div class="lodding"></div><img id="loadding_gif" src="{% static 'images/loadding.gif' %}"></div>');
+        setTimeout(function() {
+                $('.loadding_warp').remove();
+            }
+        ,1000)
+    });
+    {#jQuery(function ($) {#}
+    {##}
+    {#    const loadding = $("#loadding");#}
+    {#    $loadding.on("click", function () {#}
+    {#        $(this).prop('disabled', true);#}
+    {##}
+    {#        setTimeout(function () {#}
+    {#            $loadding.prop('disabled', false);#}
+    {#        }, 2000);#}
+    {#    });#}
+    {#{)#}
+
+
+    </script>
+
+{% endblock %}

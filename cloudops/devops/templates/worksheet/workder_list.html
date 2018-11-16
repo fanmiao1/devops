@@ -1,0 +1,1076 @@
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}工单系统{% endblock %}
+{% block table_title %}{% if status == 1 %}未受理的工单{% elif status == 2 %}待处理的工单{% elif status == 3 %}已处理的工单{% endif %}{% endblock %}
+{% block ext_before %}
+    <link href="{%static 'boxImg/css/boxImg.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'jedate/jedate.css' %}" rel="stylesheet" />
+    <style>
+    body{
+        font-family: "Helvetica Neue",Roboto,Arial,"Droid Sans",sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 400 !important;
+    }
+    .success{
+        background: #4041c3;
+    }
+    #table{
+        table-layout:fixed;
+    }
+    tr td:not(:last-child){
+        overflow: hidden;
+        text-overflow:ellipsis;
+        white-space: nowrap;
+    }
+    pre{
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        }
+    .ivu-badge-count{
+        margin-left: 10px;
+        position: inherit;
+    }
+    #detail_row_id tr{
+        white-space:nowrap;
+    }
+    #detail_row_id tr td{
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .roll::-webkit-scrollbar {/*滚动条整体样式*/
+        width: 10px;     /*高宽分别对应横竖滚动条的尺寸*/
+        height: 1px;
+    }
+    .roll::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+        border-radius: 10px;
+         -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        background: #B6B6B6;
+    }
+    .roll::-webkit-scrollbar-track {/*滚动条里面轨道*/
+        -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        border-radius: 10px;
+        background: #EDEDED;
+    }
+    .demo-upload-list{
+        display: inline-block;
+        width: 60px;
+        height: 60px;
+        text-align: center;
+        line-height: 60px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        overflow: hidden;
+        background: #fff;
+        position: relative;
+        box-shadow: 0 1px 1px rgba(0,0,0,.2);
+        margin-right: 4px;
+    }
+    #comm_logs_ul_id li img{
+        display: inline-block;
+        width: 60px;
+    }
+    </style>
+{% endblock %}
+{% block ext_button %}
+    {% if status != 1 %}
+    <div id="toolbar" class="btn-group" style="margin-bottom: 10px;">
+        <select class="form-control" id="is_delay_option" autocomplete="off">
+            <option value=''>全部</option>
+            <option value=1>已延期</option>
+            <option value=0>未延期</option>
+        </select>
+
+    </div>
+    {% endif %}
+
+{% endblock %}
+
+{% block table %}
+    <script type="text/javascript">
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "post",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:'{% url "work_order_data" status %}',
+                toolbar: '#toolbar',//指定工具栏
+                striped: false,  //表格显示条纹
+                dataField: "rows",
+                pagination: true, //启动分页
+                sortable: true,  //启用排序
+                pageSize: 25,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [25, 50, 100],  //记录数可选列表
+                search: true,  //是否启用查询
+                searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+                searchAlign:'left',	//指定 搜索框 水平方向的位置。’left’ or ‘right’
+                showColumns: true,  //显示下拉框勾选要显示的列
+                showRefresh: true,  //显示刷新按钮
+                showSearchButton: false, //显示搜索按钮
+                showExport: true,//显示导出按钮
+                exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                sidePagination: "server", //表示服务端请求
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined",
+                clickToSelect: true,//是否启用点击选中行
+                toolbarAlign:'left',//工具栏对齐方式
+                buttonsAlign:'left',//按钮对齐方式
+                cardView: false,
+                smartDisplay: true,
+                showToggle: true,
+                detailView: false,
+                columns:[
+                    {
+                        title:'工单编号',
+                        field:'wsid',
+                        sortable:false,
+                        formatter:function(value,row,gitflow){
+                            return "\u200C" + value
+                        },
+                        cellStyle:{
+                            css:{"mso-number-format":"\@"}
+                        }
+                    },
+                    {
+                        title:'提交人',
+                        field:'submitter',
+                        sortable:false,
+                        formatter:function(value,row,gitflow){
+                            if (row.unlook_count == ''){
+                                var v = value;
+                            }else{
+                                var v = value+'<sup class="ivu-badge-count">'+row.unlook_count+'</sup>';
+                            }
+                            return v
+                        }
+                    },
+                    {
+                        title:'标题',
+                        field:'title',
+                        sortable:false
+                    },
+                    {
+                        title:'提交时间',
+                        field:'c_time',
+                        sortable:false
+                    },
+                    {% if status != 1 and status != 4 %}
+                    {
+                        title:'工单类型',
+                        field:'type',
+                        sortable:false
+                    },
+                    {
+                        title:'受理人',
+                        field:'receive_pepole',
+                        sortable:false
+                    },
+                    {
+                        title:'受理时间',
+                        field:'a_time',
+                        sortable:false
+                    },
+                        {
+                        title:'截止时间',
+                        field:'deadline',
+                        sortable:false
+                    },
+                    {
+                        title:'处理人',
+                        field:'operator',
+                        sortable:false
+                    },
+                    {% if status != 2 %}
+                    {
+                        title:'处理时间',
+                        field:'f_time',
+                        sortable:false
+                    },
+                    {% endif %}
+                    {% endif %}
+                    {
+                        title:'状态',
+                        field:'status',
+                        sortable:false,
+                        formatter :function(value,row,index) {
+                            if(value == "未受理") {
+                                var a = '<span style="color:#FF3300;">'+value+'</span>';
+                            }else if(value == "待审批"){
+                                var a = '<span style="color:#999;">'+value+'</span>';
+                            }else if(value == "已处理") {
+                                var a = '<span style="color:#009900;">'+value+'</span>';
+                            }else if(value == "已关闭") {
+                                var a = '<span style="color:#999;">'+value+'</span>';
+                            }else{
+                                var a = '<span>'+value+'</span>';
+                            }
+                            return a;
+                        }
+                    },
+                    {
+                        title:'操作',
+                        field:'id',
+                        {% if status == 1 %}width:300,{% elif status == 2 %}width:250,{% elif status == 3 %}width:150,{% endif %}
+                        align:'center',
+                        //列数据格式化
+                        //formatter:operateFormatter
+                        formatter:function(value,row,gitflow){
+                            {% if status == 1 or status == 2 %}
+                            if (row.status == '待审批'){
+                                var a = '<button type="button" disabled="disabled" title="待审批" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#handModal" data-id="'+row.id+'"><span class="glyphicon glyphicon-hand-right" aria-hidden="true"></span> 指派</button> ';
+                            }
+                            else{
+                                var a = '<button type="button" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#handModal" data-id="'+row.id+'"><span class="glyphicon glyphicon-hand-right" aria-hidden="true"></span> 指派</button> ';
+                            }
+                            {% endif %}
+                            {% if status == 1 %}
+                            if (row.status == '待审批'){
+                                var w = '<button type="button" disabled="disabled" title="待审批" class="btn btn-success btn-xs" data-toggle="modal" data-target="#myModal" data-id="'+row.id+'" data-status="2"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 受理</button> ';
+                            }
+                            else{
+                                var w = '<button type="button" class="btn btn-success btn-xs" data-toggle="modal" data-target="#myModal" data-id="'+row.id+'" data-status="2"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 受理</button> ';
+                            }
+                            var d = '<button type="button" id="del_'+row.id+'" class="btn btn-danger btn-xs" data-toggle="modal" data-target="#closeModal" data-id="'+row.id+'"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> 关闭</button> ';
+                            {% elif status == 2 %}
+                            var w = '<button type="button" class="btn btn-success btn-xs" data-toggle="modal" data-target="#myModal" data-id="'+row.id+'" data-status="3"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 完成</button> ';
+                            {% elif status == 3 %}
+                            var o = '<button type="button" class="btn btn-success btn-xs" onclick="reopen('+row.id+',\''+row.title+'\');"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> 打开</button> ';
+                            {% endif %}
+                            var q = '<button type="button" class="btn btn-primary btn-xs" onclick="watch_detail('+row.id+')"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 详情</button> ';
+                            // var d = '<button type="button" id="del_'+row.id+'" class="btn btn-danger btn-xs" onclick="return Delete('+row.id+')"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span> 关闭</button> ';
+                            {% if status == 1 %}
+                                return a+w+q+d;
+                            {% elif status == 2 %}
+                                return a+w+q;
+                            {% elif status == 3 %}
+                                return q+o;
+                            {% else %}
+                                return q;
+                            {% endif %}
+                        }
+                    }
+                ],
+
+                queryParams: function queryParams(params) {   //设置查询参数
+                    var param = {
+                        //加上csrf
+                        csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                        pageNumber: params.pageNumber,
+                        pageSize: params.pageSize,
+                        search:params.searchText,
+                        order:params.sortOrder,
+                        sort:params.sortName,
+                        is_delay: $("#is_delay_option").val(),
+                    };
+                    return param;
+                },
+                rowStyle: function(row, index){
+                        if (row.is_delay == 1) {
+                            return {
+                                classes: "danger"
+                            };
+                        }
+                        return {};
+
+                    },
+                });
+        }
+        $(document).ready(function () {
+            //调用函数，初始化表格
+            initTable();
+            if($("#deadline").length > 0){
+            jeDate("#deadline", {
+                theme: {bgcolor: "#2D8CF0", color: "#ffffff", pnColor: "#2D8CF0"},
+                onClose: false,
+                format: "YYYY-MM-DD",
+                isTime: false,
+                minDate: "2000-01-01"
+            });}
+             if($("#deadline_1").length > 0){
+            jeDate("#deadline_1", {
+                theme: {bgcolor: "#2D8CF0", color: "#ffffff", pnColor: "#2D8CF0"},
+                onClose: false,
+                format: "YYYY-MM-DD",
+                isTime: false,
+                minDate: "2000-01-01"
+            });}
+
+            //当点击查询按钮的时候执行
+            $("#search").bind("click", initTable);
+            jeDate(".edit_deadline_picker",{
+                theme:{ bgcolor:"#2D8CF0",color:"#ffffff", pnColor:"#2D8CF0"},
+                onClose:false,
+                format:"YYYY-MM-DD",
+                isTime:false,
+                minDate:"2000-01-01"
+            });
+        });
+        function reopen(ID,TITLE){
+            console.log(ID);
+            console.log(TITLE);
+            $.confirm({
+                title: '提示！',
+                content: '确定要重新打开此工单「'+TITLE+'」吗？',
+                closeIcon: true,
+                confirmButtonClass:'btn-success',
+                cancelButtonClass: 'btn-default ',
+                confirmButton: '确定',
+                cancelButton: '取消',
+                confirm: function(){
+                    $.ajax({
+                        type: "get",
+                        url: "/worksheet/reopen_worksheet/"+ID+"/",
+                        success: function(result) {
+                            if(result['code'] == 1){
+                                new PNotify({
+                                  title: 'SUCCESS',
+                                  text: result['result'],
+                                  type: 'success',
+                                  styling: 'bootstrap3'
+                                });
+                                // 刷新表格
+                                $('#table').bootstrapTable("refresh");
+                            }else{
+                                new PNotify({
+                                  title: 'ERROR',
+                                  text: result['result'],
+                                  type: 'error',
+                                  styling: 'bootstrap3'
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+
+    <!-- 回复模态框 -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">回复</h4>
+                </div>
+                <div class="form-horizontal form-label-left">
+                <div class="modal-body">
+                    {% if worksheet_classify_form %}
+                        <div class="form-group">
+                            <label class="col-md-3 col-sm-3 col-xs-12">{{ worksheet_classify_form.type.label }}</label>
+                            <div class="col-md-9 col-sm-9 col-xs-12">
+                            {{ worksheet_classify_form.type }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-3 col-sm-3 col-xs-12">截止日期</label>
+                            <div class="col-md-9 col-sm-9 col-xs-12">
+                                <input id="deadline" class="ivu-input deadline_picker" type="text"
+                                       autocomplete="off" placeholder="选择日期">
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label class="col-md-3 col-sm-3 col-xs-12">回复</label>
+                        <div class="col-md-9 col-sm-9 col-xs-12">
+                        <textarea name="remessage" id="remessage_id" cols="40" rows="10" class="form-control" placeholder="回复提交人 ( 选填 )"></textarea>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"> 取消</button>
+                    <button type="submit" class="btn btn-primary" id="accept_submit_id"> 确定</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div><!-- 回复模态框结束-->
+
+    <!-- 指派模态框 -->
+    <div class="modal fade" id="handModal" tabindex="-1" role="dialog" aria-labelledby="handModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="handModalLabel">指派</h4>
+                </div>
+                <form method="post" id="connect_form" class="form-horizontal form-label-left">
+                <div class="modal-body">
+                    {% if worksheet_classify_form %}
+                        <div class="form-group">
+                            <label class="col-md-3 col-sm-3 col-xs-12">{{ worksheet_classify_form.type2.label }}</label>
+                            <div class="col-md-9 col-sm-9 col-xs-12">
+                            {{ worksheet_classify_form.type2 }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-3 col-sm-3 col-xs-12">截止日期</label>
+                            <div class="col-md-9 col-sm-9 col-xs-12">
+                                <input id="deadline_1" class="ivu-input deadline_picker" type="text"
+                                       autocomplete="off" placeholder="选择日期">
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% for field in appointform %}
+                    <div class="form-group">
+                        <label class="col-md-3 col-sm-3 col-xs-12">{{ field.label }}</label>
+                        <div class="col-md-9 col-sm-9 col-xs-12">
+                        {{ field }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                </form>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"> 取消</button>
+                    <button type="submit" class="btn btn-primary" id="appoint_submit_id"> 指派</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div><!-- 指派模态框结束-->
+
+    <!-- 修改截止日期模态框 -->
+    <div class="modal fade" id="deadlineModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">修改</h4>
+                </div>
+                <div class="form-horizontal form-label-left">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="col-md-3 col-sm-3 col-xs-12">截止日期</label>
+                        <div class="col-md-9 col-sm-9 col-xs-12">
+                            <input id="edit_deadline_id" class="ivu-input edit_deadline_picker" type="text"
+                                   autocomplete="off" placeholder="选择日期">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-3 col-sm-3 col-xs-12">回复</label>
+                        <div class="col-md-9 col-sm-9 col-xs-12">
+                        <textarea name="msg_deadline" id="msg_deadline_id" cols="40" rows="10" class="form-control" placeholder="回复提交人 ( 选填 )"></textarea>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"> 取消</button>
+                    <button type="submit" class="btn btn-primary" id="edit_deadline"> 确定</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div><!-- 修改截止日期模态框结束 -->
+
+    <!-- 修改归类模态框 -->
+    <div class="modal fade" id="typeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">修改</h4>
+                </div>
+                <div class="form-horizontal form-label-left">
+                    <div class="modal-body">
+                        {% if worksheet_classify_form2 %}
+                            <div class="form-group">
+                                <label class="col-md-3 col-sm-3 col-xs-12">{{ worksheet_classify_form2.type3.label }}</label>
+                                <div class="col-md-9 col-sm-9 col-xs-12">
+                                {{ worksheet_classify_form2.type3 }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal"> 取消</button>
+                        <button type="submit" class="btn btn-primary" id="edit_type_id"> 确定</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
+    </div>.<!-- 修改归类模态框结束 -->
+
+
+   <!-- 关闭工单模态框 -->
+    <div class="modal fade" id="closeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">回复</h4>
+                </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <textarea name="close_remark" id="close_remark_id" cols="40" rows="10" class="form-control" placeholder="回复提交人(选填)"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal"> 取消</button>
+                        <button type="submit" class="btn btn-primary" id="close_remark_submit_id"> 关闭</button>
+                    </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div><!-- 关闭工单模态框 -->
+
+    {% endblock %}
+    {% block ext_row %}
+        <div class="col-md-4 col-sm-4 col-xs-12" id="detail_row_id" style="display: none">
+            <div class="x_panel">
+              <div class="x_title">
+                  <h2><i class="fa fa-align-left"></i> 工单详情</h2>
+                <ul class="nav navbar-right panel_toolbox">
+                <li><a id="compress_worksheet_detail_id" style="display: none;"><i class="fa fa-compress"></i></a></li>
+                <li><a id="expand_worksheet_detail_id"><i class="fa fa-expand"></i></a></li>
+                <li><a id="close_worksheet_detail_id"><i class="fa fa-close"></i></a></li>
+                </ul>
+                <div class="clearfix"></div>
+              </div>
+              <div class="x_content roll" style="max-height: 1000px; overflow-y: auto">
+                <!-- start accordion -->
+                <div class="accordion" id="accordion" role="tablist" aria-multiselectable="true">
+                  <div class="panel">
+                    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                      <div class="panel-body">
+                        <div class="col-xs-12">
+                          <p class="lead">详情</p><div id="action_btn"></div>
+                          <div class="table-responsive">
+                              <table class="table">
+                                <tbody id="detail_tbody_id"></tbody>
+                              </table>
+                          </div>
+                          <p class="lead" style="margin-bottom: 0">操作记录</p>
+                          <div>
+                              <ul id="detail_logs_ul_id"></ul>
+                          </div>
+                          <p class="lead" style="margin-top: 25px;margin-bottom: 0">沟通记录</p>
+                          <div>
+                            <ul id="comm_logs_ul_id"></ul>
+                            {% if status != 3 %}
+                            <div class="ivu-form ivu-form-label-right">
+                            {% csrf_token %}
+                            <div class="ln_solid"></div>
+                              <div class="ivu-form-item">
+                                <div class="col-md-12 col-sm-12 col-xs-12" style="padding-left: 0">
+                                    <label class="ivu-form-item-label">我要回复</label>
+                                    <div class="ivu-form-item-content" style="margin-left: 60px;">
+                                        <div class="ivu-input-wrapper ivu-input-type">
+                                            <textarea class="ivu-input text_input" style="height: 52px; min-height: 52px; max-height: 115px;display: none;" name="comm" id="comm"></textarea>
+                                            <div id="commnew_toolbar" style="border-top: 1px solid #ccc;border-left: 1px solid #ccc;border-right: 1px solid #ccc;background-color: #f1f1f1;"></div>
+                                            <div id="commnew" style="border: 1px solid #ccc;height: 200px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                              </div>
+                              <div class="ivu-form-item">
+                                <div class="ivu-form-item-content" style="margin-left: 80px;">
+                                    <button type="button" class="ivu-btn ivu-btn-primary" id="comm_submit_id"><span>提交</span></button>
+                                </div>
+                              </div>
+                            </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- end of accordion -->
+              </div>
+            </div>
+        </div>
+{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_script %}
+    <script src="{% static 'js/aukeyops/detail.js' %}"></script>
+    <script src="{% static 'jedate/jedate.js' %}"></script>
+    <script src="{% static 'emoji/emoji.js' %}"></script>
+    <script src="{% static 'js/postbird-img-glass.min.js' %}"></script>
+    <script src="{% static 'js/aukeyops/wangEditor.min.js' %}"></script>
+    <script type="text/javascript">
+        {% if id != 0 %}
+            watch_detail({{ id }});
+        {% endif %}
+        $('#myModal').on('show.bs.modal', function (e) {
+            var btn = $(e.relatedTarget);
+            id = btn.data("id");
+            status = btn.data("status");
+            document.getElementById('accept_submit_id').setAttribute('onclick','ChangeStatus('+status+','+id+')');
+        });
+
+        $('#handModal').on('show.bs.modal', function (e) {
+            var btn = $(e.relatedTarget);
+            id = btn.data("id");
+            document.getElementById('appoint_submit_id').setAttribute('onclick','Appoint('+id+')');
+        });
+
+        $('#closeModal').on('show.bs.modal', function (e) {
+            var btn = $(e.relatedTarget);
+            id = btn.data("id");
+            document.getElementById('close_remark_submit_id').setAttribute('onclick','CloseWorkOrder('+id+')');
+        });
+
+        $('#deadlineModal').on('show.bs.modal', function (e) {
+            var btn = $(e.relatedTarget);
+            id = btn.data("id");
+            document.getElementById('edit_deadline').setAttribute('onclick','EditDeadline('+id+')');
+        });
+
+        $('#typeModal').on('show.bs.modal', function (e) {
+            var btn = $(e.relatedTarget);
+            id = btn.data("id");
+            console.log(id);
+            document.getElementById('edit_type_id').setAttribute('onclick','EditType('+id+')');
+        });
+
+        function ChangeStatus(STATUS,ID){   //修改状态
+            $('#myModal').modal('hide');
+            var send_wechat_messages = $("#remessage_id").val();
+            var type = 0;
+            deadline = $("#deadline").val();
+            {% if status == 1 %}
+            type = $("#id_type").val();
+            console.log(type);
+            if (type == ''){
+                new PNotify({
+                  title: 'ERROR',
+                  text: '请归类工单',
+                  type: 'error',
+                  styling: 'bootstrap3'
+                });
+                return false
+            }
+            {% endif %}
+            $.ajax({
+                type: "post",
+                url: "/worksheet/work_order_receive/"+STATUS+"_"+ ID+"/",
+                dataType: "json",
+                data: {"send_wechat_messages" : send_wechat_messages , "type" : type, "deadline": deadline},
+                success: function(result) {
+                    if(result['code'] == 1){
+                        new PNotify({
+                          title: 'SUCCESS',
+                          text: result['result'],
+                          type: 'success',
+                          styling: 'bootstrap3'
+                        });
+                        // 刷新表格
+                        $('#table').bootstrapTable("refresh");
+                        document.getElementById("detail_row_id").style.display= "none";
+                        document.getElementById("table_row_id").className= "col-md-12 col-sm-12 col-xs-12";
+                    }else{
+                        new PNotify({
+                          title: 'ERROR',
+                          text: result['result'],
+                          type: 'error',
+                          styling: 'bootstrap3'
+                        });
+                    }
+                }
+            });
+        }
+
+        function EditDeadline(ID){   //修改状态
+            $('#deadlineModal').modal('hide');
+            var msg = $("#msg_deadline_id").val();
+            deadline = $("#edit_deadline_id").val();
+            $.ajax({
+                type: "post",
+                url: "/worksheet/edit_deadline/"+ ID+"/",
+                dataType: "json",
+                data: {"msg" : msg ,"deadline": deadline},
+                success: function(result) {
+                    if(result['code'] == 1){
+                        new PNotify({
+                          title: 'SUCCESS',
+                          text: result['result'],
+                          type: 'success',
+                          styling: 'bootstrap3'
+                        });
+                        // 刷新表格
+                        $('#table').bootstrapTable("refresh");
+                        document.getElementById("detail_row_id").style.display= "none";
+                        document.getElementById("table_row_id").className= "col-md-12 col-sm-12 col-xs-12";
+                    }else{
+                        new PNotify({
+                          title: 'ERROR',
+                          text: result['result'],
+                          type: 'error',
+                          styling: 'bootstrap3'
+                        });
+                    }
+                }
+            });
+        }
+
+        function EditType(ID){   //修改状态
+            $('#typeModal').modal('hide');
+            var type = $("#id_type3").val();
+            console.log(type);
+            console.log(ID);
+            if (type == ''){
+                new PNotify({
+                  title: 'ERROR',
+                  text: '请归类工单',
+                  type: 'error',
+                  styling: 'bootstrap3'
+                });
+                return false
+            }
+            $.ajax({
+                type: "post",
+                url: "/worksheet/edit_type/"+ ID+"/",
+                dataType: "json",
+                data: {"type_id": type},
+                success: function(result) {
+                    if(result['code'] == 1){
+                        new PNotify({
+                          title: 'SUCCESS',
+                          text: result['result'],
+                          type: 'success',
+                          styling: 'bootstrap3'
+                        });
+                        // 刷新表格
+                        $('#table').bootstrapTable("refresh");
+                        document.getElementById("detail_row_id").style.display= "none";
+                        document.getElementById("table_row_id").className= "col-md-12 col-sm-12 col-xs-12";
+                    }else{
+                        new PNotify({
+                          title: 'ERROR',
+                          text: result['result'],
+                          type: 'error',
+                          styling: 'bootstrap3'
+                        });
+                    }
+                }
+            });
+        }
+
+        function Appoint(ID){ //指派
+            $('#handModal').modal('hide');
+            var user = $('#appoint_user').val();
+            var remark = $("#id_remark").val();
+            var type2 = 0;
+            var deadline_1;
+            {% if status == 1 %}
+            type2 = $("#id_type2").val();
+            deadline_1 = $("#deadline_1").val();
+            if (type2 == ''){
+                new PNotify({
+                  title: 'ERROR',
+                  text: '请归类工单',
+                  type: 'error',
+                  styling: 'bootstrap3'
+                });
+                return false
+            }
+            {% endif %}
+            $.ajax({
+                type: "post",
+                url: "/worksheet/work_order_appoint/"+ ID + "/",
+                dataType: "json",
+                data: {"user" : user, "remark" : remark, "type" : type2, "deadline": deadline_1},
+                success: function(result) {
+                    if(result['code'] == 1){
+                        new PNotify({
+                          title: 'SUCCESS',
+                          text: result['result'],
+                          type: 'success',
+                          styling: 'bootstrap3'
+                        });
+                        // 刷新表格
+                        $('#table').bootstrapTable("refresh");
+                        document.getElementById("detail_row_id").style.display= "none";
+                        document.getElementById("table_row_id").className= "col-md-12 col-sm-12 col-xs-12";
+                    }else{
+                        new PNotify({
+                          title: 'ERROR',
+                          text: result['result'],
+                          type: 'error',
+                          styling: 'bootstrap3'
+                        });
+                    }
+                }
+            });
+        }
+        function CloseWorkOrder(ID){
+            $('#closeModal').modal('hide');
+            var remark = $("#close_remark_id").val();
+            $.ajax({
+                type: "post",
+                url: "/worksheet/work_order_close/"+ ID + "/",
+                dataType: "json",
+                data: {"remark" : remark},
+                success: function(result) {
+                    if(result['code'] == 1){
+                        new PNotify({
+                          title: 'SUCCESS',
+                          text: result['result'],
+                          type: 'success',
+                          styling: 'bootstrap3'
+                        });
+                        // 刷新表格
+                        $('#table').bootstrapTable("refresh");
+                        document.getElementById("detail_row_id").style.display= "none";
+                        document.getElementById("table_row_id").className= "col-md-12 col-sm-12 col-xs-12";
+                    }else{
+                        new PNotify({
+                          title: 'ERROR',
+                          text: result['result'],
+                          type: 'error',
+                          styling: 'bootstrap3'
+                        });
+                    }
+                }
+            });
+        }
+        function Reply(ID){
+            var comm_text = $('#comm').val();
+            if (comm_text == ''){
+                new PNotify({
+                  title: 'ERROR',
+                  text: '回复框不能为空',
+                  type: 'error',
+                  styling: 'bootstrap3'
+                });
+                return false
+            }
+            $('#comm_submit_id').addClass('ivu-btn-loading');
+            var comm_submit_btn = document.getElementById('comm_submit_id');
+            var old_text = comm_submit_btn.innerHTML;
+            var loading_text = '<i class="ivu-load-loop ivu-icon ivu-icon-load-c" id="loading_id"></i>';
+            comm_submit_btn.innerHTML = loading_text + old_text;
+            $.ajax({
+                type: "post",
+                url: "/worksheet/work_order_reply_comm/1_"+ID+"/",
+                dataType: "json",
+                data: {"comm_text" : comm_text},
+                success: function(result) {
+                    if(result['code'] == 1){
+                        new PNotify({
+                          title: 'SUCCESS',
+                          text: result['result'],
+                          type: 'success',
+                          styling: 'bootstrap3'
+                        });
+                        // 刷新表格
+{#                        $('#table').bootstrapTable("refresh");#}
+                        watch_detail(ID);
+                    }else{
+                        new PNotify({
+                          title: 'ERROR',
+                          text: result['result'],
+                          type: 'error',
+                          styling: 'bootstrap3'
+                        });
+                    }
+                    comm_submit_btn.removeChild(document.getElementById("loading_id"));
+                    $('#comm_submit_id').removeClass('ivu-btn-loading');
+                }
+            });
+        }
+
+        function watch_detail(ID){
+            {% if status != 3 %}
+            $('#comm').val('');
+            document.getElementById('comm_submit_id').setAttribute('onclick','Reply('+ID+')');
+            {% endif %}
+            $.ajax({
+                type: "get",
+                url: "/worksheet/get_work_order_detail/"+ ID,
+                dataType: "json",
+                success: function(result) {
+                    document.getElementById("table_row_id").className= "col-md-8 col-sm-8 col-xs-12";
+                    document.getElementById("detail_row_id").style.display= "block";
+                    $("#action_btn").html('');
+                    var w = '<button type="button" class="btn btn-success btn-xs" data-toggle="modal" ' +
+                        'data-target="#myModal" data-id="'+result.id+'" data-status="2"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 受理</button> ';
+                    var a = '<button type="button" class="btn btn-warning btn-xs" data-toggle="modal" ' +
+                        'data-target="#handModal" data-id="'+result.id+'"><span class="glyphicon glyphicon-hand-right" aria-hidden="true"></span> 指派</button> ';
+                    var d = '<button type="button" id="del_'+result.id+'" class="btn btn-danger btn-xs" ' +
+                        'data-toggle="modal" data-target="#closeModal" data-id="'+result.id+'"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> 关闭</button> ';
+                    var c = '<button type="button" class="btn btn-success btn-xs" data-toggle="modal" ' +
+                        'data-target="#myModal" data-id="'+result.id+'" data-status="3"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 完成</button> ';
+                    var o = '<button type="button" class="btn btn-success btn-xs" onclick="reopen('+result.id+',\''+result.title+'\');">' +
+                        '<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> 打开</button> ';
+                    if (result.status == '未受理') {
+                        $("#action_btn").append(w+a+d);
+                    } else if (result.status == '待处理'){
+                        $("#action_btn").append(a+c);
+                    } else if (result.status == '已处理' || result.status == '已关闭' ){
+                        $("#action_btn").append(o);
+                    }
+                    var Textaproval = '';
+                    if (result.email){
+                        Textaproval = '<tr><th>审批时间:</th><td>'+result.p_time+'</td></tr>';
+                    }
+                    var edit_deadline = '';
+
+                    var edit_type = '';
+                    if(result.status == '待处理' || result.status == '已处理' || result.status == '已关闭'){
+                        edit_type = '<button type="button" class="btn btn-info btn-xs" data-toggle="modal" data-target="#typeModal" data-id="' + ID + '"><span class="glyphicon glyphicon-edit" aria-hidden="true">编辑</button>';
+                    }
+                    if (result.status == '待处理'){
+                        edit_deadline = '<button type="button" class="btn btn-info btn-xs" data-toggle="modal" data-target="#deadlineModal" data-id="' + ID + '"><span class="glyphicon glyphicon-edit" aria-hidden="true">编辑</button>';
+                    }
+                    var Text = '\
+                    <tr><th style="white-space:nowrap;">ID:</th><td>'+result.id+'</td></tr>\
+                    <tr><th>工单编号:</th><td>'+result.wsid+'</td></tr>\
+                    <tr><th>标题:</th><td>'+result.title+'</td></tr>\
+                    <tr><th>问题描述:</th><td style="width:70%"><div id="desc_maxlenght" style="word-break: break-all;">'+result.description+'</div></td></tr>\
+                    <tr><th>图片:</th><td>'+result.img+'</td></tr>\
+                    <tr><th>附件:</th><td>'+result.file+'</td></tr>\
+                    <tr><th>来源:</th><td>'+result.source+'</td></tr>\
+                    <tr><th>类型:</th><td>'+ result.type + ' ' + edit_type +'</td></tr>\
+                    <tr><th>提交人:</th><td>'+result.submitter+'</td></tr>\
+                    <tr><th>提交人邮箱:</th><td>'+result.submitter_email+'</td></tr>\
+                    <tr><th>抄送邮箱:</th><td>'+result.email+'</td></tr>\
+                    <tr><th>提交时间:</th><td>'+result.c_time+'</td></tr>\
+                    '+ Textaproval + '\
+                    <tr><th>状态:</th><td>'+result.status+'</td></tr>\
+                    <tr><th>受理人:</th><td>'+result.receive_pepole+'</td></tr>\
+                    <tr><th>受理时间:</th><td>'+result.a_time +'</td></tr>\
+                    <tr><th>截止时间:</th><td>'+result.deadline + ' ' + edit_deadline +'</td></tr>\
+                    <tr><th>处理人:</th><td>'+result.operator+'</td></tr>\
+                    <tr><th>处理时间:</th><td>'+result.f_time+'</td></tr>\
+                    <tr><th>结果:</th><td>'+result.result+'</td></tr>';
+                    document.getElementById("detail_tbody_id").innerHTML= Text;
+                    $("#desc_maxlenght img").css('max-width','80%');
+{#                    $("#desc_maxlenght table").css('max-width','100px');#}
+                    if($("#desc_maxlenght").length>0){
+                        function show(){
+                            var box = document.getElementById("desc_maxlenght");
+                            var text = box.innerHTML;
+                            var newBox = document.createElement("div");
+                            var btn = document.createElement("a");
+                            newBox.innerHTML = text.substring(0,200);
+                            btn.innerHTML = text.length > 200 ? "...显示全部" : "";
+                            btn.href = "###";
+                            btn.className = "btn btn-link";
+                            btn.onclick = function(){
+                                if (btn.innerHTML == "...显示全部"){
+                                    btn.innerHTML = "收起";
+                                    newBox.innerHTML = text;
+                                }else{
+                                    btn.innerHTML = "...显示全部";
+                                    newBox.innerHTML = text.substring(0,200);
+                                }
+                            };
+                            box.innerHTML = "";
+                            box.appendChild(newBox);
+                            box.appendChild(btn);
+                        }
+                        show();
+                    }
+                    county = $('#detail_logs_ul_id');
+                    county.empty();
+                    $.each(result.log_list, function (index, item) {
+                        county.append('<li>' + item[0] +','+ item[1] + '</li>');
+                    });
+
+                    county2 = $('#comm_logs_ul_id');
+                    county2.empty();
+                    $.each(result.comm_list, function (index, item) {
+                        var comm_type = '回复';
+                        if (item[2] == 1){  // 判断是回复还是反馈
+                            comm_type = '反馈'
+                        }
+                        var comm_style = '';
+                        if (item[0] == '用户'){  // 判断是用户还是客服
+                            comm_style = 'font-weight:bold';
+                        }
+                        county2.append('<li>' + item[3] +','+item[0] +' '+comm_type+'：<span style="'+comm_style+'">'+ item[1] + '</span></li><br/>');
+                    });
+                    $('#comm_logs_ul_id').emoji();
+                    $("li").css('list-style-type','none');
+                    $("li").css('word-break','break-all;');
+                    $("li").css('word-wrap','break-word');
+                    $('#comm_logs_ul_id img').attr('modal','zoomImg');
+                    $.getScript("{% static 'boxImg/js/boxImg.js' %}");
+                    $('#table').bootstrapTable("refresh");
+                }
+            });
+              $("#commnew").empty();
+              var E = window.wangEditor;
+              var editor = new E('#commnew_toolbar', '#commnew');
+              editor.customConfig.uploadImgServer = "{% url 'ws_uploadIMG' %}";
+              editor.customConfig.uploadFileName = 'img';
+              editor.customConfig.uploadImgTimeout = 60000;
+              editor.customConfig.uploadImgMaxLength = 5;
+              editor.customConfig.zIndex = 1;
+              editor.customConfig.uploadImgMaxSize = 10 * 1024 * 1024;
+              editor.customConfig.showLinkImg = false; //隐藏网络图片功能
+              editor.customConfig.pasteFilterStyle = false; //关闭粘贴样式的过滤
+              editor.customConfig.uploadImgHooks = {
+                  customInsert: function (insertImg, result, editor) {
+                      if (result.url.length == 0){
+                          message.add("贴图失败，请点击上传图片", "error");
+                      }else {
+                          var the_url;
+                          for (the_url in result.url) {
+                              insertImg(result.url[the_url])
+                          }
+                      }
+                  }
+              };
+              var $the_comm = $('#comm');
+              editor.customConfig.onchange = function (html) {
+                    // 监控变化，同步更新到 textarea
+                    $the_comm.val(html)
+                };
+              editor.customConfig.menus = [
+                'undo',  // 撤销
+                'redo',  // 重复
+                'head',  // 标题
+                'bold',  // 粗体
+                'image'  // 插入图片
+              ];
+              editor.customConfig.customAlert = function (info) {
+                message.add(info, "error");
+              };
+              editor.create();
+        }
+
+        $("#close_worksheet_detail_id").click(function(){
+            document.getElementById("detail_row_id").className= "col-md-4 col-sm-4 col-xs-4";
+            document.getElementById("detail_row_id").style.display= "none";
+            document.getElementById("table_row_id").style.display= "block";
+            document.getElementById("table_row_id").className= "col-md-12 col-sm-12 col-xs-12";
+            document.getElementById("expand_worksheet_detail_id").style.display= "block";
+            document.getElementById("compress_worksheet_detail_id").style.display= "none";
+        });
+        $("#expand_worksheet_detail_id").click(function(){
+            document.getElementById("detail_row_id").className= "col-md-12 col-sm-12 col-xs-12";
+            document.getElementById("table_row_id").style.display= "none";
+            document.getElementById("expand_worksheet_detail_id").style.display= "none";
+            document.getElementById("compress_worksheet_detail_id").style.display= "block";
+        });
+        $("#compress_worksheet_detail_id").click(function(){
+            document.getElementById("detail_row_id").className= "col-md-4 col-sm-4 col-xs-4";
+            document.getElementById("table_row_id").style.display= "block";
+            document.getElementById("table_row_id").className= "col-md-8 col-sm-8 col-xs-12";
+            document.getElementById("expand_worksheet_detail_id").style.display= "block";
+            document.getElementById("compress_worksheet_detail_id").style.display= "none";
+        });
+        $(table).on('click-row.bs.table', function (e, row, element){
+            watch_detail(row.id);
+            $('.success').removeClass('success');//去除之前选中的行的，选中样式
+            $(element).addClass('success');//添加当前选中的 success样式用于区别
+        });
+        $('#myModal').on('hidden.bs.modal', function () {
+            $("#remessage_id").val('');
+            $('#id_type').selectpicker('val', 0);
+            $('#id_type').selectpicker('refresh');
+        });
+        $('#handModal').on('hidden.bs.modal', function () {
+            $("#id_remark").val('');
+            $('#id_type2').selectpicker('val', 0);
+            $('#id_type2').selectpicker('refresh');
+            $('#appoint_user').selectpicker('val', 0);
+            $('#appoint_user').selectpicker('refresh');
+        });
+    </script>
+{% endblock %}

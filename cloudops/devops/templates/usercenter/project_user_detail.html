@@ -1,0 +1,67 @@
+{% extends 'detail.html' %}
+{% load staticfiles %}
+{% block page_title %}项目成员变更{% endblock %}
+{% block table_title %}详情{% endblock %}
+{% block communication_include %}{% endblock %}
+{% block detail_info %}
+    <table class="table">
+      <tbody>
+      {% for line in list %}
+        <tr>
+          <th style="width:20%">ID:</th>
+          <td>{{ line.project }}</td>
+        </tr>
+        <tr>
+          <th>用户名:</th>
+          <td>{{ line.user_name }}</td>
+        </tr>
+        <tr>
+          <th>名字:</th>
+          <td>{{ line.name}}</td>
+        </tr>
+        <tr>
+          <th>Email:</th>
+          <td>{{ line.email }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <th>组:</th>
+          <td>{% for group_info in group_info %}【{{ group_info.group }}】, {% endfor %}</td>
+        </tr>
+        <tr>
+          <th>角色:</th>
+          <td><div id="desc_maxlenght">{% for user_role_info in user_role_info %}【{{ user_role_info.authority_name }}】, {% endfor %}</div></td>
+        </tr>
+        {% for line in list %}
+        <tr>
+          <th>启用/禁用:</th>
+          <td>
+              <dt>启用/禁用</dt>
+              {% if line.get_is_active_display == '启用' %}
+              <span class="btn btn-xs" style="background:#5CB85C;color:#FFFFFF;">{{ line.get_is_active_display }}</span>
+              {% elif line.get_is_active_display == '禁用' %}
+              <span class="btn btn-xs" style="background:#ff4850;color:#FFFFFF;">{{ line.get_is_active_display }}</span>
+              {% else %}
+              <span>{{ line.get_is_active_display }}</span>
+              {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+{% endblock %}
+{% block ystep %}
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="approval">
+            <a href="{% url 'user_manage' %}"><button type="button" class="btn btn-default"> 返回 </button></a>
+        </div>
+    </div>
+{% endblock %}
+{% block ext_script_add %}
+    <!-- Detail-->
+    <script src="{% static 'js/aukeyops/detail.js' %}"></script>
+    <script>
+        $("#usercenter_menu_id").css("display","block");
+        $("#project_user_manage").addClass('current-page');
+    </script>
+{% endblock %}

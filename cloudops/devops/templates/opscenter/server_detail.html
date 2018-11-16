@@ -1,0 +1,2017 @@
+{% extends 'main.html' %}
+{% load staticfiles %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_before %}
+    <link rel="stylesheet" href="{% static 'ztree/css/metroStyle/metroStyle.css' %}" type="text/css">
+    <link href="{% static 'vendors/iCheck/skins/flat/blue.css' %}" rel="stylesheet">
+    <link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+    <link href="{% static 'jebox/skin/jebox.css' %}" rel="stylesheet" />
+{#    <link href="{% static 'css/xterm.min.css' %}" rel="stylesheet" type="text/css"/>#}
+{#    <link href="{% static 'css/fullscreen.min.css' %}" rel="stylesheet" type="text/css"/>#}
+    <style>
+    pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    .ivu-btn {
+        border-radius:0;
+    }
+    #basic_info_id li, #config_info_id li {
+        list-style-type:none;
+        padding: 11px 20px 11px 10px;
+        border-bottom:1px solid rgb(238, 238, 238);
+    }
+    .error_input{
+        border-color: #a94442;
+    }
+    .error_alert{
+        color: #a94442;
+        display: block;
+        margin-top: 5px;
+        margin-bottom: 10px;
+    }
+    #detail_row .modal-content{
+        border-radius:0;
+    }
+    #detail_row .x_content {
+        padding: 0;
+        margin-top: 0;
+    }
+    #detail_row .row_panel {
+        padding: 0;
+        border-bottom: 0;
+    }
+    #detail_row .header_title {
+        border-left: 4px solid #6d7781;
+        background: #F5F6FA;
+        height:40px;
+        line-height:40px;
+        padding-left: 0;
+        margin-bottom: 0;
+    }
+    #detail_row .header_title .header_title_span {
+        font-size: 13px;
+        color: #495060;
+        margin-left: 10px;
+    }
+    #detail_row .text-muted {
+        margin-left: 10px;
+    }
+    #detail_row .text-info{
+        font-size: 13px;
+        color: #333333;
+    }
+    #info_status i{
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        vertical-align: middle;
+        border-radius: 16px;
+        margin-top: -1px;
+        background-repeat: no-repeat;
+        background-image: url("{% static 'images/ecs-icons.png' %}");
+        margin-right: 5px;
+    }
+    .monitor_line_div_class {
+        border-bottom: 1px #D7DEE5 solid;
+        padding-top:5px;
+    }
+    .san_line {
+        width: 100%;height: 300px;
+    }
+    table tbody {
+        display:block;
+        height:260px;
+        overflow-y:auto;
+    }
+    table thead, tbody tr {
+        display:table;
+        width:100%;
+        table-layout:fixed;
+    }
+    tbody tr td {
+      overflow-y:auto;
+    }
+    table thead{
+        width: calc( 100% - 1em )
+    }
+    .roll_x::-webkit-scrollbar {/*滚动条整体样式*/
+        width: 1px;     /*高宽分别对应横竖滚动条的尺寸*/
+        height: 3px;
+    }
+    .roll::-webkit-scrollbar {/*滚动条整体样式*/
+        width: 7px;     /*高宽分别对应横竖滚动条的尺寸*/
+        height: 1px;
+    }
+    .roll::-webkit-scrollbar-thumb, .roll_x::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+        border-radius: 3px;
+         -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        background: #6e6e6e;
+    }
+    .roll::-webkit-scrollbar-track, .roll_x::-webkit-scrollbar-track {/*滚动条里面轨道*/
+        -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        border-radius: 3px;
+        background: #EDEDED;
+    }
+    #radio_ssh_ip{
+        margin-top: 10px;
+    }
+{#    .terminal {#}
+{#        background-color: #000;#}
+{#        font-family: "Lucida Sans Typewriter", "Lucida Console", Monaco, "Bitstream Vera Sans Mono";#}
+{#        font-weight: 400;#}
+{#        font-feature-settings: "liga" 0;#}
+{#        user-select:none;#}
+{#        -webkit-user-select: none;#}
+{#        font-size:14px;#}
+{#        line-height: 20px;#}
+{#    }#}
+{#    .terminal > div{#}
+{#        white-space: nowrap;#}
+{#    }#}
+    </style>
+{% endblock %}
+{% block right_col %}
+<div class="page-title">
+  <div class="title_left" style="margin-bottom: 10px;">
+    <h3></h3>
+  </div>
+</div>
+<div class="clearfix"></div>
+<div class="row" id="detail_row">
+  <div class="col-md-12 col-sm-12 col-xs-12" id="table_row_id">
+    <div class="x_panel">
+      <div class="x_title">
+        <h2>
+            <div class="ivu-btn-group pull-left" style="padding-left: 0; padding-bottom: 5px;">
+
+                <a href="{% url 'server_view' %}"><button id="view1_id" type="button" class="ivu-btn ivu-btn-default"><i class="ivu-icon ivu-icon-chevron-left"></i> 返回实例列表</button></a>
+                <img src="{% static 'images/server1_png.png' %}" width="8%" /> <b><span style="color: #333" id="info_name_title"></span></b>
+            </div>
+            <div id="asset_bt_group" class="pull-right">
+                <button type="button" class="ivu-btn ivu-btn-default pull-left" onclick="refresh_info()"><span class="glyphicon glyphicon-refresh" style="color: #495060"></span></button>
+                <button id="" type="button" class="ivu-btn ivu-btn-default pull-left" data-toggle="modal" data-target="#changeModal" data-id="1">编辑</button>
+                <button id="" type="button" class="ivu-btn ivu-btn-info pull-left" onclick="behaviorAudit()">行为审计</button>
+                <button id="" type="button" class="ivu-btn ivu-btn-success pull-left" data-toggle="modal" data-target="#sshModal"><i class="fa fa-terminal" aria-hidden="true"></i> 远程连接</button>
+            </div>
+        </h2>
+        <ul class="nav navbar-right panel_toolbox"></ul>
+        <div class="clearfix"></div>
+      </div>
+      <div class="x_content">
+        <div class="row">
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="x_panel row_panel">
+                          <div class="x_title header_title">
+                              <span class="header_title_span">基本信息</span>
+                            <div class="clearfix"></div>
+                          </div>
+                          <div class="x_content">
+                              <ul id="basic_info_id">
+                                <li><span class="text-muted">ID：</span><span class="text-info" id="info_server_id"></span></li>
+                                <li><span class="text-muted">名称：</span><span class="text-info" id="info_name"></span></li>
+                                <li><span class="text-muted">状态：</span><span class="text-info" id="info_status"><i></i><span style="color:#090">运行中</span></span></li>
+                                <li><span class="text-muted">可用区：</span><span class="text-info" id="info_zone"></span></li>
+                                <li><span class="text-muted">操作系统类型：</span><span class="text-info" id="info_os_type"></span></li>
+                                <li><span class="text-muted">服务商：</span><span class="text-info" id="info_support"></span></li>
+                                <li><span class="text-muted">自动续费：</span><span class="text-info" id="info_auto_renew"><span class="green"></span></span></li>
+                                <li><span class="text-muted">创建时间：</span><span class="text-info" id="info_create_time"></span></li>
+                                <li><span class="text-muted">到期时间：</span><span class="text-info" id="info_ex_time"></span></li>
+                                <li><span class="text-muted">凭证：</span><span class="text-info" id="info_certificate"></span></li>
+                                <li><span class="text-muted">备注：</span><span class="text-info" id="info_remark"></span></li>
+                              </ul>
+                          </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="x_panel row_panel">
+                          <div class="x_title header_title">
+                              <span class="header_title_span">配置信息</span>
+                            <div class="clearfix"></div>
+                          </div>
+                          <div class="x_content">
+                              <ul id="config_info_id">
+                                <li><span class="text-muted">CPU：</span><span class="text-info" id="info_cpu"></span></li>
+                                <li><span class="text-muted">内存：</span><span class="text-info" id="info_memory"></span></li>
+                                <li><span class="text-muted">私有IP：</span><span class="text-info" id="info_inner_ip"></span></li>
+                                <li><span class="text-muted">公网IP：</span><span class="text-info" id="info_public_ip"></span></li>
+                                <li><span class="text-muted">操作系统：</span><span class="text-info" id="info_os"></span></li>
+                              </ul>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8 col-sm-8 col-xs-12">
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="x_panel row_panel">
+                          <div class="x_title header_title">
+                              <span class="header_title_span">进程信息</span><span id="pids_datetime_id" style="margin-left:10px;color:#333333"></span>
+                            <div class="clearfix"></div>
+                          </div>
+                          <div class="x_content">
+                              <div class="col-md-12 col-sm-12 col-xs-12" id="pids_no_data" style="border-bottom:1px solid #D7DEE5;">无数据</div>
+                              <div  id="pids_div_id" style="height:300px;">
+                                <div class="ivu-spin ivu-spin-fix" id="pids_loading_id">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>数据加载中</div>
+                                    </div>
+                                </div>
+                                <div class="bootstrap-table">
+                                  <div class="fixed-table-container" style="border:1px 0 0 0;border-radius:0;">
+                                      <table id="table" class="table table-no-bordered table-hover table-striped">
+                                        <thead>
+                                          <tr>
+                                            <th style="text-align: center;"><div class="th-inner"><b>进程名</b></div></th>
+                                            <th style="text-align: center;"><div class="th-inner"><b>进程bin路径</b></div></th>
+                                            <th style="text-align: center;"><div class="th-inner"><b>进程工作目录</b></div></th>
+                                            <th style="text-align: center;"><div class="th-inner"><b>进程状态</b></div></th>
+                                            <th style="text-align: center;"><div class="th-inner"><b>进程内存利用率</b></div></th>
+                                            <th style="text-align: center;"><div class="th-inner"><b>进程内存rss vms信息</b></div></th>
+                                            <th style="text-align: center;"><div class="th-inner"><b>进程开启的线程数</b></div></th>
+                                          </tr>
+                                        </thead>
+                                        <tbody id="pids_table_tbody" class="roll">
+                                        </tbody>
+                                      </table>
+                                  </div>
+                                </div>
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="x_panel row_panel" style="border-bottom: 1px solid #E6E9ED;">
+                          <div class="x_title header_title">
+                              <span class="header_title_span">磁盘分区</span><span id="disk_partition_datetime_id" style="margin-left:10px;color:#333333"></span>
+                            <div class="clearfix"></div>
+                          </div>
+                          <div class="x_content">
+                              <div class="col-md-12 col-sm-12 col-xs-12" id="disk_partition_no_data" style="border-bottom:1px solid #D7DEE5;">无数据</div>
+                              <div class="ivu-spin ivu-spin-fix" id="disk_partition_loading_id" style="display: none;">
+                                  <div class="ivu-spin-main">
+                                      <span class="ivu-spin-dot"></span>
+                                      <div class="ivu-spin-text"></div>
+                                      <div>数据加载中</div>
+                                    </div>
+                              </div>
+                              <div id="disk_partition_div_id">
+
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="x_panel row_panel">
+                          <div class="x_title header_title">
+                              <span class="pull-left header_title_span">监控信息</span>
+                              <div id="my_monitor_1" class="pull-right" style="background: #fff; cursor: pointer;padding-left: 5px; padding-right:5px; border: 1px solid #ccc; height: 35px;line-height:35px;">
+                                  <i class="glyphicon glyphicon-calendar fa fa-calendar" style="top: 0;"></i>
+                                  <span style="color: #495060;"></span> <b class="caret"></b>
+                              </div>
+                              <div class="pull-right ivu-btn-group" style="margin-right:10px;" id="range_div_id">
+                                  <button id="range_最近1小时_id" type="button" class="ivu-btn ivu-btn-primary" onclick="range_trans('最近1小时')">最近1小时</button>
+                                  <button id="range_今日_id" type="button" class="ivu-btn ivu-btn-ghost" onclick="range_trans('今日')">今日</button>
+                                  <button id="range_昨日_id" type="button" class="ivu-btn ivu-btn-ghost" onclick="range_trans('昨日')">昨日</button>
+                                  <button id="range_最近7日_id" type="button" class="ivu-btn ivu-btn-ghost" onclick="range_trans('最近7日')">最近7日</button>
+                                  <button id="range_最近30日_id" type="button" class="ivu-btn ivu-btn-ghost" onclick="range_trans('最近30日')">最近30日</button>
+                              </div>
+                            <div class="clearfix"></div>
+                          </div>
+                          <div class="col-md-12 col-sm-12 col-xs-12" id="monitor_no_data" style="border-bottom:1px solid #D7DEE5;">无数据</div>
+                          <div class="x_content" id="monitor_div_id">
+                              <div class="col-md-6 col-sm-12 col-xs-12 monitor_line_div_class" style="border-right: 1px #D7DEE5 solid">
+                                <div class="ivu-spin ivu-spin-fix my_monitor_line" id="cpu_usage_line_loading_id">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>数据加载中</div>
+                                    </div>
+                                </div>
+                                  <div id="cpu_usage_line" class="san_line"></div>
+                              </div>
+                              <div class="col-md-6 col-sm-12 col-xs-12 monitor_line_div_class">
+                                <div class="ivu-spin ivu-spin-fix my_monitor_line" id="memory_usage_line_loading_id">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>数据加载中</div>
+                                    </div>
+                                </div>
+                                  <div id="memory_usage_line" class="san_line"></div>
+                              </div>
+                              <div class="col-md-12 col-sm-12 col-xs-12 monitor_line_div_class" id="load_line_div_id">
+                                <div class="ivu-spin ivu-spin-fix my_monitor_line" id="load_line_loading_id">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>数据加载中</div>
+                                    </div>
+                                </div>
+                                <div id="load_line" class="san_line"></div>
+                              </div>
+                              <div class="col-md-12 col-sm-12 col-xs-12 monitor_line_div_class">
+                                <div class="ivu-spin ivu-spin-fix my_monitor_line" id="disk_usage_line_loading_id">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>数据加载中</div>
+                                    </div>
+                                </div>
+                                  <div id="disk_usage_line" class="san_line"></div>
+                              </div>
+                              <div class="col-md-6 col-sm-12 col-xs-12 monitor_line_div_class" style="border-right: 1px #D7DEE5 solid">
+                                <div class="ivu-spin ivu-spin-fix my_monitor_line" id="recv_net_loading_id">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>数据加载中</div>
+                                    </div>
+                                </div>
+                                  <div id="recv_net" class="san_line"></div>
+                              </div>
+                              <div class="col-md-6 col-sm-12 col-xs-12 monitor_line_div_class">
+                                <div class="ivu-spin ivu-spin-fix my_monitor_line" id="send_net_loading_id">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>数据加载中</div>
+                                    </div>
+                                </div>
+                                  <div id="send_net" class="san_line"></div>
+                              </div>
+                              <div class="col-md-6 col-sm-12 col-xs-12 monitor_line_div_class" style="border-right: 1px #D7DEE5 solid">
+                                <div class="ivu-spin ivu-spin-fix my_monitor_line" id="disk_read_count_line_loading_id">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>数据加载中</div>
+                                    </div>
+                                </div>
+                                  <div id="disk_read_count_line" class="san_line"></div>
+                              </div>
+                              <div class="col-md-6 col-sm-12 col-xs-12 monitor_line_div_class">
+                                <div class="ivu-spin ivu-spin-fix my_monitor_line" id="disk_write_count_line_loading_id">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>数据加载中</div>
+                                    </div>
+                                </div>
+                                  <div id="disk_write_count_line" class="san_line"></div>
+                              </div>
+                              <div class="col-md-6 col-sm-12 col-xs-12 monitor_line_div_class" style="border-right: 1px #D7DEE5 solid">
+                                <div class="ivu-spin ivu-spin-fix my_monitor_line" id="disk_read_bytes_line_loading_id">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>数据加载中</div>
+                                    </div>
+                                </div>
+                                  <div id="disk_read_bytes_line" class="san_line"></div>
+                              </div>
+                              <div class="col-md-6 col-sm-12 col-xs-12 monitor_line_div_class">
+                                <div class="ivu-spin ivu-spin-fix my_monitor_line" id="disk_write_bytes_line_loading_id">
+                                    <div class="ivu-spin-main">
+                                        <span class="ivu-spin-dot"></span>
+                                        <div class="ivu-spin-text"></div>
+                                        <div>数据加载中</div>
+                                    </div>
+                                </div>
+                                <div id="disk_write_bytes_line" class="san_line"></div>
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+                 </div>
+                 
+            </div>
+        </div>
+        <!-- 添加/修改实例模态框 -->
+        <div class="modal fade" id="changeModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog" style="z-index: 2041;">
+                <div class="ivu-spin ivu-spin-fix" id="changing_id" style="display: none">
+                    <div class="ivu-spin-main">
+                        <span class="ivu-spin-dot"></span>
+                        <div class="ivu-spin-text"></div>
+                        <div>请求中</div>
+                    </div>
+                </div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="change_pro_title_id">添加实例</h4>
+                    </div>
+                    <form id="change_form" action="#" class="form-horizontal form-label-left">
+                        <div class="modal-body roll" style="max-height: 650px;overflow-y: auto">
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">实例ID <span class="required">*</span>
+                                </label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <input class="ivu-input is_required" name="server_id">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">实例名称 <span class="required">*</span>
+                                </label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <input class="ivu-input is_required" name="name">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">私有IP</label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <input class="ivu-input" name="inner_ip">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">公网IP</label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <input class="ivu-input" name="public_ip">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">操作系统 <span class="required">*</span>
+                                </label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <select class="selectpicker show-tick form-control" name="os" id="change_os_id">
+                                        <option value="0">Linux</option>
+                                        <option value="1">Windows</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">服务商</label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <select class="selectpicker show-tick form-control" name="support" id="change_support_id"></select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">地域</label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <input class="ivu-input" name="region">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">凭证</label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <select class="selectpicker show-tick form-control" name="certificate" id="change_certificate_id"></select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">其他信息</label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <textarea class="ivu-input" name="server_info" placeholder="格式（字典）：{key: value, key2: value2}"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">备注</label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <textarea class="ivu-input" name="remark"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" id="change_submit_btn" onclick="change(-1)">
+                                <span class="ladda-label"> 确认 </span>
+                            </button>
+                            <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- /. 模态框结束 -->
+        <!-- 远程连接 -->
+        <div class="modal fade" id="sshModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog" style="z-index: 2041;">
+                <div class="ivu-spin ivu-spin-fix" id="connecting_id" style="display: none">
+                    <div class="ivu-spin-main">
+                        <span class="ivu-spin-dot"></span>
+                        <div class="ivu-spin-text"></div>
+                        <div>连接中</div>
+                    </div>
+                </div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">SSH连接</h4>
+                    </div>
+                    <form method="post" id="connect_form" class="form-horizontal form-label-left">
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <input type="hidden" id="con_host_id" name="con_host_id" value="">
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">连接IP</label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <div class="btn-group" data-toggle="buttons" id="radio_ssh_ip">
+                                        <input type="radio" name="con_ip" value="inner_ip" id="ssh_inner_ip">
+                                        <label for="ssh_inner_ip" style="cursor:pointer; margin-right: 20px;">内部IP</label>
+                                        <input type="radio" name="con_ip" value="public_ip" id="ssh_public_ip">
+                                        <label for="ssh_public_ip" style="cursor:pointer;">外部IP</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="ivu-form-item-label pull-left col-md-2">凭证</label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <select class="selectpicker show-tick form-control" name="certificate" id="ssh_certificate_id"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="btn_conn" onclick="connFun()" class="ivu-btn ivu-btn-primary ladda-button" data-style="expand-left">
+                                <span class="ladda-label"> 连接 </span>
+                            </button>
+                            <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                        </div>
+                    </form>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div><!-- /.远程连接结束 -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block ext_script %}
+    <script src="{% static 'js/aukeyops/currency.js' %}"></script>
+    <script src="{% static 'js/echarts/echarts.js' %}"></script>
+    <script src="{% static 'js/echarts/walden.js' %}"></script>
+    <script src="{% static 'js/echarts/roma.js' %}"></script>
+    <script src="{% static 'js/echarts/macarons.js' %}"></script>
+    <script src="{% static 'js/echarts/westeros.js' %}"></script>
+    <script src="{% static 'js/echarts/customed.js' %}"></script>
+    <script src="{% static 'jebox/jquery.jebox.min.js' %}"></script>
+    <script type="text/javascript">
+        var the_server_id;
+        // 添加/修改实例
+        function change(id) {
+            cleanErrorAlert('change_form');
+            var re = checkRequired('change_form');
+            if (!re) {
+                return false
+            }
+            if (id > 0) {
+                var url = '/opscenter/server/detail/'+id+'/';
+                var type = 'put'
+            } else {
+                var url ='/opscenter/server/list/';
+                var type = 'post'
+            }
+            $.ajax({
+                url: url,
+                data: $('#change_form').serializeArray(),
+                datatype: 'json',
+                type: type,
+                success: function (result) {
+                    MyMessage(1, '操作成功！');
+                    $('#changeModal').modal('hide');
+                    refresh_info()
+                },
+                error: function (result) {
+                    var re_json = result.responseJSON;
+                    for (i in re_json){
+                        $("#change_form [name="+i+"]").addClass('error_input');
+                        $("#change_form [name="+i+"]").after("<div class='error_alert'>"+result.responseJSON[i]+"</div>");
+                    }
+                }
+            })
+        }
+
+        // 删除
+        function confirmDelete(){
+            var select = getSelectRow();
+            if (select && select.id) {
+                var url = '/opscenter/server/detail/'+select.id+'/';
+                $.confirm({
+                    title: '提示！',
+                    content: '确定要删除实例「'+select.name+'」吗？',
+                    closeIcon: true,
+                    confirmButtonClass:'btn-danger',
+                    cancelButtonClass: 'btn-default ',
+                    confirmButton: '删除!',
+                    cancelButton: '取消',
+                    confirm: function(){
+                        $.ajax({
+                            url: url,
+                            type: 'DELETE',
+                            success: function (result) {
+                                MyMessage(1, '操作成功！');
+                                $('#table').bootstrapTable("refresh");
+                            },
+                            error: function (result) {
+                                MyMessage(0, result.responseText);
+                            }
+                        })
+                    }
+                });
+            } else {
+                MyMessage(0, '请选择实例！');
+                return false;
+            }
+        }
+
+        $(".selectpicker").selectpicker({
+            noneSelectedText : ''//默认显示内容
+        });
+
+        // 检查是否开启自动续费
+        function checkAutoRenew(support_id, id) {
+            $.ajax({
+                url: '/opscenter/server/check_auto_renew',
+                data: {'support_id': support_id, 'id': id},
+                type: 'post',
+                success: function (result) {
+                    if (result['code'] == 0) {
+                    } else {
+                        if (result['result'] == '是') {
+                            var color = 'green'
+                        } else {
+                            var color = 'red'
+                        }
+                        $("#info_auto_renew").html('<span class="'+color+'">'+result['result']+'</span>');
+                    }
+                }
+            })
+        }
+        var data_zoom = [
+            {
+                type: 'slider',
+                show: true,
+                xAxisIndex: [0],
+                start: 0,
+                end: 100,
+                height: 15,
+                bottom: 10
+            },
+            {
+                type: 'slider',
+                show: true,
+                yAxisIndex: [0],
+                start: 0,
+                end: 100,
+                width: 15,
+            },
+            {
+                type: 'inside',
+                xAxisIndex: [0],
+                start: 80,
+                end: 100
+            },
+            {
+                type: 'inside',
+                yAxisIndex: [0],
+                start: 0,
+                end: 100
+            }
+        ];
+        var server_detail_info;
+        var cpu_usage_line = echarts.init(document.getElementById('cpu_usage_line'), 'walden');
+        var memory_usage_line = echarts.init(document.getElementById('memory_usage_line'), 'macarons');
+        var disk_usage_line = echarts.init(document.getElementById('disk_usage_line'), 'westeros');
+        var recv_net_line = echarts.init(document.getElementById('recv_net'), 'roma');
+        var send_net_line = echarts.init(document.getElementById('send_net'), 'roma');
+        var disk_read_count_line = echarts.init(document.getElementById('disk_read_count_line'), 'customed');
+        var disk_write_count_line = echarts.init(document.getElementById('disk_write_count_line'), 'customed');
+        var disk_read_bytes_line = echarts.init(document.getElementById('disk_read_bytes_line'), 'roma');
+        var disk_write_bytes_line = echarts.init(document.getElementById('disk_write_bytes_line'), 'roma');
+        var load_line = echarts.init(document.getElementById('load_line'), 'macarons');
+        function getDetailInfo() { // 获取实例详情信息
+            $(".text-info").html('');
+            $.ajax({
+                url: '/opscenter/server/detail/{{ pk }}/',
+                type: 'get',
+                success: function (result) {
+                    server_detail_info = result;
+                    try{
+                        var server_info = eval("["+result['server_info']+"]")[0];
+                    } catch(err) {
+                        var server_info = {}
+                    }
+                    if (result['os'] == 1) {
+                      $('#load_line_div_id').hide();
+                    }
+                    var my_os_type = {0: 'Linux', 1: 'Windows'};
+                    $('#info_server_id').html(result['server_id']);
+                    $('#info_name').html(result['name']);
+                    $('#info_name_title').html(result['name']);
+                    $('#info_inner_ip').html(result['inner_ip']);
+                    $('#info_public_ip').html(result['public_ip']);
+                    $('#info_remark').html(result['remark']);
+                    $('#info_os_type').html(my_os_type[result['os']]);
+                    try {
+                        $('#info_zone').html(server_info['可用区']);
+                        $('#info_create_time').html(server_info['创建时间']);
+                        $('#info_ex_time').html(server_info['到期时间']);
+                        $('#info_cpu').html(server_info['CPU']);
+                        $('#info_memory').html(server_info['内存']);
+                        $('#info_os').html(server_info['操作系统']);
+                    } catch (err) {}
+                    if (result['public_ip']) {
+                        var ssh_ip_type = 'public_ip';
+                    } else {
+                        var ssh_ip_type = 'inner_ip';
+                    }
+                    $(":radio[name='con_ip']").iCheck('uncheck');
+                    $(":radio[name='con_ip'][value='" + ssh_ip_type + "']").iCheck('check');
+                    $(":radio[name='con_ip'][value='" + ssh_ip_type + "']").prop("checked", "checked");
+                    if (result['certificate']) {
+                        $('#info_certificate').html(result['certificate']['name']);
+                        $('#ssh_certificate_id').selectpicker('val',result['certificate']['id']);
+                    }
+                    if (result['support']) {
+                        $('#info_support').html(result['support']['name']);
+                        checkAutoRenew(result['support']['id'], '{{ pk }}')
+                    }
+                    the_server_id = result['server_id'];
+                    get_server_status(the_server_id);
+                    get_monitor_data(the_server_id, $('#my_monitor_1 span').html());
+                }
+            });
+        }
+
+        function get_server_status(server_id){
+            $('#pids_no_data').hide();
+            $('#pids_div_id').show();
+            $('#pids_loading_id').show();
+            $('#disk_partition_div_id').html('');
+            $('#disk_partition_no_data').hide();
+            $('#disk_partition_loading_id').show();
+            $.ajax({
+                url: '/opscenter/get_redis_list',
+                data: {'key': server_id, 'start': -1},
+                timeout: 30000,
+                type: 'post',
+                success: function (result) {
+                    if (result['result'].length > 0) {
+                        var a = result['result'][0];
+                        var nMinutes = minutesBetween(a['datetime'], 'now');
+                        if (nMinutes <= 5) {
+                            document.getElementById('info_status').innerHTML = '<span class="running_span"><i style="background-position: -61px -4px;"></i>' +
+                                '<span style="color: #090">运行中</span></span>';
+                        } else {
+                            document.getElementById('info_status').innerHTML = '<span class="disable_span"><i style="background-position: -61px -28px;"></i>' +
+                                '<span class="red" title="' + nMinutes + '分钟未收到监控信息">已断开</span>「<b>' + nMinutes + '</b>分钟未收到监控信息」</span>';
+                        }
+                        if (a['pids']) {
+                          if (a['pids']['pid']) {
+                              var pid_list = a['pids']['pid'];
+                              var html_tbody = '';
+                              for (v in pid_list) {
+                                  var html_td = '';
+                                  html_td = '<td class="roll_x" style="text-align: center; center;" title="'+pid_list[v][0]+'">'+pid_list[v][0]+'</td>'+
+                                    '<td class="roll_x" style="text-align: center; title="'+pid_list[v][1]+'">'+pid_list[v][1]+'</td>'+
+                                    '<td class="roll_x" style="text-align: center; title="'+pid_list[v][2]+'">'+pid_list[v][2]+'</td>'+
+                                    '<td class="roll_x" style="text-align: center; title="'+pid_list[v][3]+'">'+pid_list[v][3]+'</td>'+
+                                    '<td class="roll_x" style="text-align: center; title="'+pid_list[v][4]+'">'+pid_list[v][4]+'</td>'+
+                                    '<td class="roll_x" style="text-align: center; title="'+pid_list[v][5]+'">'+pid_list[v][5]+'</td>'+
+                                    '<td class="roll_x" style="text-align: center;" title="'+pid_list[v][6]+'">'+pid_list[v][6]+'</td>';
+                                  html_tbody += '<tr>'+html_td+'</tr>'
+                              }
+                              $('#pids_datetime_id').html('（数据时间：'+a['datetime']+'） <span class="pull-right" style="color:#333333">进程数：'+a['pids']['allow_look_count']+'</span>')
+                              $('#pids_table_tbody').html(html_tbody);
+                          }
+                        } else {
+                          $('#pids_no_data').show();
+                          $('#pids_div_id').hide();
+                        }
+                        if (a['disk']) {
+                            if (a['disk']['partition']) {
+                                var pid_list = [];
+                                var sexIcon = {
+                                    'male': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAoCAYAAAD+MdrbAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDE0IDc5LjE1MTQ4MSwgMjAxMy8wMy8xMy0xMjowOToxNSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6ODkzRDIwQTE0MTIxMTFFODkyOTU4RUU5NzM3MjE3MDMiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6ODkzRDIwQTA0MTIxMTFFODkyOTU4RUU5NzM3MjE3MDMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKFdpbmRvd3MpIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6NTQ4MERFMjNCRDNDMTFFNzgyQTFFRkM1MDA3MjdBRTYiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6NTQ4MERFMjRCRDNDMTFFNzgyQTFFRkM1MDA3MjdBRTYiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz4iuAMWAAABl0lEQVR42uzWTSgEYRzH8ZmJcPDOkRMXG1cl5SInJ1e5aEtuLhwoNy5K0mpzWCXJyQEH5eDEwUVecuKCKEJ5qU2L8R2e1fT0zLM7O3NR869P284zz69nnmeemTFt2zac6kz+/kpVjG6MoB0ZbGMWJ/jKnrg3bP78WoZ3OW2DWEcPKlGHAWyiC6aqk1fFMI4yRVsDJlDrJ7AXjZp2Z4RtfgLrDX0VocJP4H2OwE+8+Ancwa2mfR9nfgIPMYMnxchuMI071TzoKoFHxMXKOjfrERaw6zWxuvrACjZQLW5kZ27fdSslT0ETyqXjGdeuqHH1e8WFe8e4A0vQL7ZZs2oXSOVc/jnmsJodtTuwDynDX7WKPmmsyas8ahReY6rbpiVAYEwVaBkhlCVNcqFlhzoqI+zLjAL/ygyQY4Z9H1qqkKsAgdeqwESAwHnV4yslnnVD4oWeTz1gEUuqwGdMYQtV4tgkOjzCklgWnyRprye203Dg+h/XjO5YOjevldW9c0qjrRcF/tdA029brsBT8aEke8OlqsO3AAMAxyBOvxLL2/sAAAAASUVORK5CYII=',
+                                    'female': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAdCAYAAACaCl3kAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDE0IDc5LjE1MTQ4MSwgMjAxMy8wMy8xMy0xMjowOToxNSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OTgxQUVBQkE0MTIwMTFFODlBRjc4REM5QkNCNEQ3NkEiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OTgxQUVBQjk0MTIwMTFFODlBRjc4REM5QkNCNEQ3NkEiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKFdpbmRvd3MpIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6NTQ4MERFMjNCRDNDMTFFNzgyQTFFRkM1MDA3MjdBRTYiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6NTQ4MERFMjRCRDNDMTFFNzgyQTFFRkM1MDA3MjdBRTYiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz5Op4glAAABOUlEQVR42mL8//8/Awj8zY1lgAJ2IG4C4lQg/gbEy4C4Foh/giSZJy8GK2JhwAQzgDgByhYE4lIgFgXiRGRFTGiaQArjsBgWC5XDqVEcixjYhVA5nBrvA/F7LBrfQeVwagQFQDEorJDEQOwSWODAALbAmQ/EN5ACaAEQH0dXxPgnJ4aBHIAtILYB8X80vJWQRiEgdsFimCtUDqfGACBmxaKRFSqHU2M4Hm+F49IoAsROeDQ6QdVgaAzEET3IUReITWMYEbEQhq5RDIgdidDoCFUL1xgETciEADNULVxjGAmJJgymUQKI7UjQaA/SA9JoRaQzkcPFCkScQs8yBABI7SmQxidQDz8gQtMDqNonTEg5QhGUzYC4A4uGDqicIlQtAwusuEMrIrHHBZJaJgYywRDX+IkYMYAAAwB6sjfXWpdRXAAAAABJRU5ErkJggg=='
+                                };
+                                $('#disk_partition_no_data').hide();
+                                $('#disk_partition_loading_id').hide();
+                                $('#disk_partition_datetime_id').html('（数据时间：'+a['datetime']+'）');
+                                var pn = 1;
+                                for (partition_name in a['disk']['partition']){
+                                    var used = (a['disk']['partition'][partition_name]['used']/1024/1024/1024).toFixed(0);
+                                    var free = (a['disk']['partition'][partition_name]['free']/1024/1024/1024).toFixed(0);
+                                    var percent = a['disk']['partition'][partition_name]['percent'];
+                                    var free_percentage = 100 - percent;
+                                    if (used+free == 0){
+                                        continue
+                                    }
+                                    var pid = 'disk_partition_'+pn;
+                                    pid_list.push(pid);
+                                    $('#disk_partition_div_id').append('<div style="margin:0 auto;height:80px;width:90%;" id="'+pid+'"></div>');
+                                    pn += 1;
+                                    var disk_partition_pie = echarts.init(document.getElementById(pid), 'roma');
+                                    var disk_partition_option = {
+                                         title: {
+                                            text: partition_name,
+                                            x: 'center'
+                                        },
+                                        tooltip: {
+                                            trigger: 'item',
+                                            axisPointer: { // 坐标轴指示器，坐标轴触发有效
+                                                type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+                                            },
+                                            backgroundColor: 'rgba(255,255,255,0.7)',
+                                            borderColor: '#cee5ff',
+                                            borderWidth: 1,
+                                            padding: [5, 10],
+                                            textStyle: {
+                                                color: '#444'
+                                            },
+                                            formatter: function(params) {
+                                                return '<div style="height:30px;line-height: 30px;">' + params.name + '</div>' + '<div style="height: 40px;line-height: 40px;">' + params.data.name + ': <span style="color: ' + params.color + ';">' + params.value + '%</span></div>';
+                                            }
+                                        },
+                                        color: ['#e34c4c', '#3a8eff'],
+                                        xAxis: [{
+                                            type: 'value',
+                                            show: false
+                                        }],
+                                        yAxis: [{
+                                            type: 'category',
+                                            show: false,
+                                            data: [partition_name]
+                                        }],
+                                        series: [{
+                                                type: 'bar',
+                                                stack: partition_name,
+                                                barWidth: 10,
+                                                label: {
+                                                    normal: {
+                                                        show: true,
+                                                        position: 'left'
+                                                    }
+                                                },
+                                                data: [{
+                                                    name: '已用',
+                                                    value: percent,
+                                                    label: {
+                                                        position: 'left',
+                                                        normal: {
+                                                            formatter: ['已用 '+used+'GB'].join('\n'),
+                                                            rich: {
+                                                                Female: {
+                                                                    height: 40,
+                                                                    align: 'center',
+                                                                    backgroundColor: {
+                                                                        image: sexIcon.female
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }]
+                                            },
+                                            {
+                                                type: 'bar',
+                                                stack: partition_name,
+                                                barWidth: 10,
+                                                label: {
+                                                    normal: {
+                                                        show: true,
+                                                        position: 'right'
+                                                    }
+                                                },
+                                                data: [{
+                                                    name: '空闲',
+                                                    value: free_percentage,
+                                                    label: {
+                                                        normal: {
+                                                            formatter: ['空闲 '+free+'GB'].join('\n'),
+                                                            rich: {
+                                                                Male: {
+                                                                    height: 40,
+                                                                    align: 'center',
+                                                                    backgroundColor: {
+                                                                        image: sexIcon.male
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }]
+                                            }
+                                        ]
+                                    };
+                                    disk_partition_pie.setOption(disk_partition_option,true);
+                                }
+                                window.addEventListener("resize",function(){
+                                    for (c in pid_list){
+                                        echarts.init(document.getElementById(pid_list[c]), 'roma').resize();
+                                    }
+                                });
+                            } else {
+                                $('#disk_partition_no_data').show();
+                            }
+                        } else {
+                            $('#disk_partition_no_data').show();
+                        }
+                    } else {
+                        $('#pids_no_data').show();
+                        $('#pids_div_id').hide();
+                        document.getElementById('info_status').innerHTML = '<span style="color: #999">监控未启动</span>';
+                    }
+                },
+                error: function(result) {
+                  $('#pids_no_data').show();
+                  $('#pids_div_id').hide();
+                },
+                complete: function (){
+                  $('#pids_loading_id').hide();
+                }
+            })
+        }
+
+        function get_monitor_data(server_id, datetime_range='') {
+            $('#monitor_no_data').hide();
+            $('#monitor_div_id').show();
+            $('.my_monitor_line').show();
+            cpu_usage_line.clear();
+            memory_usage_line.clear();
+            disk_usage_line.clear();
+            recv_net_line.clear();
+            send_net_line.clear();
+            disk_read_count_line.clear();
+            disk_write_count_line.clear();
+            disk_read_bytes_line.clear();
+            disk_write_bytes_line.clear();
+            load_line.clear();
+            $.ajax({
+                url: '/opscenter/get_mongo_list',
+                data: {'key': server_id, 'datetime_range': datetime_range},
+                type: 'post',
+                error: function(result) {
+                    $('#monitor_no_data').show();
+                    $('#monitor_div_id').hide();
+                },
+                success: function(monitor_res) {
+                    var cpu_datetime_list = monitor_res['cpu_percent'];
+                    var memory_datetime_list = monitor_res['memory_percent'];
+                    var disk_datetime_list = monitor_res['disk_percent'];
+                    var recv_net_list = monitor_res['net_recv_data_list'];
+                    var send_net_list = monitor_res['net_send_data_list'];
+                    var disk_read_count_data_list = monitor_res['disk_read_count_data_list'];
+                    var disk_write_count_data_list = monitor_res['disk_write_count_data_list'];
+                    var disk_read_bytes_data_list = monitor_res['disk_read_bytes_data_list'];
+                    var disk_write_bytes_data_list = monitor_res['disk_write_bytes_data_list'];
+                    var one_minute_load = monitor_res['one_minute_load'];
+                    var five_minute_load = monitor_res['five_minute_load'];
+                    var fifteen_minute_load = monitor_res['fifteen_minute_load'];
+                    <!-- CPU使用率折线图 -->
+                    cpu_usage_line_option = {
+                        title: {
+                            show: "true",//是否显示标题，默认显示，可以不设置
+                            text: "CPU",//图表标题文本内容
+                            textStyle:{//标题内容的样式
+                                color:'#333333',
+                                fontWeight:"lighter",//可选normal(正常)，bold(加粗)，bolder(加粗)，lighter(变细)，100|200|300|400|500...
+                                fontSize:14 //主题文字字体大小，默认为18px
+                            }
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        tooltip : {
+                            trigger: 'axis',
+                            position:function(p){   //其中p为当前鼠标的位置
+                                return [p[0] + 10, p[1] - 10];
+                            },
+                            formatter: function (params, ticket, callback) {
+                                var params_date = params[0]['data'][0];
+                                var params_value = params[0]['data'][1];
+                                return "时间："+params_date.replace('T', ' ')+"<br>CPU使用率："+params_value+"(%)";
+                            }
+                        },
+                        legend: {
+                            show:true
+                        },
+                        lineStyle: {
+                            width: 1
+                        },
+                        xAxis: {
+                            type: 'time',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                },
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        yAxis: {
+                            min:0,
+                            max:100,
+                            type: 'value',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        dataZoom: data_zoom,
+                        series: [{
+                            name: 'CPU使用率(%)',
+                            data: eval(cpu_datetime_list),
+                            type: 'line',
+                            smooth: true,
+                            showSymbol: false,
+                            lineStyle: {
+                                normal: {
+                                    width: 1
+                                }
+                            }
+                        }]
+                    };
+                    cpu_usage_line.setOption(cpu_usage_line_option,true);
+                    $('#cpu_usage_line_loading_id').hide();
+                    <!-- CPU使用率折线图结束 -->
+                    <!-- 内存使用率折线图 -->
+                    memory_usage_line_option = {
+                        title: {
+                            show: "true",//是否显示标题，默认显示，可以不设置
+                            text: "内存",//图表标题文本内容
+                            textStyle:{//标题内容的样式
+                                color:'#333333',
+                                fontWeight:"lighter",//可选normal(正常)，bold(加粗)，bolder(加粗)，lighter(变细)，100|200|300|400|500...
+                                fontSize:14 //主题文字字体大小，默认为18px
+                            }
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        tooltip : {
+                            trigger: 'axis',
+                            position:function(p){   //其中p为当前鼠标的位置
+                                return [p[0] + 10, p[1] - 10];
+                            },
+                            formatter: function (params, ticket, callback) {
+                                var params_date = params[0]['data'][0];
+                                var params_value = params[0]['data'][1];
+                                return "时间："+params_date.replace('T', ' ')+"<br>内存使用率："+params_value+"(%)";
+                            }
+                        },
+                        legend: {
+                            show:true
+                        },
+                        xAxis: {
+                            type: 'time',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        yAxis: {
+                            min:0,
+                            max:100,
+                            type: 'value',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        dataZoom: data_zoom,
+                        series: [{
+                            name: '内存使用率(%)',
+                            data: eval(memory_datetime_list),
+                            type: 'line',
+                            smooth: true,
+                            showSymbol: false,
+                            lineStyle: {
+                                normal: {
+                                    width: 1
+                                }
+                            }
+                        }]
+                    };
+                    memory_usage_line.setOption(memory_usage_line_option);
+                    $('#memory_usage_line_loading_id').hide();
+                    <!-- 内存使用率折线图结束 -->
+                    <!-- 磁盘使用率折线图 -->
+                    disk_usage_line_option = {
+                        title: {
+                            show: "true",//是否显示标题，默认显示，可以不设置
+                            text: "磁盘",//图表标题文本内容
+                            textStyle:{//标题内容的样式
+                                color:'#333333',
+                                fontWeight:"lighter",//可选normal(正常)，bold(加粗)，bolder(加粗)，lighter(变细)，100|200|300|400|500...
+                                fontSize:14 //主题文字字体大小，默认为18px
+                            }
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        tooltip : {
+                            trigger: 'axis',
+                            position:function(p){   //其中p为当前鼠标的位置
+                                return [p[0] + 10, p[1] - 10];
+                            },
+                            formatter: function (params, ticket, callback) {
+                                var params_date = params[0]['data'][0];
+                                var params_value = params[0]['data'][1];
+                                return "时间："+params_date.replace('T', ' ')+"<br>磁盘使用率："+params_value+"(%)";
+                            }
+                        },
+                        legend: {
+                            show:true
+                        },
+                        xAxis: {
+                            type: 'time',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        yAxis: {
+                            min:0,
+                            max:100,
+                            type: 'value',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        dataZoom: data_zoom,
+                        series: [{
+                            name: '磁盘使用率(%)',
+                            data: eval(disk_datetime_list),
+                            type: 'line',
+                            smooth: true,
+                            showSymbol: false,
+                            lineStyle: {
+                                normal: {
+                                    width: 1
+                                }
+                            }
+                        }]
+                    };
+                    disk_usage_line.setOption(disk_usage_line_option);
+                    $('#disk_usage_line_loading_id').hide();
+                    <!-- 磁盘使用率折线图结束 -->
+                    <!-- 网络流入带宽折线图 -->
+                    recv_net_line_option = {
+                        title: {
+                            show: "true",//是否显示标题，默认显示，可以不设置
+                            text: "网络流入",//图表标题文本内容
+                            textStyle:{//标题内容的样式
+                                color:'#333333',
+                                fontWeight:"lighter",//可选normal(正常)，bold(加粗)，bolder(加粗)，lighter(变细)，100|200|300|400|500...
+                                fontSize:14 //主题文字字体大小，默认为18px
+                            }
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        tooltip : {
+                            trigger: 'axis',
+                            position:function(p){   //其中p为当前鼠标的位置
+                                return [p[0] + 10, p[1] - 10];
+                            },
+                            formatter: function (params, ticket, callback) {
+                                var params_date = params[0]['data'][0];
+                                var params_value = params[0]['data'][1];
+                                return "时间："+params_date+"<br>网络流入带宽："+params_value+"(KB/s)<br>粒度：30秒";
+                            }
+                        },
+                        legend: {
+                            show:true
+                        },
+                        xAxis: {
+                            type: 'time',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        dataZoom: data_zoom,
+                        series: [{
+                            name: '网络流入带宽(KB/s)',
+                            data: eval(recv_net_list),
+                            type: 'line',
+                            smooth: true,
+                            showSymbol: false,
+                            lineStyle: {
+                                normal: {
+                                    width: 1
+                                }
+                            }
+                        }]
+                    };
+                    recv_net_line.setOption(recv_net_line_option);
+                    $('#recv_net_loading_id').hide();
+                    <!-- 网络流入带宽折线图结束 -->
+                    <!-- 网络流出带宽折线图 -->
+                    send_net_line_option = {
+                        title: {
+                            show: "true",//是否显示标题，默认显示，可以不设置
+                            text: "网络流出",//图表标题文本内容
+                            textStyle:{//标题内容的样式
+                                color:'#333333',
+                                fontWeight:"lighter",//可选normal(正常)，bold(加粗)，bolder(加粗)，lighter(变细)，100|200|300|400|500...
+                                fontSize:14 //主题文字字体大小，默认为18px
+                            }
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        tooltip : {
+                            trigger: 'axis',
+                            position:function(p){   //其中p为当前鼠标的位置
+                                return [p[0] + 10, p[1] - 10];
+                            },
+                            formatter: function (params, ticket, callback) {
+                                var params_date = params[0]['data'][0];
+                                var params_value = params[0]['data'][1];
+                                return "时间："+params_date+"<br>网络流出带宽："+params_value+"(KB/s)<br>粒度：30秒";
+                            }
+                        },
+                        legend: {
+                            show:true
+                        },
+                        xAxis: {
+                            type: 'time',
+{#                                data: eval(net_io_datetime_list),#}
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        dataZoom: data_zoom,
+                        series: [{
+                            name: '网络流出带宽(KB/s)',
+                            data: eval(send_net_list),
+                            type: 'line',
+                            smooth: true,
+                            showSymbol: false,
+                            lineStyle: {
+                                normal: {
+                                    width: 1
+                                }
+                            }
+                        }]
+                    };
+                    send_net_line.setOption(send_net_line_option);
+                    $('#send_net_loading_id').hide();
+                    <!-- 网络流出带宽折线图结束 -->
+                    <!-- 磁盘读IOPS折线图 -->
+                    disk_read_count_line_option = {
+                        title: {
+                            show: "true",//是否显示标题，默认显示，可以不设置
+                            text: "磁盘读IOPS",//图表标题文本内容
+                            textStyle:{//标题内容的样式
+                                color:'#333333',
+                                fontWeight:"lighter",//可选normal(正常)，bold(加粗)，bolder(加粗)，lighter(变细)，100|200|300|400|500...
+                                fontSize:14 //主题文字字体大小，默认为18px
+                            }
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        tooltip : {
+                            trigger: 'axis',
+                            position:function(p){   //其中p为当前鼠标的位置
+                                return [p[0] + 10, p[1] - 10];
+                            },
+                            formatter: function (params, ticket, callback) {
+                                var params_date = params[0]['data'][0];
+                                var params_value = params[0]['data'][1];
+                                return "时间："+params_date+"<br>磁盘读IOPS："+params_value+"(个)<br>粒度：30秒";
+                            }
+                        },
+                        legend: {
+                            show:true
+                        },
+                        xAxis: {
+                            type: 'time',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        dataZoom: data_zoom,
+                        series: [
+                            {
+                                name: '磁盘读IOPS(个)',
+                                data: eval(disk_read_count_data_list),
+                                type: 'line',
+                                smooth: true,
+                                showSymbol: false,
+                                lineStyle: {
+                                    normal: {
+                                        width: 1
+                                    }
+                                }
+                            }
+                        ]
+                    };
+                    disk_read_count_line.setOption(disk_read_count_line_option);
+                    $('#disk_read_count_line_loading_id').hide();
+                    <!-- 磁盘读IOPS折线图结束 -->
+                    <!-- 磁盘写IOPS折线图 -->
+                    disk_write_count_line_option = {
+                        title: {
+                            show: "true",//是否显示标题，默认显示，可以不设置
+                            text: "磁盘写IOPS",//图表标题文本内容
+                            textStyle:{//标题内容的样式
+                                color:'#333333',
+                                fontWeight:"lighter",//可选normal(正常)，bold(加粗)，bolder(加粗)，lighter(变细)，100|200|300|400|500...
+                                fontSize:14 //主题文字字体大小，默认为18px
+                            }
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        tooltip : {
+                            trigger: 'axis',
+                            position:function(p){   //其中p为当前鼠标的位置
+                                return [p[0] + 10, p[1] - 10];
+                            },
+                            formatter: function (params, ticket, callback) {
+                                var params_date = params[0]['data'][0];
+                                var params_value = params[0]['data'][1];
+                                return "时间："+params_date+"<br>磁盘写IOPS："+params_value+"(个)<br>粒度：30秒";
+                            }
+                        },
+                        legend: {
+                            show:true
+                        },
+                        xAxis: {
+                            type: 'time',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　},
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        dataZoom: data_zoom,
+                        series: [
+                            {
+                                name: '磁盘写IOPS(个)',
+                                data: eval(disk_write_count_data_list),
+                                type: 'line',
+                                smooth: true,
+                                showSymbol: false,
+                                lineStyle: {
+                                    normal: {
+                                        width: 1
+                                    }
+                                }
+                            }
+                        ]
+                    };
+                    disk_write_count_line.setOption(disk_write_count_line_option);
+                    $('#disk_write_count_line_loading_id').hide();
+                    <!-- 磁盘写IOPS折线图结束 -->
+                    <!-- 磁盘读流量折线图 -->
+                    disk_read_bytes_line_option = {
+                        title: {
+                            show: "true",//是否显示标题，默认显示，可以不设置
+                            text: "磁盘读流量",//图表标题文本内容
+                            textStyle:{//标题内容的样式
+                                color:'#333333',
+                                fontWeight:"lighter",//可选normal(正常)，bold(加粗)，bolder(加粗)，lighter(变细)，100|200|300|400|500...
+                                fontSize:14 //主题文字字体大小，默认为18px
+                            }
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        tooltip : {
+                            trigger: 'axis',
+                            position:function(p){   //其中p为当前鼠标的位置
+                                return [p[0] + 10, p[1] - 10];
+                            },
+                            formatter: function (params, ticket, callback) {
+                                var params_date = params[0]['data'][0];
+                                var params_value = params[0]['data'][1];
+                                return "时间："+params_date+"<br>磁盘读流量："+params_value+"K(Bytes/s)<br>粒度：30秒";
+                            }
+                        },
+                        legend: {
+                            show:true
+                        },
+                        xAxis: {
+                            type: 'time',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            axisLabel : {
+                                formatter : '{value}K'
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        dataZoom: data_zoom,
+                        series: [{
+                            name: '磁盘读流量(Bytes/s)',
+                            data: eval(disk_read_bytes_data_list),
+                            type: 'line',
+                            smooth: true,
+                            showSymbol: false,
+                            lineStyle: {
+                                normal: {
+                                    width: 1
+                                }
+                            }
+                        }]
+                    };
+                    disk_read_bytes_line.setOption(disk_read_bytes_line_option);
+                    $('#disk_read_bytes_line_loading_id').hide();
+                    <!-- 磁盘读流量折线图结束 -->
+                    <!-- 磁盘写流量折线图 -->
+                    disk_write_bytes_line_option = {
+                        title: {
+                            show: "true",//是否显示标题，默认显示，可以不设置
+                            text: "磁盘写流量",//图表标题文本内容
+                            textStyle:{//标题内容的样式
+                                color:'#333333',
+                                fontWeight:"lighter",//可选normal(正常)，bold(加粗)，bolder(加粗)，lighter(变细)，100|200|300|400|500...
+                                fontSize:14 //主题文字字体大小，默认为18px
+                            }
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        tooltip : {
+                            trigger: 'axis',
+                            position:function(p){   //其中p为当前鼠标的位置
+                                return [p[0] + 10, p[1] - 10];
+                            },
+                            formatter: function (params, ticket, callback) {
+                                var params_date = params[0]['data'][0];
+                                var params_value = params[0]['data'][1];
+                                return "时间："+params_date+"<br>磁盘写流量："+params_value+"K(Bytes/s)<br>粒度：30秒";
+                            }
+                        },
+                        legend: {
+                            show:true
+                        },
+                        xAxis: {
+                            type: 'time',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            axisLabel : {
+                                formatter : '{value}K'
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        dataZoom: data_zoom,
+                        series: [{
+                            name: '磁盘写流量(Bytes/s)',
+                            data: eval(disk_write_bytes_data_list),
+                            type: 'line',
+                            smooth: true,
+                            showSymbol:false,
+                            lineStyle: {
+                                normal: {
+                                    width: 1
+                                }
+                            }
+                        }]
+                    };
+                    disk_write_bytes_line.setOption(disk_write_bytes_line_option);
+                    $('#disk_write_bytes_line_loading_id').hide();
+                    <!-- 磁盘写流量折线图结束 -->
+                    <!-- 平均负载折线图 -->
+                    load_line_option = {
+                        title: {
+                            show: "true",//是否显示标题，默认显示，可以不设置
+                            text: "平均负载",//图表标题文本内容
+                            textStyle:{//标题内容的样式
+                                color:'#333333',
+                                fontWeight:"lighter",//可选normal(正常)，bold(加粗)，bolder(加粗)，lighter(变细)，100|200|300|400|500...
+                                fontSize:14 //主题文字字体大小，默认为18px
+                            }
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        tooltip : {
+                            trigger: 'axis',
+                            position:function(p){   //其中p为当前鼠标的位置
+                                return [p[0] + 10, p[1] - 10];
+                            },
+                            formatter: function (params, ticket, callback) {
+                                var params_date = params[0]['data'][0];
+                                var params_value = params[0]['data'][1];
+                                var params_date_1 = params[1]['data'][0];
+                                var params_value_1 = params[1]['data'][1];
+                                var params_date_2 = params[2]['data'][0];
+                                var params_value_2 = params[2]['data'][1];
+                                return "时间："+params_date+"<br>一分钟平均负载："+params_value+"<br>五分钟平均负载："+params_value_1+"<br>十五分钟平均负载："+params_value_2+"<br>";
+                            }
+                        },
+                        legend: {
+                            show:true
+                        },
+                        xAxis: {
+                            type: 'time',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLine:{
+                                lineStyle:{
+                                    color:'#333333'
+                                }
+                            },
+                            splitLine:{
+                        　　　　show:true
+                        　　}
+                        },
+                        dataZoom: data_zoom,
+                        series: [
+                          {
+                            name: '一分钟平均负载',
+                            data: eval(one_minute_load),
+                            type: 'line',
+                            smooth: true,
+                            showSymbol:false,
+                            lineStyle: {
+                                normal: {
+                                    width: 1
+                                }
+                            }
+                          },
+                          {
+                            name: '五分钟平均负载',
+                            data: eval(five_minute_load),
+                            type: 'line',
+                            smooth: true,
+                            showSymbol:false,
+                            lineStyle: {
+                                normal: {
+                                    width: 1
+                                }
+                            }
+                          },
+                          {
+                            name: '十五分钟平均负载',
+                            data: eval(fifteen_minute_load),
+                            type: 'line',
+                            smooth: true,
+                            showSymbol:false,
+                            lineStyle: {
+                                normal: {
+                                    width: 1
+                                }
+                            }
+                          }
+                        ]
+                    };
+                    load_line.setOption(load_line_option);
+                    $('#load_line_loading_id').hide();
+                    <!-- 平均负载折线图结束 -->
+                }
+            });
+            window.addEventListener("resize",function(){
+              cpu_usage_line.resize();
+              memory_usage_line.resize();
+              disk_usage_line.resize();
+              recv_net_line.resize();
+              send_net_line.resize();
+              disk_read_count_line.resize();
+              disk_write_count_line.resize();
+              disk_read_bytes_line.resize();
+              disk_write_bytes_line.resize();
+              load_line.resize();
+          });
+        }
+
+        // 打开修改模态框
+        $('#changeModal').on('show.bs.modal', function () {
+            $('#change_pro_title_id').html('修改实例');
+            $('#change_submit_btn').attr('onclick', 'change("{{ pk }}")');
+            var form = $('#change_form');
+            form.find("[name='server_id']").val(server_detail_info['server_id']);
+            form.find("[name='name']").val(server_detail_info['name']);
+            form.find("[name='inner_ip']").val(server_detail_info['inner_ip']);
+            form.find("[name='public_ip']").val(server_detail_info['public_ip']);
+            form.find("[name='server_info']").val(server_detail_info['server_info']);
+            form.find("[name='remark']").val(server_detail_info['remark']);
+            form.find("[name='region']").val(server_detail_info['region']);
+            $('#change_os_id').selectpicker('val', server_detail_info['os']);
+            if (server_detail_info['support']) {
+                $('#change_support_id').selectpicker('val', server_detail_info['support']['id']);
+            }
+            if (server_detail_info['certificate']){
+                $('#change_certificate_id').selectpicker('val', server_detail_info['certificate']['id']);
+            }
+        });
+
+        // 关闭修改模态框
+        $('#changeModal').on('hide.bs.modal', function () {
+            cleanErrorAlert('change_form');
+            document.getElementById("change_form").reset();
+            $('#change_support_id').selectpicker('refresh');
+        });
+
+        // 刷新
+        function refresh_info(){
+            getDetailInfo();
+        }
+
+        var region = {};
+        var support_dict = {};
+        $(document).ready(function(){
+            $("#opscenter_menu_id").css("display","block");
+            $("#server_view").addClass('current-page');
+            $.ajax({ // 初始化凭证下拉框
+                url: '/opscenter/certificate/list/',
+                type: 'get',
+                async: false,
+                success: function (result) {
+                    $('#change_certificate_id').empty(); // change模态框凭证下拉框
+                    $('#ssh_certificate_id').empty(); // ssh模态框凭证下拉框
+                    $('#change_certificate_id.selectpicker').append('<option></option>');
+                    $.each(result['results'], function (index, item) {
+                       $('#change_certificate_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                       $('#ssh_certificate_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                    });
+                    $('#change_certificate_id').selectpicker('refresh');
+                    $('#ssh_certificate_id').selectpicker('refresh');
+                }
+            });
+            refresh_info(); // 获取实例详情信息
+            $.ajax({ // 初始化服务商下拉框
+                url: '/opscenter/support/list/',
+                type: 'get',
+                success: function (result) {
+                    $('#change_support_id').empty();//添加/修改模态框服务商下拉框
+                    $('#change_support_id.selectpicker').append('<option></option>');
+                    $.each(result, function (index, item) {
+                       $('#change_support_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                       support_dict[item['id']]=item['type']
+                    });
+                    $('#change_support_id').selectpicker('refresh');
+                }
+            });
+            $.ajax({ // 获取region
+                url: '/opscenter/server/region',
+                type: 'get',
+                success: function (result) {
+                    region = result['result'];
+                }
+            });
+            $('#connect_form input').iCheck({
+                radioClass: 'iradio_flat-blue',
+            });
+
+        });
+
+        function cleanErrorAlert(FormId) {
+            $('.error_alert').remove();
+            $("#"+FormId).find("[class*='error_input']").removeClass("error_input");
+        }
+
+        $(document).ready(function (){
+          //时间插件
+          $('#my_monitor_1 span').html(moment().subtract(1 ,'hours').format('YYYY-MM-DD HH:mm') + ' ~ ' + moment().format('YYYY-MM-DD HH:mm'));
+
+          $('#my_monitor_1').daterangepicker({
+              startDate: moment().subtract(1,'hours'),
+              endDate: moment(),
+              minDate: '01/01/2017',    //最小时间
+              maxDate : moment(), //最大时间
+              dateLimit : {
+                  days : 30
+              }, //起止时间的最大间隔
+              showDropdowns : true,
+              showWeekNumbers : false, //是否显示第几周
+              timePicker : true, //是否显示小时和分钟
+              timePickerIncrement : 1, //时间的增量，单位为分钟
+              timePicker24Hour : true, //是否使用24小时制来显示时间
+              opens : 'left', //日期选择框的弹出位置
+              buttonClasses : [ 'ivu-btn' ],
+              applyClass : 'ivu-btn-primary',
+              cancelClass : 'ivu-btn-ghost',
+              format : 'YYYY-MM-DD HH:mm', //控件中from和to 显示的日期格式
+              separator : ' to ',
+              locale : {
+                  format : 'YYYY-MM-DD HH:mm',
+                  separator: ' ~ ',
+                  applyLabel : '确定',
+                  cancelLabel : '取消',
+                  fromLabel : '起始时间',
+                  toLabel : '结束时间',
+                  customRangeLabel : '自定义',
+                  daysOfWeek : [ '日', '一', '二', '三', '四', '五', '六' ],
+                  monthNames : [ '一月', '二月', '三月', '四月', '五月', '六月',
+                          '七月', '八月', '九月', '十月', '十一月', '十二月' ],
+                  firstDay : 1
+              }
+          },
+          function(start, end, label) {//格式化日期显示框
+              $('#my_monitor_1 span').html(start.format('YYYY-MM-DD HH:mm') + ' ~ ' + end.format('YYYY-MM-DD HH:mm'));
+              get_monitor_data(the_server_id, start.format('YYYY-MM-DD HH:mm') + ' ~ ' + end.format('YYYY-MM-DD HH:mm'));
+          });
+      });
+      function range_trans(range){
+          $("#range_div_id button").attr("class","ivu-btn ivu-btn-ghost");
+          $("#range_"+range+"_id").attr("class","ivu-btn ivu-btn-primary");
+          var ranges = {
+              '最近1小时': [moment().subtract(1,'hours'), moment()],
+              '今日': [moment().startOf('day'), moment()],
+              '昨日': [moment().subtract(1,'days').startOf('day'), moment().subtract(1,'days').endOf('day')],
+              '最近7日': [moment().subtract(6,'days'), moment()],
+              '最近30日': [moment().subtract(29,'days'), moment()]
+          };
+          $('#my_monitor_1 span').html(ranges[range][0].format('YYYY-MM-DD HH:mm') + ' ~ ' + ranges[range][1].format('YYYY-MM-DD HH:mm'));
+          get_monitor_data(the_server_id, ranges[range][0].format('YYYY-MM-DD HH:mm') + ' ~ ' + ranges[range][1].format('YYYY-MM-DD HH:mm'));
+      }
+
+        // 远程连接
+        function connFun() {
+            if (!$('#ssh_certificate_id').val()) {
+                MyMessage(0, '请选择凭证');
+                return false
+            }
+            var conn_cert_id = $('#ssh_certificate_id').val();
+            $("#connecting_id").show();
+            $.ajax({
+                url: "/opscenter/certificate/detail/"+conn_cert_id+"/",
+                type: "get",
+                async: false,
+                success: function(result) {
+                    return true
+                },
+                error: function(result) {
+                    MyMessage(0, result.responseText);
+                    $('#connecting_id').hide();
+                    return false
+                }
+            });
+            var port_data = {
+                "con_id": {{ pk }},
+                "con_ip":$('input:radio[name="con_ip"]:checked').val(),
+                'cid': conn_cert_id
+            };
+            var new_url='';
+            $.ajax({
+                type: "post",
+                url: "{% url 'check_connect' %}",
+                async: false,
+                dataType: "json",
+                data: JSON.stringify(port_data),
+                success: function(con_status) {
+                    if(con_status['con_status'] == "true"){
+                        new_url = "/opscenter/connect_ssh/";
+                        $('#connecting_id').hide();
+                        $("#myModal").modal('hide');
+                        new PNotify({
+                            title: 'SUCCESS',
+                            text: con_status['message'],
+                            type: 'success',
+                            styling: 'bootstrap3'
+                        });
+                        if(new_url.length>0){
+                            jeBox({
+                                title:"远程连接",
+                                type:'iframe',
+                                maxBtn:true,
+                                padding:"0",
+                                boxSize:["70%","640px"],
+                                content: ["/opscenter/ssh_view/sid={{ pk }}/inoex="+$('input:radio[name="con_ip"]:checked').val()+"/cid="+conn_cert_id+"/",'no'], //iframe的url，no代表不显示滚动条
+                                maskLock : true,
+                            });
+
+                            $('#sshModal').modal('hide');
+                        }
+                    }else{
+                        $('#connecting_id').hide();
+                        MyMessage(0, con_status['message']);
+                        return false
+                    }
+                },
+                error: function (err) {
+                    $('#connecting_id').hide();
+                    MyMessage(0, err.responseText);
+                }
+            });
+        }
+        function behaviorAudit(){
+          jeBox({
+            title:"行为审计",
+            type:'iframe',
+            maxBtn:true,
+            padding:"0",
+            boxSize:["80%","80%"],
+            content: ["/opscenter/behavior_audit_view/{{ pk }}"], //iframe的url，no代表不显示滚动条
+            maskLock : true
+          });
+        }
+    </script>
+{% endblock %}

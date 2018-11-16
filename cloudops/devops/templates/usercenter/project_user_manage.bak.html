@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load staticfiles %}
+{% csrf_token %}
+<head>
+	<meta charset="utf-8">
+    <!-- Jquery -->
+	<script src="{%static 'js/jquery-3.0.0.min.js' %}"></script>
+	<link href="{%static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" type="text/css">
+	<link href="{%static 'bootstrap/css/bootstrap-table.css' %}" rel="stylesheet" type="text/css">
+	<title> 业务用户管理 - AUKEY</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+    <!-- Jquery JS -->
+    <script src="{%static 'js/jquery-3.0.0.min.js' %}"></script>
+
+    <!-- main -->
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Bootstrap-table CSS -->
+    <link href="{%static 'bootstrap/css/bootstrap-table.css' %}" rel="stylesheet" type="text/css">
+
+    <!-- Font Awesome -->
+    <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet">
+
+    <!-- ionicons -->
+    <link href="{% static 'css/ionicons.min.css' %}" rel="stylesheet">
+
+    <!-- Morris -->
+    <link href="{% static 'css/morris.css' %}" rel="stylesheet" />
+
+    <!-- Datepicker -->
+    <link href="{% static 'css/datepicker.css' %}" rel="stylesheet" />
+
+    <!-- Animate -->
+    <link href="{% static 'css/animate.min.css' %}" rel="stylesheet">
+
+    <!-- Owl Carousel -->
+    <link href="{% static 'css/owl.carousel.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/owl.theme.default.min.css' %}" rel="stylesheet">
+
+    <!-- Simplify -->
+    <link href="{% static 'css/simplify.min.css' %}" rel="stylesheet">
+
+    <!-- PNotify -->
+    <link href="{% static 'css/pnotify.css' %}" rel="stylesheet">
+    <link href="{% static 'css/pnotify.buttons.css' %}" rel="stylesheet">
+    <link href="{% static 'css/pnotify.nonblock.css' %}" rel="stylesheet">
+
+    <!-- Jquery-confirm CSS -->
+    <link href="{%static 'css/jquery-confirm.css' %}" rel="stylesheet" type="text/css">
+{#    <style>#}
+{#        td{#}
+{#            white-space:nowrap;#}
+{#            overflow:hidden;#}
+{#            text-overflow:ellipsis;#}
+{#        }#}
+{#        #table{#}
+{#            table-layout:fixed;#}
+{#        }#}
+{#    </style>#}
+</head>
+<body class="overflow-hidden">
+	<div class="wrapper preload">
+		<!-- 右侧消息 -->
+        {% include 'right_message.html' %}
+
+        <!-- 头部 -->
+        {% include 'head.html' %}
+
+        <!-- 左侧导航栏 -->
+        {% include 'menu.html' %}
+        <div class="main-container ">
+            <!-- 面包屑 -->
+            <div class="padding-md">
+                <ul class="breadcrumb">
+                    <li>
+                        <span class="primary-font">
+                            <i class="icon-home"></i>
+                        </span>
+						<a href="{% url 'index' %}">首页</a>
+                    </li>
+                    <li>业务用户管理</li>
+                </ul>
+            </div>
+            <!-- ./padding-md -->
+            <!-- table-list -->
+            <div class="table-list" style="padding: 20px;padding-top: 0;">
+                <div class="navbar-form navbar-left" role="search">
+                    <div class="form-group">
+                        <input type="text" name="search_text" class="form-control" placeholder="Search" onkeydown=submit()>
+                    </div>
+                </div>
+                <div id="toolbar" class="btn-group pull-right" style="margin-right: 5px;">
+                    <a href="{% url 'project_user_add' %}" style="color: #333333">
+                        <button id="btn_add" type="button" class="btn btn-default" style="float: right">
+                            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 新增
+                        </button>
+                    </a>
+                </div>
+                <table class="table table-hover" id="table"></table>
+                <script type="text/javascript">
+                    function initTable() {
+                        $('#table').bootstrapTable({
+                            method: "post",  //使用post请求到服务器获取数据
+                            contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                            dataType: "json",
+                            cache: false,
+                            url:'{% url "user_manage" %}',
+                            toolbar: '#mytab',//指定工具栏
+                            striped: true,  //表格显示条纹
+                            dataField: "rows",
+                            pagination: true, //启动分页
+                            pageSize: 15,  //每页显示的记录数
+                            pageNumber:1, //当前第几页
+                            pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+{#                            search: true,  //是否启用查询#}
+                            showColumns: true,  //显示下拉框勾选要显示的列
+                            showRefresh: true,  //显示刷新按钮
+                            showSearchButton: true, //显示搜索按钮
+                            showExport: true,//显示导出按钮
+                            exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                            sidePagination: "server", //表示服务端请求
+                            //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                            //设置为limit可以获取limit, offset, search, sort, order
+                            queryParamsType : "undefined",
+                            clickToSelect: true,//是否启用点击选中行
+                            toolbarAlign:'left',//工具栏对齐方式
+                            buttonsAlign:'left',//按钮对齐方式
+                            columns:[
+{#                                {#}
+{#                                    title:'全选',#}
+{#                                    field:'select',#}
+{#                                    //复选框#}
+{#                                    checkbox:true,#}
+{#                                    width:25,#}
+{#                                    align:'center',#}
+{#                                    valign:'middle'#}
+{#                                },#}
+                                {
+                                    title:'ID',
+                                    field:'id',
+                                    sortable:false
+                                },
+                                {
+                                    title:'用户名',
+                                    field:'user_name',
+                                    sortable:true
+                                },
+                                {
+                                    title:'名字',
+                                    field:'name',
+                                    sortable:true
+                                },
+                                {
+                                    title:'Email',
+                                    field:'email',
+                                    sortable:true
+                                },
+                                {
+                                    title:'所属项目',
+                                    field:'project_name',
+                                    sortable:false
+                                },
+                                {
+                                    title:'状态',
+                                    field:'is_active',
+                                    sortable:true,
+                                    formatter :function(value,row,index) {
+                                        if(value == "启用") {
+                                            var a = '<span class="btn btn-xs" style="background:#5CB85C;color:#FFFFFF;">'+value+'</span>';
+                                        }else if(value == "禁用") {
+                                            var a = '<span class="btn btn-xs" style="background:#ff4850;color:#FFFFFF;">'+value+'</span>';
+                                        }else{
+                                            var a = '<span>'+value+'</span>';
+                                        }
+                                        return a;
+                                    }
+                                },
+                                {
+                                    title:'操作',
+                                    field:'id',
+                                    align:'center',
+                                    //列数据格式化
+                                    //formatter:operateFormatter
+                                    formatter:function(value,row,gitflow){
+                                        var w = '<a href="/usercenter/user_manage/user_detail/'+ row.id +'"><button type="button" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 查看详情</button></a> ';
+                                        var e = '<a href="/usercenter/user_manage/modify/'+ row.id +'/"><button type="button" class="btn btn-warning btn-xs"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> 编辑</button></a> ';
+                                        if (row.is_active=='启用'){
+                                            var d = '<button type="button" id="btn_submit1" class="btn btn-danger btn-xs" onclick="return Delete('+row.id+',0)"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> 禁用</button> ';
+                                        }else if (row.is_active=='禁用'){
+                                            var d = '<button type="button" id="btn_submit1" class="btn btn-success btn-xs" onclick="return Delete('+row.id+',1)"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 启用</button> ';
+                                        }
+                                        return w+e+d;
+                                    }
+                                }
+                            ],
+                            queryParams: function queryParams(params) {   //设置查询参数
+                                var param = {
+                                    //加上csrf
+                                    csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                                    pageNumber: params.pageNumber,
+                                    pageSize: params.pageSize,
+                                    search:$(" input[ name='search_text' ] ").val(),
+                                    order:params.sortOrder,
+                                    sort:params.sortName
+                                };
+                                return param;
+                            },
+
+                        });
+                    }
+                    $(document).ready(function () {
+                        //调用函数，初始化表格
+                        initTable();
+
+                        //当点击查询按钮的时候执行
+                        $("#search").bind("click", initTable);
+                    });
+                    function Delete(ID,STATUS){
+                        $.confirm({
+                            title: '提示！',
+                            content: '确定要修改用户ID为'+ID+'的用户状态吗？',
+                            closeIcon: true,
+                            confirmButtonClass:'btn-danger',
+                            cancelButtonClass: 'btn-default ',
+                            confirmButton: '确定!',
+                            cancelButton: '取消',
+                            confirm: function(){
+                                $.ajax({
+                                    type: "get",
+                                    url: "/usercenter/user_manage/user_is_active/"+ ID + "_" + STATUS,
+                                    dataType: "json",
+                                    success: function(result) {
+                                        if(result['result'] == 'true'){
+                                                    new PNotify({
+                                                      title: 'SUCCESS',
+                                                      text: '修改ID为'+ result['project_user_id'] +'的用户状态成功!',
+                                                      type: 'success',
+                                                      styling: 'bootstrap3'
+                                                    });
+                                            // 刷新表格
+                                            $('#table').bootstrapTable("refresh");
+                                        }else{
+                                            new PNotify({
+                                              title: 'ERROR',
+                                              text: '删除失败!',
+                                              type: 'error',
+                                              styling: 'bootstrap3'
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+{#                    function Delete(ID,STATUS){#}
+{#                        if(confirm("确定要修改用户ID为"+ID+"的用户状态吗")){#}
+{#                            $.ajax({#}
+{#                                type: "get",#}
+{#                                url: "/usercenter/user_manage/user_is_active/"+ ID + "_" + STATUS,#}
+{#                                dataType: "json",#}
+{#                                success: function(result) {#}
+{#                                    if(result['result'] == 'true'){#}
+{#                                                new PNotify({#}
+{#                                                  title: 'SUCCESS',#}
+{#                                                  text: '修改ID为'+ result['project_user_id'] +'的用户状态成功!',#}
+{#                                                  type: 'success',#}
+{#                                                  styling: 'bootstrap3'#}
+{#                                                });#}
+{#                                        // 刷新表格#}
+{#                                        $('#table').bootstrapTable("refresh");#}
+{#                                    }else{#}
+{#                                        new PNotify({#}
+{#                                          title: 'ERROR',#}
+{#                                          text: '删除失败!',#}
+{#                                          type: 'error',#}
+{#                                          styling: 'bootstrap3'#}
+{#                                        });#}
+{#                                    }#}
+{#                                }#}
+{#                            });#}
+{#                        }else{#}
+{#                            return false;#}
+{#                        }#}
+{#                    }#}
+                </script>
+            </div>
+            <!-- /table-list -->
+        </div>
+        <!-- /main-container -->
+
+		<!-- 底部 -->
+		{% include 'foot.html' %}
+
+    </div>
+
+
+	<!-- /wrapper -->
+	<!-- Le javascript
+	    ================================================== -->
+	<!-- Placed at the end of the document so the pages load faster -->
+
+	<!-- Bootstrap -->
+	<script src="{%static 'bootstrap/js/bootstrap.min.js' %}"></script>
+	<script src="{%static 'bootstrap/js/bootstrap-table.js' %}"></script>
+	<script src="{%static 'bootstrap/js/bootstrap-table-editable.js' %} "></script>
+	<script src="{%static 'bootstrap/js/bootstrap-table-zh-CN.js' %}"></script>
+    <script src="{%static 'bootstrap/js/bootstrap-table-export.js' %}"></script>
+    <script src="{%static 'bootstrap/js/tableExport.js' %}"></script>
+
+	<!-- Flot -->
+	<script src="{% static 'js/jquery.flot.min.js' %}"></script>
+
+	<!-- Slimscroll -->
+	<script src="{% static 'js/jquery.slimscroll.min.js' %}"></script>
+
+	<!-- Morris -->
+	<script src="{% static 'js/rapheal.min.js' %}"></script>
+	<script src="{% static 'js/morris.min.js' %}"></script>
+
+	<!-- Datepicker -->
+	<script src="{% static 'js/uncompressed/datepicker.js' %}"></script>
+
+	<!-- Sparkline -->
+	<script src="{% static 'js/sparkline.min.js' %}"></script>
+
+	<!-- Skycons -->
+	<script src="{% static 'js/uncompressed/skycons.js' %}"></script>
+
+	<!-- Popup Overlay -->
+	<script src="{% static 'js/jquery.popupoverlay.min.js' %}"></script>
+
+	<!-- Easy Pie Chart -->
+	<script src="{% static 'js/jquery.easypiechart.min.js' %}"></script>
+
+	<!-- Sortable -->
+	<script src="{% static 'js/uncompressed/jquery.sortable.js' %}"></script>
+
+	<!-- Owl Carousel -->
+	<script src="{% static 'js/owl.carousel.min.js' %}"></script>
+
+	<!-- Modernizr -->
+	<script src="{% static 'js/modernizr.min.js' %}"></script>
+
+	<!-- Simplify -->
+	<script src="{% static 'js/simplify/simplify.js' %}"></script>
+	<script src="{% static 'js/simplify/simplify_dashboard.js' %}"></script>
+
+    <!-- PNotify -->
+    <script src="{% static 'js/pnotify.js' %}"></script>
+    <script src="{% static 'js/pnotify.buttons.js' %}"></script>
+    <script src="{% static 'js/pnotify.nonblock.js' %}"></script>
+
+    <!-- Jquery-confirm -->
+    <script src="{% static 'js/jquery-confirm.js' %}"></script>
+
+	<script>
+		$("#usercenter_menu").css("display","block");
+		//搜索框按回车键搜索
+        function submit(){
+            var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异
+            if(event.keyCode == 13){
+                document.getElementById('search_button').click()==true
+            }
+        }
+        {% if messages %}
+            {% for message in messages %}
+                new PNotify({
+                  title: '{{ message.tags }}',
+                  text: '{{ message }}',
+                  type: '{{ message.tags }}',
+                  styling: 'bootstrap3'
+                });
+            {% endfor %}
+        {% endif %}
+	</script>
+</body>
+</html>

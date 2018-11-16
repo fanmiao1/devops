@@ -1,0 +1,78 @@
+{% extends 'main.html' %}
+{% block form_use %}
+    <style>
+        .bootstrap-duallistbox-container{
+            display:flex;/*Flex布局*/
+            display: -webkit-flex; /* Safari */
+            align-items:center;/*指定垂直居中*/
+        }
+        .bootstrap-duallistbox-container .move{
+            margin-top: 40px;
+            margin-bottom: 1px;
+        }
+        .bootstrap-duallistbox-container .remove{
+            margin-bottom: 1px;
+        }
+        .col-md-5 {
+            width: 50%;
+        }
+        option{
+            font-size: 13px;
+        }
+    </style>
+{% endblock %}
+{% block right_col %}
+    <div class="page-title">
+      <div class="title_left" style="margin-bottom: 10px;">
+        <h3>
+            {% block page_title %}AUKEY{% endblock %}
+        </h3>
+      </div>
+    </div>
+    <div class="row">
+      <div id="table_row_id" class="{% block re_class %}col-md-12 col-sm-12 col-xs-12{% endblock %}">
+        <div class="x_panel">
+          <div class="x_title">
+            <h2>
+                {% block table_title %}AUKEY | Form title{% endblock %}
+{#                <small>different form elements</small>#}
+            </h2>
+            <ul class="nav navbar-right panel_toolbox">
+              <!-- <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li> -->
+              <!-- <li><a class="close-link"><i class="fa fa-close"></i></a>
+              </li> -->
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <br />
+            {% block change_form %}
+            <form id="demo-form2" data-parsley-validate class="form-horizontal form-label-left" method="post">
+            {% csrf_token %}
+              {% block page_form %}{% endblock %}
+              <div class="ln_solid"></div>
+              <div class="form-group">
+                <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                    {% block review_button %}{% endblock %}
+                    {% if not detail %}
+                    <button type="submit" class="btn btn-info" id="btn-submit">提交</button>
+                    <button class="btn btn-warning" type="reset">重置</button>
+                    {% endif %}
+
+                    <a href="javascript:history.back(-1)" style="float: right"> <button class="btn btn-primary" type="button">返回</button></a>
+                </div>
+              </div>
+            </form>
+            {% endblock %}
+          </div>
+
+            {% block review_result %} {% endblock %}
+        </div>
+      </div>
+    {% block ext_result %}{% endblock %}
+    </div>
+{% endblock %}
+
+{% block ext_script %}{% endblock %}
+

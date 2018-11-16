@@ -1,0 +1,160 @@
+<div class="row" style="margin-bottom: 10px;">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="dashboard_graph">
+        <div class="row x_title">
+          <div class="col-md-6">
+            <h3>工单 <small> 统计</small></h3>
+          </div>
+          <div class="col-md-6">
+                <div id="worksheet_num_range" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
+                  <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
+                  <span></span> <b class="caret"></b>
+                </div>
+          </div>
+        </div>
+        <div class="col-md-7 col-sm-7 col-xs-12">
+          <div id="worksheet_line" style="width: 100%;height: 300px;"></div>
+        </div>
+        <div class="col-md-5 col-sm-5 col-xs-12 bg-white">
+          <div class="col-md-12 col-sm-12 col-xs-12">
+            <div>
+                <div id="worksheet_type_pie" style="width: 100%;height: 300px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="clearfix"></div>
+      </div>
+    </div>
+</div>
+<div class="row" style="margin-bottom: 10px;">
+    <div class="col-md-4 col-sm-4 col-xs-12">
+      <div class="dashboard_graph">
+        <div class="row x_title">
+          <div class="col-md-12">
+            <h3><small>工单来源</small></h3>
+          </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div id="worksheet_source_pie" style="width: 100%;height: 300px;"></div>
+        </div>
+        <div class="clearfix"></div>
+      </div>
+    </div>
+    <div class="col-md-4 col-sm-4 col-xs-12">
+      <div class="dashboard_graph">
+        <div class="row x_title">
+          <div class="col-md-12">
+            <h3>
+                <div class="pull-left">
+                    <small>工单响应时间 </small>
+                    <span style="font-size: 12px;color:#00aeef;margin-left: 10px;"> 平均值： <span id="response_average" style="color: #07496c;"></span>小时</span>
+                </div>
+{#                <div class="col-md-3 pull-right">#}
+{#                    <select class="selectpicker show-tick form-control" id="select_response_user_id">#}
+{#                        <option value="1">受理人</option>#}
+{#                    </select>#}
+{#                </div>#}
+            </h3>
+          </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div id="worksheet_response_range_id" style="width: 100%;height: 300px;">
+            <div class="col-md-12 col-sm-12 col-xs-6">
+            <div>
+              <p>0~1小时 <span id="response_one_hours"></span></p>
+              <div class="">
+                <div class="progress progress_sm">
+                  <div id="response_one_hours_count_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p>1~8小时 <span id="response_one_to_eight_hours"></span></p>
+              <div class="">
+                <div class="progress progress_sm">
+                  <div id="response_one_to_eight_hours_count_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p>8~24小时  <span id="response_eight_to_one_day"></span></p>
+              <div class="">
+                <div class="progress progress_sm">
+                  <div id="response_eight_to_one_day_count_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p>超过24小时  <span id="response_more_than_one_day"></span></p>
+              <div class="">
+                <div class="progress progress_sm">
+                  <div id="response_more_than_one_day_count_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+        <div class="clearfix"></div>
+      </div>
+    </div>
+    <div class="col-md-4 col-sm-4 col-xs-12">
+      <div class="dashboard_graph">
+        <div class="row x_title">
+          <div class="col-md-12">
+            <h3>
+                <div class="pull-left">
+                    <small>工单解决时间</small>
+                    <span style="font-size: 12px;color:#00aeef;margin-left: 10px;"> 平均值： <span id="solve_average" style="color: #07496c;"></span>小时</span>
+                </div>
+{#                <div class="col-md-4 pull-right">#}
+{#                    <select class="selectpicker show-tick form-control" id="select_solve_user_id">#}
+{#                        <option value="1">处理人</option>#}
+{#                    </select>#}
+{#                </div>#}
+            </h3>
+          </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div id="worksheet_solve_range_id" style="width: 100%;height: 300px;">
+              <div class="col-md-12 col-sm-12 col-xs-6">
+                <div>
+                  <p>0~1小时 <span id="solve_one_hours"></span></p>
+                  <div class="">
+                    <div class="progress progress_sm">
+                      <div id="solve_one_hours_count_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p>1~8小时 <span id="solve_one_to_eight_hours"></span></p>
+                  <div class="">
+                    <div class="progress progress_sm">
+                      <div id="solve_one_to_eight_hours_count_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p>8~24小时  <span id="solve_eight_to_one_day"></span></p>
+                  <div class="">
+                    <div class="progress progress_sm">
+                      <div id="solve_eight_to_one_day_count_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p>超过24小时  <span id="solve_more_than_one_day"></span></p>
+                  <div class="">
+                    <div class="progress progress_sm">
+                      <div id="solve_more_than_one_day_count_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="clearfix"></div>
+      </div>
+
+    </div>
+</div>

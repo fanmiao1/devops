@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+{% csrf_token %}
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>AUKEY Ops</title>
+    <!-- Jquery JS -->
+    <script src="{%static 'js/jquery-3.0.0.min.js' %}"></script>
+    <!-- Bootstrap -->
+    <link href="{% static 'css/bootstrap-table.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendors/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="{% static 'vendors/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet">
+    <!-- NProgress -->
+    <link href="{% static 'vendors/nprogress/nprogress.css' %}" rel="stylesheet">
+    <!-- iCheck -->
+    <link href="{% static 'vendors/iCheck/skins/flat/green.css' %}" rel="stylesheet">
+    <!-- bootstrap-progressbar -->
+    <link href="{% static 'vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css' %}" rel="stylesheet">
+    <!-- bootstrap-daterangepicker -->
+    <link href="{% static 'daterangepicker/daterangepicker.css' %}" rel="stylesheet">
+    <!-- import stylesheet -->
+    <link rel="stylesheet" href="{% static 'vuejs/iview.css' %}">
+    <!-- Custom Theme Style -->
+    <link href="{% static 'build/css/custom.min.css' %}" rel="stylesheet">
+    <!-- Bootstrap-select CSS -->
+    <link href="{% static 'bootstrap/css/bootstrap-select.min.css' %}" rel="stylesheet">
+    <!-- PNotify -->
+    <link href="{% static 'css/pnotify.css' %}" rel="stylesheet">
+    <link href="{% static 'css/pnotify.buttons.css' %}" rel="stylesheet">
+    <link href="{% static 'css/pnotify.nonblock.css' %}" rel="stylesheet">
+    <!-- Jquery-confirm CSS -->
+    <link href="{%static 'css/jquery-confirm.css' %}" rel="stylesheet" type="text/css">
+    <style>
+        html,body{
+            height: 100%;
+            color:#495060 !important;
+            overflow-y:hidden;
+            background-color: #F7F7F7 !important;
+        }
+        #main_container_id::-webkit-scrollbar {/*滚动条整体样式*/
+            width: 10px;     /*高宽分别对应横竖滚动条的尺寸*/
+            height: 1px;
+        }
+        .roll_main::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+            border-radius: 3px;
+             -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            background: #a5a5a5;
+        }
+        .roll_main::-webkit-scrollbar-track {/*滚动条里面轨道*/
+            -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            border-radius: 3px;
+            background: #EDEDED;
+        }
+        #table{width:100%;}
+        #table td{word-break: keep-all;white-space:nowrap;}
+        .fixed-table-container thead th .th-inner{
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+        .loader {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            margin: -0.2em 0 0 -0.2em;
+            text-indent: -9999em;
+            border-top: 0.3em solid rgba(0, 0, 0, 0.1);
+            border-right: 0.3em solid rgba(0, 0, 0, 0.1);
+            border-bottom: 0.3em solid rgba(0, 0, 0, 0.1);
+            border-left: 0.3em solid #555;
+            -moz-transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            -moz-animation: loader 300ms infinite linear;
+            -webkit-animation: loader 300ms infinite linear;
+            animation: loader 300ms infinite linear;
+            -moz-transition: all 500ms ease;
+            -o-transition: all 500ms ease;
+            -webkit-transition: all 500ms ease;
+            transition: all 500ms ease;
+        }
+
+        .loader,
+        .loader:after {
+            border-radius: 50%;
+            width: 2em;
+            height: 2em;
+        }
+
+        .curtain {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-color: white;
+            -moz-transition: all 600ms ease;
+            -o-transition: all 600ms ease;
+            -webkit-transition: all 600ms ease;
+            transition: all 600ms ease;
+            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
+            opacity: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        @-webkit-keyframes loader {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @-moz-keyframes loader {
+            0% {
+                -moz-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -moz-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes loader {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        .is-loading {
+            overflow: hidden;
+        }
+
+        .is-loading .curtain {
+            filter: progid:DXImageTransform.Microsoft.Alpha(enabled=false);
+            opacity: 1;
+            z-index: 10000;
+        }
+
+        .is-loading .loader {
+            filter: progid:DXImageTransform.Microsoft.Alpha(enabled=false);
+            opacity: 1;
+        }
+
+        .lodding{
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 9999;
+            opacity: .6;
+        }
+        #loadding_gif{
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin:auto;
+        }
+        .child_menu{
+            opacity:0.95;
+        }
+        #table th{
+            padding: 3px;
+            border-bottom: 0;
+            line-height: 26px;
+        }
+        #table tbody tr td{
+            padding: 6px 3px 3px 3px;
+        }
+        .fixed-table-container thead th .sortable {
+            padding-right: 15px;
+        }
+        .user-profile{
+            font-size: 13px !important;
+        }
+        .ico2{
+            background: url("/static/images/logo-fff.png") center left no-repeat;
+            width:50px;
+            height:50px;
+            background-size: cover;
+            display: block;
+            float:left;
+        }
+    </style>
+    {% block form_use %}{% endblock %}
+    {% block ext_before %}{% endblock %}
+  </head>
+  <body class="nav-sm is-loading">
+    <div class="curtain">
+        <div class="loader">
+            loading...
+        </div>
+    </div>
+    <div class="container body">
+      <div class="main_container roll_main" id="main_container_id" style="overflow-y: auto;">
+        <div class="col-md-3 left_col">
+          <div class="left_col scroll-view">
+            <div class="navbar nav_title" style="border: 0; background: #00a990">
+              <a href="{% url 'index' %}" class="site_title"><i class="ivu-icon ivu-icon-planet"></i> <span style="color: #ffffff">AUKEY Ops</span></a>
+            </div>
+            <div class="clearfix"></div>
+            <!-- menu profile quick info -->
+{#            <div class="profile clearfix">#}
+{#              <div class="profile_pic">#}
+{#                <img src="{% static 'images/img.jpg' %}" alt="..." class="img-circle profile_img">#}
+{#              </div>#}
+{#              <div class="profile_info">#}
+{#                <span>Welcome,</span>#}
+{#                <h2>#}
+{#                    {% if user.is_authenticated %}#}
+{#                        {% if user.last_name or user.first_name %}#}
+{#                            {{ user.last_name }}{{ user.first_name }}#}
+{#                        {% else %}#}
+{#                            {{ user.username }}#}
+{#                        {% endif %}#}
+{#                      {% else %}#}
+{#                        {% url 'logout' %}#}
+{#                    {% endif %}#}
+{#                </h2>#}
+{#              </div>#}
+{#            </div>#}
+            <!-- /menu profile quick info -->
+            <!-- sidebar menu -->
+            <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+              <div class="menu_section">
+                <h3></h3>
+              </div>
+                <ul class="nav side-menu menu_section">
+                  <li><a href="{% url 'index' %}"><i class="fa fa-dashboard"></i> Dashboard <span class="label label-success pull-right"></span></a></li>
+                  <li><a href="http://192.168.27.240:8001"><i class="fa fa-cloud"></i> 私有云管理 <span class="label label-success pull-right"></span></a></li>
+                  <li><a><i class="fa fa-list-alt"></i> 工作流 <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu" id="flow">
+                        {% if request.session.menu_list.project_manage %}
+                            <li id="project_manage"><a href="{% url 'project_manage' %}">项目管理</a></li>{% endif %}
+                        {% if request.session.menu_list.project_member_manage %}
+                            <li id="project_member_manage"><a href="{% url 'project_member_manage' %}">项目成员变更</a>
+                            </li>{% endif %}
+                        {% if request.session.menu_list.user_apply_list %}
+                            <li id="user_apply"><a href="{% url 'user_apply_list' %}">业务用户变更</a></li>{% endif %}
+                        {% if request.session.menu_list.project_authority_manage %}
+                            <li id="project_authority_manage"><a
+                                    href="{% url 'project_authority_manage' %}">业务用户权限变更</a></li>{% endif %}
+                        {% if request.session.menu_list.releaseflow_manage %}
+                            <li id="releaseflow_manage"><a href="{% url 'releaseflow_manage' %}">项目变更</a>
+                            </li>{% endif %}
+                        {% if request.session.menu_list.database_release_flow %}
+                            <li id="database_release_flow"><a href="{% url 'database_release_flow' %}">数据库变更</a>
+                            </li>{% endif %}
+                        {% if request.session.menu_list.sql_alert %}
+                            <li id="sql_alert"><a href="{% url 'sql_alert' %}">数据预警任务</a></li>{% endif %}
+                        {% if request.session.menu_list.data_migrate %}
+                            <li id="data_migrate"><a href="{% url 'data_migrate' %}">数据迁移</a></li>{% endif %}
+                        {% if request.session.menu_list.cronflow_manage %}
+                            <li id="cronflow_manage"><a href="{% url 'cronflow_manage' %}">计划任务变更</a></li>{% endif %}
+                    </ul>
+                  </li>
+                  <li><a><i class="fa fa-desktop"></i> 操作中心 <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu" id="opscenter_menu_id">
+                      {% if request.session.menu_list.cron_list %}<li id="cron_manage"><a href="{% url 'cron_view' %}">计划任务管理</a></li>{% endif %}
+                      {% if request.session.menu_list.script_manage %}<li id="script_manage"><a href="{% url 'script_manage' %}">脚本管理</a></li>{% endif %}
+                      <li id="remote_exec_view"><a href="{% url 'remote_exec_view' %}">Ansible执行模块</a></li>
+                      {% if request.session.menu_list.job_manage_qa %}<li id="jenkins_manage"><a href="{% url 'job_manage_qa' 110 %}">jenkins发布管理</a></li>{% endif %}
+                      <li id="cert_view"><a href="{% url 'cert_view' %}">凭证管理</a></li>
+                      <li id="server_view"><a href="{% url 'server_view' %}">服务器管理</a></li>
+                    </ul>
+                  </li>
+                  <li><a><i class="fa fa-database"></i> 数据库 <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu" id="database_menu_id">
+                      {% if request.session.menu_list.instances %}<li id="instances_list"><a href="{% url 'instances' %}">实例列表</a></li>{% endif %}
+{#                      {% if request.session.menu_list.instances %}<li><a href="#" onclick="jump_queries_analyzing()">查询分析</a></li>{% endif %}#}
+{#                      {% if request.session.menu_list.instances %}<li><a href="#" onclick="jump_monitor()">监控</a></li>{% endif %}#}
+                    </ul>
+                  </li>
+                  <li><a><i class="fa fa-server"></i>CMDB <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu" id="cmdb_menu_id">
+                        {% if request.session.menu_list.fixed_asset_list %}<li class="sub_menu" id="fixed_asset_menu_id"><a href="{% url 'fixed_asset_list' %}">固定资产</a></li>{% endif %}
+                        <li id="domain_menu_id"><a href="/cmdb/domain">域名管理</a></li>
+                    </ul>
+                  </li>
+                  <li><a><i class="fa fa-laptop"></i> 工单系统 <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu" id="worksheet_menu_id">
+                      <li id=""><a href="{% url 'work_order_list' 1 %}">未受理的工单</a></li>
+                      <li id=""><a href="{% url 'work_order_list' 2 %}">待处理的工单</a></li>
+                      <li id=""><a href="{% url 'work_order_list' 3 %}">已处理的工单</a></li>
+                    </ul>
+                  </li>
+                  <li><a><i class="fa fa-usd"></i> 费用中心 <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu" id="costcenter_menu_id">
+                      <li id=""><a href="/costcenter/purchase">采购订单</a></li>
+                    </ul>
+                  </li>
+                  <li><a><i class="fa fa-user"></i> 用户中心 <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu" id="usercenter_menu_id">
+                      {% if request.session.menu_list.user_manage %}<li id="project_user_manage"><a href="{% url 'user_manage' %}">业务用户管理</a></li>{% endif %}
+                      {% if request.session.menu_list.project_authority_group_list %}<li id="project_authority_group_manage"><a href="{% url 'project_authority_group_list' %}">业务用户组管理</a></li>{% endif %}
+                      {% if request.session.menu_list.role_manage %}<li id="project_role_manage"><a href="{% url 'role_manage' %}">业务角色管理</a></li>{% endif %}
+                      {% if request.session.menu_list.module_manage %}<li id="project_moudle_manage"><a href="{% url 'module_manage' %}">业务权限管理</a></li>{% endif %}
+                      <li><a href="/admin/">平台用户和权限管理</a></li>
+                      <li id="messages_center"><a href="{% url 'all_message' %}">消息中心</a></li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <!-- /sidebar menu -->
+            <!-- /menu footer buttons -->
+            <div class="sidebar-footer hidden-small">
+              <a data-toggle="tooltip" data-placement="top" title="首页" href="{% url 'index' %}">
+                <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+              </a>
+              <a data-toggle="tooltip" data-placement="top" title="修改密码" href="{% url 'password_change' %}">
+                <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
+              </a>
+              <a data-toggle="tooltip" data-placement="top" title="消息中心" href="{% url 'all_message' %}">
+                <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+              </a>
+              <a data-toggle="tooltip" data-placement="top" title="注销" href="{% url 'logout' %}">
+                <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
+              </a>
+            </div>
+            <!-- /menu footer buttons -->
+          </div>
+
+        <!-- top navigation -->
+        <div class="top_nav">
+          <div class="nav_menu">
+            <nav>
+              <div class="nav toggle">
+                <a id="menu_toggle"><i class="fa fa-bars"></i></a>
+              </div>
+
+              <ul class="nav navbar-nav navbar-right">
+                <script>
+                    $.get('/usercenter/message/check_unread_message/', function (dict) {
+                        $.each(dict.data, function (index, item) {
+                            var aText = ' <li><a href="/usercenter/message/detail/'+item[0]+'/">' +
+                                '<span><span>工作流</span><span class="time">'+item[2]+'</span>' +
+                                '</span><span  class="message">'+item[1]+'</span></a></li>';
+                            var html = document.getElementById("menu1").innerHTML;
+                            document.getElementById("menu1").innerHTML= html + aText;
+                        });
+                        $.each(dict.data2, function (index, item) {
+                            document.getElementById("unread_message_count").innerHTML=item;
+{#                            document.getElementById("unhead_count_two").innerHTML='You have '+item+' new message';#}
+                            if (item > 10){
+                                var cText = ' <li><a href="{% url "isread_message" 0 %}">' +
+                                '</span><span class="m-left-xs">查看更多...</span></a></li>';
+                                var chtml = document.getElementById("menu1").innerHTML;
+                                document.getElementById("menu1").innerHTML= chtml + cText;
+                            }
+                        });
+                        var bText = '<li><div class="text-center"><a href="{% url "all_message" %}"><strong>查看所有消息</strong></a></div></li>';
+                        var bhtml = document.getElementById("menu1").innerHTML;
+                        document.getElementById("menu1").innerHTML= bhtml + bText;
+                    });
+                </script>
+                <li role="presentation" class="dropdown">
+                  <a href="javascript:;" class="dropdown-toggle info-number" data-toggle="dropdown" aria-expanded="false">
+                    <i class="fa fa-envelope-o"></i>
+                    <span class="badge bg-green" id="unread_message_count"></span>
+                  </a>
+                  <ul id="menu1" class="dropdown-menu list-unstyled msg_list" role="menu">
+                  </ul>
+                </li>
+                <li class="">
+                  <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+{#                    <img src="{% static 'images/img.jpg' %}" alt="">#}
+                      {% if user.is_authenticated %}
+                          {% if user.last_name or user.first_name %}
+                              {{ user.last_name }}{{ user.first_name }}
+                          {% else %}
+                              {{ user.username }}
+                          {% endif %}
+                      {% else %}
+                          {% url 'logout' %}
+                      {% endif %}
+                    <span class="fa fa-angle-down"></span>
+                  </a>
+                  <ul class="ivu-dropdown-menu dropdown-menu dropdown-usermenu pull-right" style="width:100%">
+                    <li class="ivu-dropdown-item" style="height: 30px;padding: 0;">
+                        <a href="{% url 'password_change' %}" style="text-align: center;line-height: 30px; padding: 0;color:#2d8cf0">修改密码</a>
+                    </li>
+                    <li class="ivu-dropdown-item" style="height: 30px;padding: 0;">
+                        <a href="{% url "all_message" %}" style="text-align: center;line-height: 30px; padding: 0;color:#2d8cf0">消息中心</a>
+                    </li>
+                    <li class="ivu-dropdown-item" style="height: 30px;padding: 0;">
+                        <a href="{% url 'logout' %}" style="text-align: center;line-height: 30px; padding: 0;color:#2d8cf0">注销</a>
+                    </li>
+                  </ul>
+                </li>
+
+              </ul>
+            </nav>
+          </div>
+        </div>
+        <!-- /top navigation -->
+        <!-- page content -->
+        <div class="right_col" role="main">
+          {% block right_col %}{% endblock %}
+        </div>
+        <!-- /page content -->
+        <!-- footer content -->
+        <footer style="padding:11px 20px 11px 20px; margin-top: 35px;">
+            <span class="footer-brand">
+                <strong class="text-danger">AUKEY</strong>
+            </span>
+            <div class="pull-right">
+                &copy; 2018
+                <strong> AUKEY Ops</strong>. ALL Rights Reserved.
+            </div>
+        </footer>
+        <!-- /footer content -->
+      </div>
+    </div>
+    <!-- jQuery -->
+    <script src="{% static 'vendors/jquery/dist/jquery.min.js' %}"></script>
+    <script src="{%static 'js/jquery.highlight.js' %}"></script>
+    <!-- Bootstrap -->
+    <script src="{%static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="{%static 'bootstrap/js/bootstrap-table.js' %}"></script>
+    <script src="{%static 'bootstrap/js/bootstrap-table-editable.js' %} "></script>
+    <script src="{%static 'bootstrap/js/bootstrap-table-zh-CN.js' %}"></script>
+    <script src="{%static 'bootstrap/js/bootstrap-table-export.js' %}"></script>
+    <script src="{%static 'bootstrap/js/tableExport.js' %}"></script>
+    <script src="{%static 'bootstrap/js/bootstrap-alert.js' %}"></script>
+    <script src="{%static 'bootstrap/js/bootstrap-select.min.js' %}"></script>
+    <!-- NProgress -->
+    <script src="{% static 'vendors/nprogress/nprogress.js' %}"></script>
+    <!-- bootstrap-progressbar -->
+    <script src="{% static 'vendors/bootstrap-progressbar/bootstrap-progressbar.min.js' %}"></script>
+    <!-- iCheck -->
+    <script src="{% static 'vendors/iCheck/icheck.min.js' %}"></script>
+    <!-- bootstrap-daterangepicker -->
+    <script src="{% static 'daterangepicker/moment.min.js' %}"></script>
+    <script src="{% static 'daterangepicker/daterangepicker.js' %}"></script>
+    <!-- Custom Theme Scripts -->
+    <script src="{% static 'build/js/custom.min.js' %}"></script>
+    <!-- tinymce -->
+    {% block tinymce_js %}
+    <script src="{% static 'js/tinymce/jquery.tinymce.min.js' %}"></script>
+    <script src="{% static 'js/tinymce/tinymce.min.js' %}"></script>
+    <script src="{% static 'js/tinymce/textareas-small.js' %}"></script>
+    {% endblock %}
+    <!-- PNotify -->
+    <script src="{% static 'js/pnotify.js' %}"></script>
+    <script src="{% static 'js/pnotify.buttons.js' %}"></script>
+    <script src="{% static 'js/pnotify.nonblock.js' %}"></script>
+    <!-- Jquery-confirm -->
+    <script src="{% static 'js/jquery-confirm.js' %}"></script>
+    <!-- Jquery-validate -->
+    <script type="text/javascript" src="{% static 'js/jquery.validate.js' %}"></script>
+    <!-- Open-Database-Monitor -->
+    <script src="{% static 'js/open-database-monitor.js' %}"></script>
+    <!-- Main -->
+    <script src="{% static 'js/aukeyops/main.js' %}"></script>
+    <script type="text/javascript">
+        /* 页面加载完成后去掉loading */
+        window.onload=function(){
+            $('body').removeClass('is-loading');
+            $('.curtain').hide();
+        };
+    </script>
+    {% if messages %}
+        <script>
+        {% for message in messages %}
+            new PNotify({
+              title: '{{ message.tags }}',
+              text: '{{ message }}',
+              type: '{{ message.tags }}',
+              styling: 'bootstrap3'
+            });
+        {% endfor %}
+        </script>
+    {% endif %}
+    {% block ext_script %}{% endblock %}
+    <script language="javascript">
+        if(top != self){
+            location.href = "about:blank";
+        }
+        $(window).on("load resize",function(){
+            var h=window.innerHeight||document.body.clientHeight||document.documentElement.clientHeight;
+            $("#main_container_id").css("height",h);
+        });
+    </script>
+    <script>
+        $(document).ready(function(){
+            $("#sidebar-menu ul li ul").prop("style", "display:none");
+            $("#sidebar-menu ul li").hover(function() {
+                if ($("body").attr("class") === "nav-sm"){
+                    $(this).children("ul").prop("style", "display:block");
+                }
+            }, function() {
+                if ($("body").attr("class") === "nav-sm") {
+                    $(this).children("ul").prop("style", "display:none");
+                }
+            });
+        });
+
+        $(document).click(function(e){
+            if ($("body").attr("class") === "nav-sm") {
+                $("#sidebar-menu ul li ul").prop("style", "display:none");
+            }
+        });
+    </script>
+  </body>
+</html>

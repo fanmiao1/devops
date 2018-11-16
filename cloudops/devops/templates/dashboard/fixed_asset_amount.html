@@ -1,0 +1,247 @@
+<div class="row tile_count">
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 电脑总数</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="asset_card_computer_count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 物理服务器总数</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="asset_card_server_count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 云服务器总数</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="asset_card_cloud_server_count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 域名总数</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="asset_card_domain_count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 网络设备总数</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="asset_card_net_count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-xs-6 top_count">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><i class="fa fa-align-left"></i> 打印机总数</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="count" id="asset_card_printer_count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row tile_count">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head" style="padding-bottom: 25px;">
+                    <Icon type="ios-pricetags-outline"></Icon> <b>电脑库存统计</b>
+                    <div class="pull-right">
+                        <date-picker :value="fixed_asset_computer_start_date_value"
+                                     type="daterange"
+                                     @on-change="fixed_asset_computer_datarange_change"
+                                     :options="fixed_asset_computer_date_range"
+                                     placement="bottom-end"
+                                     placeholder="Select date"
+                                     style="width: 200px"
+                        ></date-picker>
+                    </div>
+                </div>
+                <div class="ivu-card-body" style="height: 320px;">
+                    <div class="ivu-spin ivu-spin-fix" id="line_asset_computer_amount_loading_id" style="display: none;">
+                        <div class="ivu-spin-main">
+                            <span class="ivu-spin-dot"></span>
+                            <div class="ivu-spin-text"></div>
+                            <div>数据加载中</div>
+                        </div>
+                    </div>
+                    <div class="col-md-9 col-sm-9 col-xs-12">
+                      <div id="line_asset_computer_amount" style="width: 100%;height: 300px;"></div>
+                    </div>
+                    <div class="col-md-3 col-sm-3 col-xs-12">
+                      <div id="pie_asset_computer_amount" style="width: 100%;height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row tile_count">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><Icon type="ios-pricetags-outline"></Icon> 服务器统计</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="row">
+                        <div class="col-md-6 col-sm-12 col-xs-12" style="margin-bottom: 10px;">
+                            <div class="ivu-card ivu-card-bordered">
+                                <div class="ivu-card-head" style="background-color: #F2F2F2;height: 30px;padding:0;">
+                                    <p style="text-align: center;height: 30px;line-height: 30px;font-weight: normal;">服务器平台统计</p>
+                                </div>
+                                <div class="ivu-card-body" style="height: 300px;">
+                                    <div class="ivu-spin ivu-spin-fix" id="pie_asset_server_loading_id" style="display: none;">
+                                        <div class="ivu-spin-main">
+                                            <span class="ivu-spin-dot"></span>
+                                            <div class="ivu-spin-text"></div>
+                                            <div>数据加载中</div>
+                                        </div>
+                                    </div>
+                                    <div id="pie_asset_server_id" style="width: 100%; height: 250px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-sm-12 col-xs-12" style="margin-bottom: 10px;">
+                            <div class="ivu-card ivu-card-bordered">
+                                <div class="ivu-card-head" style="background-color: #F2F2F2;height: 30px;padding:0;">
+                                    <p style="text-align: center;height: 30px;line-height: 30px;font-weight: normal;">
+                                        <span>即将到期</span>
+                                        <span class="ivu-badge-count" style="position: inherit;margin-left: 5px;" id="expired_server_badge_count">0</span>
+                                    </p>
+                                </div>
+                                <div class="ivu-card-body" style="height: 300px;padding: 0;">
+                                    <div class="ivu-spin ivu-spin-fix" id="table_expired_server_loading_id" style="display: none;">
+                                        <div class="ivu-spin-main">
+                                            <span class="ivu-spin-dot"></span>
+                                            <div class="ivu-spin-text"></div>
+                                            <div>数据加载中</div>
+                                        </div>
+                                    </div>
+                                    <div class="bootstrap-table roll" style="height: 280px; overflow-y: auto;">
+                                        <div class="fixed-table-container" style="border:0;">
+                                            <div class="fixed-table-header">
+                                                <table id="table_expired_server" class="table table-no-bordered table-hover table-striped" style="font-size:13px !important;">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="text-align: center;"><div class="th-inner">实例ID</div></th>
+                                                            <th style="text-align: center;"><div class="th-inner">实例名称</div></th>
+                                                            <th style="text-align: center;"><div class="th-inner">所在平台</div></th>
+                                                            <th style="text-align: center;"><div class="th-inner">到期时间</div></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="server_expire_at_one_table_tbody">
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row tile_count">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="ivu-col ivu-col-span-24">
+            <div class="ivu-card ivu-card-bordered">
+                <div class="ivu-card-head">
+                    <p><Icon type="ios-pricetags-outline"></Icon> 域名统计</p>
+                </div>
+                <div class="ivu-card-body">
+                    <div class="row">
+                        <div class="col-md-6 col-sm-12 col-xs-12" style="margin-bottom: 10px;">
+                            <div class="ivu-card ivu-card-bordered">
+                                <div class="ivu-card-head" style="background-color: #F2F2F2;height: 30px;padding:0;">
+                                    <p style="text-align: center;height: 30px;line-height: 30px;font-weight: normal;">域名平台统计</p>
+                                </div>
+                                <div class="ivu-card-body" style="height: 300px;">
+                                    <div class="ivu-spin ivu-spin-fix" id="pie_asset_domain_loading_id" style="display: none;">
+                                        <div class="ivu-spin-main">
+                                            <span class="ivu-spin-dot"></span>
+                                            <div class="ivu-spin-text"></div>
+                                            <div>数据加载中</div>
+                                        </div>
+                                    </div>
+                                    <div id="pie_asset_domain_id" style="width: 100%; height: 250px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-sm-12 col-xs-12" style="margin-bottom: 10px;">
+                            <div class="ivu-card ivu-card-bordered">
+                                <div class="ivu-card-head" style="background-color: #F2F2F2;height: 30px;padding:0;">
+                                    <p style="text-align: center;height: 30px;line-height: 30px;font-weight: normal;">
+                                        <span>即将到期</span>
+                                        <span class="ivu-badge-count" style="position: inherit;margin-left: 5px;" id="expired_domain_badge_count">0</span>
+                                    </p>
+                                </div>
+                                <div class="ivu-card-body" style="height: 300px;padding: 0;">
+                                    <div class="ivu-spin ivu-spin-fix" id="table_expired_domain_loading_id" style="display: none;">
+                                        <div class="ivu-spin-main">
+                                            <span class="ivu-spin-dot"></span>
+                                            <div class="ivu-spin-text"></div>
+                                            <div>数据加载中</div>
+                                        </div>
+                                    </div>
+                                    <div class="bootstrap-table roll" style="height: 280px; overflow-y: auto;">
+                                        <div class="fixed-table-container" style="border:0;">
+                                            <div class="fixed-table-header">
+                                                <table id="table_expired_domain" class="table table-no-bordered table-hover table-striped" style="font-size:13px !important;">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="text-align: center;"><div class="th-inner">域名</div></th>
+                                                            <th style="text-align: center;"><div class="th-inner">所在平台</div></th>
+                                                            <th style="text-align: center;"><div class="th-inner">过期时间</div></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="asset_expire_at_one_table_tbody">
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

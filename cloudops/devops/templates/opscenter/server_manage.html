@@ -1,0 +1,2473 @@
+{% extends 'main.html' %}
+{% load staticfiles %}
+{% block right_col %}
+<div class="page-title">
+  <div class="title_left" style="margin-bottom: 10px;">
+    <h3></h3>
+  </div>
+</div>
+<div class="clearfix"></div>
+<div class="row">
+    <div class="col-md-2 col-sm-2 col-xs-12" id="tree_div_id">
+        <ul id="treeDemo" class="ztree"></ul>
+    </div>
+    <div id="rMenu" style="z-index: 1999">'+
+        <a href="#" class="list-group-item" data-toggle="modal" data-target="#changeGroupModal">编辑实例</a>
+        <a href="#" class="list-group-item" onclick="expand();">展开下一级</a>
+        <a href="#" class="list-group-item" onclick="expandSon();">展开所有子节点</a>
+        <a href="#" class="list-group-item" onclick="collapse();">折叠子节点</a>
+        <a href="#" class="list-group-item" onclick="expandAll();">全部展开</a>
+        <a href="#" class="list-group-item" onclick="collapseAll();">全部折叠</a>
+    </div>
+
+  <div class="col-md-10 col-sm-10 col-xs-12" id="right_div_id">
+    <button class="btn btn-sm btn-primary tree-toggle-btn pull-left" id="toggle_bt_id" onclick="toggle(1)" style="border: 0; margin-top: 1px; background-color: #2D8CF0;">
+        <i class="fa fa-angle-left fa-x" id="toggle-icon"></i>
+    </button>
+    <div class="col-md-12 col-sm-12 col-xs-12" id="table_row_id" style="max-width: 97%; padding-left: 0;">
+        <div class="x_panel">
+          <div class="x_title">
+            <h2>
+                <div class="ivu-btn-group pull-left" style="padding-left: 0; padding-bottom: 5px;" id="view_trans_div_id">
+                    <button id="view1_id" type="button" class="ivu-btn ivu-btn-primary" onclick="view_trans(1)">常规状态</button>
+                    <button id="view2_id" type="button" class="ivu-btn ivu-btn-ghost" onclick="view_trans(2)">网卡流量</button>
+                    <button id="view3_id" type="button" class="ivu-btn ivu-btn-ghost" onclick="view_trans(3)">CPU</button>
+                    <button id="view4_id" type="button" class="ivu-btn ivu-btn-ghost" onclick="view_trans(4)">内存</button>
+                    <button id="view5_id" type="button" class="ivu-btn ivu-btn-ghost" onclick="view_trans(5)">磁盘IO</button>
+                    <button id="view6_id" type="button" class="ivu-btn ivu-btn-ghost" onclick="view_trans(6)">系统进程数</button>
+                </div>
+                <div class="pull-right">
+                    <button type="button" class="ivu-btn ivu-btn-default pull-left" onclick="refresh_table()"><span class="glyphicon glyphicon-refresh" style="color: #495060"></span></button>
+                    <button id="" type="button" class="ivu-btn ivu-btn-default pull-left" data-toggle="modal" data-target="#collectModal">收集</button>
+                    <button id="" type="button" class="ivu-btn ivu-btn-default pull-left" data-toggle="modal" data-target="#changeModal">添加</button>
+                    <button id="" type="button" class="ivu-btn ivu-btn-default pull-left" data-toggle="modal" data-target="#changeModal" data-id="1">编辑</button>
+                    <button id="" type="button" class="ivu-btn ivu-btn-default pull-left" onclick="confirmDelete()">删除</button>
+                    <button type="button" class="ivu-btn ivu-btn-ghost" onclick="cutoverTermView()">查看远程连接</button>
+                </div>
+            </h2>
+            <ul class="nav navbar-right panel_toolbox">
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <p class="text-muted font-13 m-b-30">
+            </p>
+            <!-- 搜索栏 -->
+            <form class="form-horizontal" action="#" id="searchFormId">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div id="asset_search">
+                        <input hidden name="id__in" id="hidden_id_in">
+                        <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                            <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">实例ID</label></div>
+                            <div class="col-md-8"><input class="ivu-input" type="text" name="server_id" placeholder=""></div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                            <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">实例名</label></div>
+                            <div class="col-md-8"><input class="ivu-input" type="text" name="name" placeholder=""></div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                            <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">凭证</label></div>
+                            <div class="col-md-8">
+                                <select class="selectpicker show-tick form-control" id="search_certificate" name="certificate"></select>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                            <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">公网IP</label></div>
+                            <div class="col-md-8">
+                                <input name="public_ip" class="ivu-input timeselect_input" type="text" autocomplete="off" style="font-size:10px;">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                            <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">私有IP</label></div>
+                            <div class="col-md-8">
+                                <input class="ivu-input" type="text" name="inner_ip">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                            <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">服务商</label></div>
+                            <div class="col-md-8">
+                                <select class="selectpicker show-tick form-control" name="support" id="search_support_id"></select>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                            <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">操作系统</label></div>
+                            <div class="col-md-8">
+                                <select class="selectpicker show-tick form-control" name="os">
+                                    <option value=""></option>
+                                    <option value=0>Linux</option>
+                                    <option value=1>Windows</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                            <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">地域</label></div>
+                            <div class="col-md-8">
+                                <input class="ivu-input" type="text" name="region">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                            <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">其他信息</label></div>
+                            <div class="col-md-8">
+                                <input class="ivu-input" type="text" name="server_info">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                            <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">备注</label></div>
+                            <div class="col-md-8">
+                                <input class="ivu-input" type="text" name="remark">
+                            </div>
+                        </div>
+                        <div id="lend_count_search"></div>
+                    </div>
+                    <div class="ivu-form-item-content pull-left">
+                        <div class="col-md-12">
+                        <a href="javascript:void(0);" id="searchBtnId" class="ivu-btn ivu-btn-circle ivu-btn-primary ivu-btn-circle-outline">
+                            <i class="fa fa-search"></i> 搜索 </a>
+                        <a href="javascript:;" class="ivu-btn ivu-btn-circle ivu-btn-ghost ivu-btn-circle-outline" onclick="formReset()">
+                            <i class="fa fa-print"></i> 重置 </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <!-- /.搜索栏结束 -->
+
+            <!-- 收集云主机 -->
+            <div class="modal fade" id="collectModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog" style="z-index: 2041;">
+                    <div class="ivu-spin ivu-spin-fix" id="collecting_id" style="display: none">
+                        <div class="ivu-spin-main">
+                            <span class="ivu-spin-dot"></span>
+                            <div class="ivu-spin-text"></div>
+                            <div>实例收集中</div>
+                        </div>
+                    </div>
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="change_pro_title_id">实例收集</h4>
+                        </div>
+                        <form id="collect_form" action="#" class="form-horizontal form-label-left">
+                            <div class="modal-body roll">
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">服务商名称 <span class="required">*</span>
+                                    </label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <select class="selectpicker show-tick form-control" name="support_id" id="support_selectid"></select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">所在地域 <span class="required">*</span>
+                                    </label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <select class="selectpicker show-tick form-control" name="region_id" id="region_select_id">
+                                            <option></option>
+                                            <option value="all">所有地域</option>
+                                            <option value="cn-qingdao">华北 1 - 青岛</option>
+                                            <option value="cn-beijing">华北 2 - 北京</option>
+                                            <option value="cn-zhangjiakou">华北 3 - 张家口</option>
+                                            <option value="cn-huhehaote">华北 5 - 呼和浩特</option>
+                                            <option value="cn-hangzhou">华东 1 - 杭州</option>
+                                            <option value="cn-shanghai">华东 2 - 上海</option>
+                                            <option value="cn-shenzhen">华南 1 - 深圳</option>
+                                            <option value="cn-hongkong">香港</option>
+                                            <option value="ap-southeast-1">亚太东南 1 - 新加坡</option>
+                                            <option value="ap-southeast-2">亚太东南 2 - 悉尼</option>
+                                            <option value="ap-southeast-3">亚太东南 3 - 吉隆坡</option>
+                                            <option value="ap-southeast-5">亚太东南 5 - 雅加达</option>
+                                            <option value="ap-south-1">亚太南部 1 - 孟买</option>
+                                            <option value="ap-northeast-1">亚太东北 1 - 东京</option>
+                                            <option value="us-west-1">美国西部 1 - 硅谷</option>
+                                            <option value="us-east-1">美国东部 1 - 弗吉尼亚</option>
+                                            <option value="eu-central-1">欧洲中部 1 - 法兰克福</option>
+                                            <option value="me-east-1">中东东部 1 - 迪拜</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" id="collect_submit_btn" onclick="collect()">
+                                    <span class="ladda-label"> 确认 </span>
+                                </button>
+                                <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- /. 收集云主机结束 -->
+
+            <!-- 添加/修改实例 -->
+            <div class="modal fade" id="changeModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog" style="z-index: 9999;">
+                    <div class="ivu-spin ivu-spin-fix" id="changing_id" style="display: none">
+                        <div class="ivu-spin-main">
+                            <span class="ivu-spin-dot"></span>
+                            <div class="ivu-spin-text"></div>
+                            <div>请求中</div>
+                        </div>
+                    </div>
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="change_pro_title_id">添加实例</h4>
+                        </div>
+                        <form id="change_form" action="#" class="form-horizontal form-label-left">
+                            <div class="modal-body roll">
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">实例ID <span class="required">*</span>
+                                    </label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <input class="ivu-input is_required" name="server_id">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">实例名称 <span class="required">*</span>
+                                    </label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <input class="ivu-input is_required" name="name">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">私有IP</label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <input class="ivu-input" name="inner_ip">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">公网IP</label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <input class="ivu-input" name="public_ip">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">操作系统 <span class="required">*</span>
+                                    </label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <select class="selectpicker show-tick form-control" name="os" id="change_os_id">
+                                            <option value="0">Linux</option>
+                                            <option value="1">Windows</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">服务商</label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <select class="selectpicker show-tick form-control" name="support" id="change_support_id"></select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">地域</label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <input class="ivu-input" name="region">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">凭证</label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <select class="selectpicker show-tick form-control" name="certificate" id="change_certificate_id"></select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">管理员</label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <input class="ivu-input" name="manager">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">其他信息</label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <textarea class="ivu-input" name="server_info" placeholder="格式（字典）：{key: value, key2: value2}"></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">备注</label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <textarea class="ivu-input" name="remark"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" id="change_submit_btn" onclick="change(-1)">
+                                    <span class="ladda-label"> 确认 </span>
+                                </button>
+                                <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- /. 收集云主机结束 -->
+
+            <!-- 添加/修改分组 -->
+            <div class="modal fade" id="changeGroupModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog" style="z-index: 2041;">
+                    <div class="ivu-spin ivu-spin-fix" id="server_catch_id">
+                        <div class="ivu-spin-main">
+                            <span class="ivu-spin-dot"></span>
+                            <div class="ivu-spin-text"></div>
+                            <div>实例抓取中</div>
+                        </div>
+                    </div>
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="change_group_pro_title_id"></h4>
+                        </div>
+                        <form id="change_group_form" action="#" class="form-horizontal form-label-left">
+                            <div class="modal-body roll" style="max-height: 650px;overflow-y: auto">
+                                <input hidden name="id" id="change_group_this_id">
+                                <input hidden name="name" id="change_group_this_name">
+                                <input hidden name="server" id="change_group_this_server">
+                                <div class="form-group">
+                                    <div class="col-md-12 col-sm-12 col-xs-12" id="app_p_div">
+                                        <div id="app">
+                                            <transfer
+                                                :data="data1"
+                                                :target-keys="targetKeys1"
+                                                :list-style="listStyle"
+                                                filterable
+                                                :render-format="render1"
+                                                :operations="['移出','移入']"
+                                                not-found-text=""
+                                                @on-change="handleChange1"></transfer>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" id="change_group_submit_btn" onclick="changeGroup(-1)">
+                                    <span class="ladda-label"> 保存 </span>
+                                </button>
+                                <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- /. 收集云主机分组 -->
+
+            <!-- 远程连接 -->
+            <div class="modal fade" id="sshModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog" style="z-index: 2041;">
+                    <div class="ivu-spin ivu-spin-fix" id="connecting_id" style="display: none">
+                        <div class="ivu-spin-main">
+                            <span class="ivu-spin-dot"></span>
+                            <div class="ivu-spin-text"></div>
+                            <div>连接中</div>
+                        </div>
+                    </div>
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="myModalLabel">SSH连接</h4>
+                        </div>
+                        <form method="post" id="connect_form" class="form-horizontal form-label-left">
+                            <div class="modal-body">
+                                {% csrf_token %}
+                                <input type="hidden" id="con_host_id" name="con_host_id" value="">
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">连接IP</label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <div class="btn-group" data-toggle="buttons" id="radio_ssh_ip">
+                                            <label class="btn btn-default ivu-btn-ghost" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                                <input type="radio" name="con_ip" value="inner_ip"> &nbsp; 内部IP &nbsp;
+                                            </label>
+                                            <label class="btn btn-primary ivu-btn-ghost active" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                                <input type="radio" name="con_ip" value="public_ip" checked> 外部IP
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="ivu-form-item-label pull-left col-md-2">凭证</label>
+                                    <div class="col-md-10 col-sm-10 col-xs-12">
+                                        <select class="selectpicker show-tick form-control" name="certificate" id="ssh_certificate_id"></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" id="btn_conn" class="ivu-btn ivu-btn-primary ladda-button" data-style="expand-left">
+                                    <span class="ladda-label"> 连接 </span>
+                                </button>
+                                <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                            </div>
+                        </form>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal -->
+            </div><!-- /.远程连接结束 -->
+            <table id="table" class="table"></table>
+          </div>
+        </div>
+    </div>
+
+    <div class="col-md-12 col-sm-12 col-xs-12" id="term_view_id" style="display:none; max-width: 97%; padding-left: 0;">
+        <div class="x_panel">
+          <div class="x_title" style="padding-bottom: 0;border-bottom:1px solid #E6E9ED;">
+                <div class="ivu-btn-group pull-left" style="padding-left: 0; padding-bottom: 5px;padding-bottom: 0px;">
+                    <ul id="termTab" class="nav nav-tabs bar_tabs" role="tablist" style="margin-bottom: 0;margin-top:10px;"></ul>
+                </div>
+                <div class="pull-right">
+                    <button type="button" class="ivu-btn ivu-btn-primary" onclick="reNewConn()">重新连接</button>
+                    <button type="button" class="ivu-btn ivu-btn-error" onclick="WebSocketStop()">关闭所有连接</button>
+                    <button type="button" class="ivu-btn ivu-btn-ghost" onclick="cutoverServerView()">返回实例列表</button>
+                </div>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <div class="" role="tabpanel" data-example-id="togglable-tabs">
+                <div id="termTabContent" class="tab-content"></div>
+            </div>
+          </div>
+        </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_before %}
+    <link rel="stylesheet" href="{% static 'ztree/css/metroStyle/metroStyle.css' %}" type="text/css">
+    <link href="{% static 'jedate/jedate.css' %}" rel="stylesheet" />
+    <link href="{% static 'bootstrap-datetimepicker/css/bootstrap-datetimepicker.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+    <style>
+    #table{width:100%;}
+    #table td{word-break: keep-all;white-space:nowrap;}
+    pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    .ivu-btn {
+        border-radius:0;
+    }
+    #table .ivu-btn {
+        border-radius:5px;
+    }
+    .error_input{
+        border-color: #a94442;
+    }
+    .error_alert{
+        color: #a94442;
+        display: block;
+        margin-top: 5px;
+        margin-bottom: 10px;
+    }
+    .modal-content{
+        border-radius:0;
+    }
+    div#rMenu {position:absolute; visibility:hidden; top:0; background-color: #555;text-align: left;padding: 2px;}
+    div#rMenu a{
+        padding: 3px 15px 3px 15px;
+        cursor: pointer;
+        list-style: none outside none;
+    }
+    #table tbody tr td{
+        line-height:28px;
+    }
+    #radio_ssh_ip .active {
+        background: #2d8cf0;
+        color: #333;
+    }
+    .terminal {
+        background-color: #000;
+        font-family: "Lucida Sans Typewriter", "Lucida Console", Monaco, "Bitstream Vera Sans Mono";
+        font-weight: 400;
+        font-feature-settings: "liga" 0;
+        user-select:none;
+        -webkit-user-select: none;
+        font-size:14px;
+        line-height: 20px;
+    }
+{#    .terminal > div{#}
+{#        white-space: nowrap;#}
+{#    }#}
+    .close_term_class{
+        cursor: pointer;
+    }
+    .close_term_class:hover{
+        color: #000;
+    }
+    .table_non_data_class{
+        color: #999;
+    }
+    #table .server_status i {
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        vertical-align: middle;
+        border-radius: 16px;
+        margin-top: -1px;
+        background-repeat: no-repeat;
+        background-image: url("{% static 'images/ecs-icons.png' %}");
+        margin-right: 5px;
+    }
+    #table .running_span i {
+        background-position: -61px -4px;
+    }
+    #table .disable_span i {
+        background-position: -61px -28px;
+    }
+    </style>
+{% endblock %}
+{% block ext_script %}
+    <script src="{% static 'js/echarts/echarts.js' %}"></script>
+    <script src="{% static 'js/echarts/echarts-liquidfill/echarts-liquidfill.min.js' %}"></script>
+    <script src="{% static 'js/echarts/walden.js' %}"></script>
+    <script src="{% static 'js/aukeyops/searchTable.js' %}"></script>
+    <script src="{% static 'ztree/js/jquery.ztree.core.js' %}"></script>
+	<script type="text/javascript" src="{% static 'ztree/js/jquery.ztree.exedit.js' %}"></script>
+    <script src="{% static 'bootstrap/js/spin.min.js' %}"></script>
+    <script src="{% static 'bootstrap/js/ladda.min.js' %}"></script>
+    <script src="{% static 'bootstrap-datetimepicker/js/moment-with-locales.js' %}"></script>
+    <script src="{% static 'bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js' %}"></script>
+    <script src="{% static 'jedate/jedate.js' %}"></script>
+    <script src="{% static 'js/aukeyops/currency.js' %}"></script>
+    <script src="{% static 'vuejs/vue.min.js' %}"></script>
+    <script src="{% static 'vuejs/iview.min.js' %}"></script>
+    <script type="text/javascript" src="{%static 'js/aukeyops/term.js' %}"></script>
+    <script type="text/javascript" src="{%static 'js/aukeyops/ws.js' %}"></script>
+    <script type="text/javascript">
+        // 搜索触发
+        $("#searchBtnId").on("click", function () {
+            searchGetTable('table', 'searchFormId', '/opscenter/server/list/');
+        });
+
+        // 重置搜索表单
+        function formReset() {
+            var curr_id_in = $('#hidden_id_in').val();
+            document.getElementById("searchFormId").reset();
+            $('#searchFormId .selectpicker').selectpicker('refresh');
+            $('#hidden_id_in').val(curr_id_in);
+        }
+
+        var nodes = [{'id':0, 'parent_id':0, 'name': "实例分组", 'open': 'true'}];
+        $.ajax({
+            url: '/opscenter/server_group/list/',
+            type: 'get',
+            async: false,
+            success: function (result) {
+                nodes = nodes.concat(result);
+            }
+        });
+        var setting = {
+            view: {
+				addHoverDom: addHoverDom,
+				removeHoverDom: removeHoverDom,
+				selectedMulti: false
+			},
+            edit: {
+				enable: true,
+				editNameSelectAll: true,
+				showRemoveBtn: showRemoveBtn,
+				showRenameBtn: showRenameBtn
+			},
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "id",
+                    pIdKey: "parent_id",
+                    rootPId: 0
+                }
+            },
+            check: {
+                enable: true
+            },
+            callback: {
+                onClick: zTreeOnClick,
+                onRightClick: OnRightClick,
+                beforeDrag: beforeDrag,
+				beforeRemove: beforeRemove,
+				beforeRename: beforeRename,
+				onRemove: onRemove,
+				onRename: onRename
+            }
+        };
+        var zTree = $.fn.zTree.init($("#treeDemo"), setting, nodes);
+        // 在ztree上点击左键触发
+        function zTreeOnClick(event, treeId, treeNode){
+            cutoverServerView();
+            formReset();
+            if (treeNode['id'] == 0){
+                $('#hidden_id_in').val('');
+            } else {
+                var server_id_list = getChildNodes(treeNode);
+                if (server_id_list) {
+                    console.log()
+                    $('#hidden_id_in').val(server_id_list)
+                } else {
+                    $('#hidden_id_in').val(99999999);
+                }
+            }
+            searchGetTable('table', 'searchFormId', '/opscenter/server/list/');
+        }
+        // 获取所有子节点ID
+        function getChildNodes(treeNode) {
+            var childNodes = zTree.transformToArray(treeNode);
+            var nodes = new Array();
+            for(i = 0; i < childNodes.length; i++) {
+                nodes[i] = childNodes[i].server;
+            }
+            return nodes.join(",");
+        }
+        var rMenu = $('#rMenu');
+        // 在ztree上的右击事件
+        function OnRightClick(event, treeId, treeNode) {
+            if (!treeNode && event.target.tagName.toLowerCase() != "button" && $(event.target).parents("a").length == 0) {
+                zTree.cancelSelectedNode();
+                showRMenu("root", event.clientX, event.clientY);
+            } else if (treeNode && !treeNode.noR) {
+                zTree.selectNode(treeNode);
+                showRMenu("node", event.clientX, event.clientY);
+            }
+        }
+        //显示右键菜单
+        function showRMenu(type, x, y) {
+            $("#rMenu ul").show();
+            rMenu.css({"top":y+"px", "left":x+"px", "visibility":"visible"}); //设置右键菜单的位置、可见
+            $("body").bind("mousedown", onBodyMouseDown);
+        }
+        //隐藏右键菜单
+        function hideRMenu() {
+            if (rMenu) rMenu.css({"visibility": "hidden"}); //设置右键菜单不可见
+            $("body").unbind("mousedown", onBodyMouseDown);
+        }
+        //鼠标按下事件
+        function onBodyMouseDown(event){
+            if (!(event.target.id == "rMenu" || $(event.target).parents("#rMenu").length>0)) {
+                rMenu.css({"visibility" : "hidden"});
+            }
+        }
+        //展开下一级子节点
+        function expand(){
+            hideRMenu();
+            var selectNodes = zTree.getSelectedNodes();
+            zTree.expandNode(selectNodes[0], true, null, null);
+        }
+        //展开所有子节点
+        function expandSon(){
+            hideRMenu();
+            var selectNodes = zTree.getSelectedNodes();
+            zTree.expandNode(selectNodes[0], true, true, null);
+        }
+
+        //折叠子节点
+        function collapse(){
+            hideRMenu();
+            var selectNodes = zTree.getSelectedNodes();
+
+            zTree.expandNode(selectNodes[0], false, null, null);
+        }
+        //全部展开
+        function expandAll(){
+            hideRMenu();
+            zTree.expandAll(true);
+        }
+        //全部折叠
+        function collapseAll(){
+            hideRMenu();
+            zTree.expandAll(false);
+        }
+        var newCount = 1;
+		function addHoverDom(treeId, treeNode) {
+			var sObj = $("#" + treeNode.tId + "_span");
+			if (treeNode.editNameFlag || $("#addBtn_"+treeNode.tId).length>0) return;
+			var addStr = "<span class='button add' id='addBtn_" + treeNode.tId
+				+ "' title='add node' onfocus='this.blur();'></span>";
+			sObj.after(addStr);
+			var btn = $("#addBtn_"+treeNode.tId);
+			if (btn) btn.bind("click", function(){
+			    var new_name = "new group" + (newCount++);
+			    $.ajax({
+                    url: '/opscenter/server_group/list/',
+                    data: {'name': new_name, 'parent_id': treeNode.id},
+                    dataType: 'json',
+                    type: 'post',
+                    async: false,
+                    success: function (result) {
+                        var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+                        zTree.addNodes(treeNode, {id:result['id'], pId:result['parent_id'], name: result['name']});
+                        return false;
+                    },
+                    error: function (result) {
+                        MyMessage(0, '添加组失败！')
+                    }
+                });
+			});
+		}
+		function removeHoverDom(treeId, treeNode) {
+			$("#addBtn_"+treeNode.tId).unbind().remove();
+		}
+        function showRemoveBtn(treeId, treeNode) {
+			//return !treeNode.isFirstNode;
+			return !treeNode.id == 0;
+		}
+		function showRenameBtn(treeId, treeNode) {
+			//return !treeNode.isLastNode;
+            return !treeNode.id == 0;
+		}
+        function beforeRemove(treeId, treeNode) {
+            var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+            zTree.selectNode(treeNode);
+            return confirm("确认删除 节点 -- " + treeNode.name + " 吗？");
+        }
+        function onRemove(e, treeId, treeNode) {
+			$.ajax({
+                url: '/opscenter/server_group/detail/'+treeNode.id+'/',
+                type: 'delete',
+                async: false,
+                success: function (result) {},
+                error: function (result) {
+                    MyMessage(0, '删除组失败！')
+                }
+            });
+		}
+        function beforeRename(treeId, treeNode, newName) {
+            if (newName.length == 0) {
+                MyMessage(0, "节点名称不能为空.");
+                return false;
+            }
+            return true;
+        }
+        function beforeDrag(treeId, treeNodes) {
+			return false;
+		}
+
+		function onRename(e, treeId, treeNode, isCancel) {
+			$.ajax({
+                url: '/opscenter/server_group/detail/'+treeNode.id+'/',
+                type: 'put',
+                data: {'name': treeNode.name},
+                dataType: 'json',
+                async: false,
+                success: function (result) {
+                },
+                error: function (result) {
+                    MyMessage(0, '修改分组名称失败！')
+                }
+            });
+		}
+
+		$('#changeGroupModal').on('show.bs.modal', function () {
+            document.getElementById('change_group_form').reset();
+		    hideRMenu();
+		    $('#server_catch_id').show();
+		    var a_html  = '<div id="app"><transfer :data="data1"'+
+                ':target-keys="targetKeys1"'+
+                ':list-style="listStyle"'+
+                'filterable="" '+
+                ':render-format="render1"'+
+                ':operations="[\'移出\',\'移入\']"'+
+                'not-found-text=""'+
+                '@on-change="handleChange1"></transfer>'+
+            '</div>';
+		    $('#app_p_div').html(a_html);
+		    var mockData = [];
+            var TargetKeys = [];
+            var selectNodes = zTree.getSelectedNodes();
+            if (!selectNodes[0]) {
+                MyMessage(0, '请先选中分组，再右键点击编辑实例');
+                return false
+            }
+            document.getElementById('change_group_this_id').value = selectNodes[0]['id'];
+            document.getElementById('change_group_this_name').value = selectNodes[0]['name'];
+            $("#change_group_submit_btn").attr('onclick', 'changeGroup('+selectNodes[0]['id']+')');
+            $('#change_group_pro_title_id').html(selectNodes[0]['name']);
+            var Main = {
+                data () {
+                    return {
+                        data1: mockData,
+                        targetKeys1: TargetKeys,
+                        listStyle: {
+                        width: '40%',
+                        height: '300px'
+                    }
+                    }
+                },
+                methods: {
+                    render1 (item) {
+                        return item.label;
+                    },
+                    handleChange1 (newTargetKeys, direction, moveKeys) {
+                        document.getElementById("change_group_this_server").value=newTargetKeys;
+                        this.targetKeys1 = newTargetKeys;
+                    }
+                }
+            };
+            var Component = Vue.extend(Main);
+            new Component().$mount('#app');
+            $.ajax({
+                url: '/opscenter/server/all/list/',
+                type: 'get',
+                success: function (result) {
+                    for (i in result) {
+                        mockData.push({
+                            key: result[i]['id'],
+                            label: result[i]['name'],
+                            description: result[i]['name'],
+                            disabled: false
+                        });
+                    }
+                    $('#server_catch_id').hide()
+                }
+            });
+            $.ajax({
+                url: '/opscenter/server_group/detail/'+selectNodes[0]['id']+'/',
+                type: 'get',
+                success: function (result) {
+                    var exist_server_list = eval('['+result['server']+']');
+                    for (i in exist_server_list){
+                        TargetKeys.push(exist_server_list[i])
+                    }
+                    document.getElementById("change_group_this_server").value=TargetKeys;
+                }
+            });
+        });
+
+		function changeGroup(id){
+		    var group_name = $('#change_group_this_server').val();
+		    if (group_name.substr(group_name.length-1,1) == ','){
+		        group_name = group_name.substr(0,group_name.length-1);
+            }
+            $.ajax({
+                url: '/opscenter/server_group/detail/'+id+'/',
+                type: 'put',
+                data: {'name':$('#change_group_this_name').val(), 'server': group_name},
+                success: function (result) {
+                    $('#changeGroupModal').modal('hide');
+                    location.reload();
+                    MyMessage(1, '操作成功！');
+                },
+                error: function (result) {
+                    MyMessage(0, '修改失败！'+ result['responseText'])
+                }
+            });
+        }
+
+        function toggle(view) {
+		    if (view == 1) {
+		        $('#toggle_bt_id').attr("onclick","toggle(2)");
+                $('#right_div_id').removeClass('col-md-10 col-sm-10');
+                $('#right_div_id').addClass('col-md-12 col-sm-12');
+                $('#toggle-icon').removeClass('fa-angle-left');
+                $('#toggle-icon').addClass('fa-angle-right');
+                $('#tree_div_id').hide();
+            } else {
+		        $('#toggle_bt_id').attr("onclick","toggle(1)");
+                $('#right_div_id').removeClass('col-md-12 col-sm-12');
+                $('#right_div_id').addClass('col-md-10 col-sm-10');
+                $('#toggle-icon').removeClass('fa-angle-right');
+                $('#toggle-icon').addClass('fa-angle-left');
+                $('#tree_div_id').show();
+            }
+        }
+
+        // 收集实例.
+        function collect() {
+            var support_id = $('#collect_form').find("[name='support_id']").val();
+            var region_id = $('#region_select_id').val();
+            if (!support_id) {
+                MyMessage(0, '请选择服务商');
+                return false
+            }
+            $('#collecting_id').show();
+            $.ajax({
+                url: 'server/collect_instances',
+                type: 'post',
+                data: $('#collect_form').serializeArray(),
+                success: function (result) {
+                    MyMessage(result['code'], result['result']);
+                    $('#collecting_id').hide();
+                },
+                error: function(result){
+                    MyMessage(0, result);
+                    $('#collecting_id').hide();
+                }
+            })
+        }
+
+        // 添加/修改实例
+        function change(id) {
+            cleanErrorAlert('change_form');
+            var re = checkRequired('change_form');
+            if (!re) {
+                return false
+            }
+            if (id > 0) {
+                var url = '/opscenter/server/detail/'+id+'/';
+                var type = 'put'
+            } else {
+                var url ='/opscenter/server/list/';
+                var type = 'post'
+            }
+            $.ajax({
+                url: url,
+                data: $('#change_form').serializeArray(),
+                datatype: 'json',
+                type: type,
+                success: function (result) {
+                    MyMessage(1, '操作成功！');
+                    $('#changeModal').modal('hide');
+                    $('#table').bootstrapTable("refresh");
+                },
+                error: function (result) {
+                    var re_json = result.responseJSON;
+                    for (i in re_json){
+                        $("#change_form [name="+i+"]").addClass('error_input');
+                        $("#change_form [name="+i+"]").after("<div class='error_alert'>"+result.responseJSON[i]+"</div>");
+                    }
+                }
+            })
+        }
+
+        // 打开添加/修改模态框
+        $('#changeModal').on('show.bs.modal', function (event) {
+            var id = $(event.relatedTarget).data('id');
+            if (id) {
+                var select = getSelectRow();
+                if (select && select.id) {
+                    $('#change_pro_title_id').html('修改实例');
+                    $('#change_submit_btn').attr('onclick','change('+select.id+')');
+                    var form = $('#change_form');
+                    form.find("[name='server_id']").val(select.server_id);
+                    form.find("[name='name']").val(select.name);
+                    form.find("[name='inner_ip']").val(select.inner_ip);
+                    form.find("[name='public_ip']").val(select.public_ip);
+                    form.find("[name='server_info']").val(select.server_info);
+                    form.find("[name='remark']").val(select.remark);
+                    form.find("[name='region']").val(select.region);
+                    form.find("[name='manager']").val(select.manager);
+                    $('#change_os_id').selectpicker('val',select.os);
+                    if (select.support) {
+                        $('#change_support_id').selectpicker('val',select.support.id);
+                    }
+                    if (select.certificate) {
+                        $('#change_certificate_id').selectpicker('val',select.certificate.id);
+                    }
+                } else {
+                    MyMessage(0, '请选择实例！');
+                    return false
+                }
+            } else {
+                $('#change_pro_title_id').html('添加实例');
+                $('#change_submit_btn').attr('onclick','change(-1)');
+            }
+        });
+
+        // 关闭添加/修改模态框
+        $('#changeModal').on('hide.bs.modal', function () {
+            cleanErrorAlert('change_form');
+            document.getElementById("change_form").reset();
+            $('.selectpicker').selectpicker('refresh');
+        });
+
+        // 删除
+        function confirmDelete(){
+            var select = getSelectRow();
+            if (select && select.id) {
+                var url = '/opscenter/server/detail/'+select.id+'/';
+                $.confirm({
+                    title: '提示！',
+                    content: '确定要删除实例「'+select.name+'」吗？',
+                    closeIcon: true,
+                    confirmButtonClass:'btn-danger',
+                    cancelButtonClass: 'btn-default ',
+                    confirmButton: '删除!',
+                    cancelButton: '取消',
+                    confirm: function(){
+                        $.ajax({
+                            url: url,
+                            type: 'DELETE',
+                            success: function (result) {
+                                MyMessage(1, '操作成功！');
+                                $('#table').bootstrapTable("refresh");
+                            },
+                            error: function (result) {
+                                MyMessage(0, result.responseText);
+                            }
+                        })
+                    }
+                });
+            } else {
+                MyMessage(0, '请选择实例！');
+                return false;
+            }
+        }
+
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "get",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:'/opscenter/server/list/',
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                minimumCountColumns: 1,
+                dataField: "results",
+                pagination: true, //启动分页
+                sortable: true,  //启用排序
+                pageSize: 15,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+                search: false,  //是否启用查询
+                searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+                searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+                showColumns: false,  //显示下拉框勾选要显示的列
+                showRefresh: false,  //显示刷新按钮
+                showSearchButton: false, //显示搜索按钮
+                showExport: false,//显示导出按钮
+                exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                sidePagination: "server", //分页方式：client客户端分页，server服务端分页（*）
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined", //设置为 'limit' 则会发送符合 RESTFul 格式的参数
+                clickToSelect: true,//是否启用点击选中行
+                singleSelect:true, // 设置 true 将禁止多选
+                checkboxHeader:false, //设置 false 将在列头隐藏全选复选框
+                toolbarAlign:'left',//工具栏对齐方式
+                buttonsAlign:'right',//按钮对齐方式
+                undefinedText: '', //当数据为 undefined 时显示的字符
+                detailView:false,
+                responseHandler: function (res) { //加载服务器数据之前的处理程序，可以用来格式化数据。参数：res为从服务器请求到的数据
+                    res['total'] = res['count'];
+                    var server_id_list = [];
+                    for (i in res['results']) {
+                        server_id_list.push(res['results'][i]['server_id']);
+                    }
+                    $.ajax({
+                        url: '/opscenter/get_redis_list',
+                        data: {'key': server_id_list, 'start': -1},
+                        type: 'post',
+                        timeout: 30000,
+                        success: function(result) {
+                            for (i in res['results']) {
+                                var server_id = res['results'][i]['server_id'];
+                                if (result['result'][server_id].length > 0) {
+                                    var a = result['result'][server_id][0];
+                                    var nMinutes = minutesBetween(a['datetime'], 'now');
+                                    if (nMinutes <= 5) {
+                                        document.getElementById(server_id+'_status_1').innerHTML = '<span class="running_span"><i></i><span style="color: #090">运行中</span></span>';
+                                        if (a['cpu']) {
+                                            var value = a['cpu']['percent'];
+                                            var data = value+"%";
+                                            var btn_color = configBackgroud(value);
+                                            var t_html = '<span onclick="view_trans(3)" class="ivu-btn-small ivu-btn ivu-btn-'+btn_color+'">'+data+'</span>';
+                                            document.getElementById(server_id+'_cpu_usage').innerHTML = t_html;
+                                        }
+                                        if (a['memory']) {
+                                            var value = a['memory']['percent'];
+                                            var data = value+"%";
+                                            var btn_color = configBackgroud(value);
+                                            var t_html = '<span onclick="view_trans(4)" class="ivu-btn-small ivu-btn ivu-btn-'+btn_color+'">'+data+'</span>';
+                                            document.getElementById(server_id+'_memory_usage').innerHTML = t_html;
+                                        }
+                                        if (a['disk']) {
+                                            var value = a['disk']['usage'];
+                                            var data = value+"%";
+                                            var btn_color = configBackgroud(value);
+                                            var t_html = '<span class="ivu-btn-small ivu-btn ivu-btn-'+btn_color+'">'+data+'</span>';
+                                            document.getElementById(server_id+'_disk_usage').innerHTML = t_html;
+                                        }
+                                        var t_html = '<span class="blue">'+nMinutes+'分钟</span>';
+                                        document.getElementById(server_id+'_deviation').innerHTML = t_html;
+                                    } else {
+                                        document.getElementById(server_id+'_status_1').innerHTML = '<span class="disable_span"><i></i><span class="red" title="'+nMinutes+'分钟未收到监控信息">已断开</span></span>';
+                                    }
+                                } else {
+                                    document.getElementById(server_id+'_status_1').innerHTML = '<span style="color: #999">监控未启动</span>';
+                                }
+                            }
+                            for (v in $('.table_monitor_loadding')) {
+                                try {
+                                    if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                        $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>无数据</span>";
+                                    }
+                                }catch(err){
+                                    continue
+                                }
+                            }
+                        },
+                        error: function(result){
+                            MyMessage(0, '连接Redis失败！');
+                            for (v in $('.table_monitor_loadding')) {
+                                try {
+                                    if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                        $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>连接Redis失败</span>";
+                                    }
+                                }catch(err){
+                                    continue
+                                }
+                            }
+                        },
+                        complete: function (XMLHttpRequest,status) {
+                            if(status == 'timeout') {
+                                xhr.abort();    // 超时后中断请求
+                                MyMessage(0, '连接Redis超时！');
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>请求超时</span>";
+                                        }
+                                    }catch(err){
+                                        continue
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    return res
+                },
+                columns: view_list_0,
+                queryParams: function queryParams(params) {   //设置查询参数
+                    if (params.sortOrder == 'desc') {
+                        params.sortName = '-'+params.sortName
+                    }
+                    var param = {
+                        page: params.pageNumber,
+                        size: params.pageSize,
+                        ordering:params.sortName
+                    };
+                    return param;
+                },
+                detailFormatter:function (index, row) {
+                }
+            });
+        }
+
+        $(".selectpicker").selectpicker({
+            noneSelectedText : ''//默认显示内容
+        });
+
+        // 检查是否开启自动续费
+        function checkAutoRenew(support_id, id) {
+            $.ajax({
+                url: '/opscenter/server/check_auto_renew',
+                data: {'support_id': support_id, 'id': id},
+                type: 'post',
+                success: function (result) {
+                    if (result['code'] == 0) {
+                        MyMessage(0, result['result'])
+                    } else {
+                        if (result['result'] == '是') {
+                            var color = 'green'
+                        } else {
+                            var color = 'red'
+                        }
+                        $("#row_id_"+id).html('<span class="'+color+'">'+result['result']+'</span>');
+                    }
+                }
+            })
+        }
+
+        var region = {};
+        var support_dict = {};
+        $(document).ready(function(){
+            $('#table').addClass('table-no-bordered');
+            initTable(); // 初始化列表
+            $.ajax({ // 初始化服务商下拉框
+                url: '/opscenter/support/list/',
+                type: 'get',
+                success: function (result) {
+                    $('#support_selectid').empty(); // 收集模态框服务商下拉框
+                    $('#change_support_id').empty(); // 添加/修改模态框服务商下拉框
+                    $('#search_support_id').empty(); // 搜索模态框服务商下拉框
+                    $('#support_selectid.selectpicker').append('<option></option>');
+                    $('#change_support_id.selectpicker').append('<option></option>');
+                    $('#search_support_id.selectpicker').append('<option></option>');
+                    $.each(result, function (index, item) {
+                       $('#support_selectid.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                       $('#change_support_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                       $('#search_support_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                       support_dict[item['id']]=item['type']
+                    });
+                    $('#support_selectid').selectpicker('refresh');
+                    $('#change_support_id').selectpicker('refresh');
+                    $('#search_support_id').selectpicker('refresh');
+                }
+            });
+
+            $.ajax({ // 初始化凭证下拉框
+                url: '/opscenter/certificate/list/',
+                type: 'get',
+                success: function (result) {
+                    $('#change_certificate_id').empty(); // 收集模态框服务商下拉框
+                    $('#search_certificate').empty(); // 收集模态框服务商下拉框
+                    $('#change_certificate_id.selectpicker').append('<option></option>');
+                    $('#search_certificate.selectpicker').append('<option></option>');
+                    $('#ssh_certificate_id.selectpicker').append('<option></option>');
+                    $.each(result['results'], function (index, item) {
+                       $('#change_certificate_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                       $('#search_certificate.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                       $('#ssh_certificate_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                    });
+                    $('#change_certificate_id').selectpicker('refresh');
+                    $('#search_certificate').selectpicker('refresh');
+                    $('#ssh_certificate_id').selectpicker('refresh');
+                }
+            });
+
+            $.ajax({ // 获取region
+                url: '/opscenter/server/region',
+                type: 'get',
+                success: function (result) {
+                    region = result['result'];
+                }
+            })
+        });
+        var support_selectid = $('#support_selectid');
+        support_selectid.change(function(e){
+            $('#region_select_id').empty();
+            var region_list = '';
+            if (support_dict[e.target.value] == 1) {
+                region_list = region['aliyun_region_list']
+            } else if (support_dict[e.target.value] == 2) {
+                region_list = region['ucloud_region_list']
+            } else if (support_dict[e.target.value] == 3) {
+                region_list = region['aws_region_list']
+            }
+            if (region_list) {
+                $('#region_select_id.selectpicker').append('<option value="">-- 请选择地域 --</option>');
+                $('#region_select_id.selectpicker').append('<option value="all">所有地域</option>');
+                for (i in region_list) {
+                   $('#region_select_id.selectpicker').append('<option value=' + region_list[i]['value'] + '>' + region_list[i]['name'] + '</option>');
+                }
+            }
+            $('#region_select_id').selectpicker('refresh');
+        });
+
+        var support_type_obj = $('#change_support_id');
+        support_type_obj.change(function(e){
+            $('#change_region_select_id').empty();
+            var region_list = '';
+            if (support_dict[e.target.value] == 1) {
+                region_list = region['aliyun_region_list']
+            } else if (support_dict[e.target.value] == 2) {
+                region_list = region['ucloud_region_list']
+            } else if (support_dict[e.target.value] == 3) {
+                region_list = region['aws_region_list']
+            }
+            if (region_list) {
+                $('#change_region_select_id.selectpicker').append('<option>-- 请选择地域 --</option>');
+                $('#change_region_select_id.selectpicker').append('<option value="all">所有地域</option>');
+                for (i in region_list) {
+                   $('#change_region_select_id.selectpicker').append('<option value=' + region_list[i]['value'] + '>' + region_list[i]['name'] + '</option>');
+                }
+            }
+            $('#change_region_select_id').selectpicker('refresh');
+        });
+
+        function checkRequired(FormId) {
+            var required_input = $('#'+FormId).find("[class*='is_required']");
+            var have_not_write = 0;
+            for (var i=0;i < required_input.length; i++) {
+                if (!required_input[i].value) {
+                    have_not_write = 1;
+                    $(required_input[i]).addClass('error_input');
+                    $(required_input[i]).after("<div class='error_alert'>此项不能为空。</div>");
+                }
+            }
+            if (have_not_write == 1) {
+                return false
+            } else {
+                return true
+            }
+        }
+
+        function cleanErrorAlert(FormId) {
+            $('.error_alert').remove();
+            $("#"+FormId).find("[class*='error_input']").removeClass("error_input");
+        }
+
+        // 打开远程连接模态框
+        var the_server_name = '';
+        $('#sshModal').on('show.bs.modal', function (event) {
+            var id = $(event.relatedTarget).data('id');
+            var cert_id = $(event.relatedTarget).data('cert_id');
+            the_server_name = $(event.relatedTarget).data('name');
+            $('#ssh_certificate_id').selectpicker('val',cert_id);
+            $("#btn_conn").attr('onclick', 'connFun('+id+')');
+        });
+
+        // 远程连接
+        var containerNumber = 0;
+        function connFun(id) {
+            if (!$('#ssh_certificate_id').val()) {
+                MyMessage(0, '请选择凭证');
+                return false
+            }
+            var conn_cert_id = $('#ssh_certificate_id').val();
+            $("#connecting_id").show();
+            $.ajax({
+                url: "/opscenter/certificate/detail/"+conn_cert_id+"/",
+                type: "get",
+                async: false,
+                success: function(result) {
+                    return true
+                },
+                error: function(result) {
+                    MyMessage(0, result.responseText);
+                    $('#connecting_id').hide();
+                    return false
+                }
+            });
+            var port_data = {
+                "con_id": id,
+                "con_ip":$('input:radio[name="con_ip"]:checked').val(),
+                'cid': conn_cert_id
+            };
+            var new_url='';
+            $.ajax({
+                type: "post",
+                url: "{% url 'check_connect' %}",
+                async: false,
+                dataType: "json",
+                data: JSON.stringify(port_data),
+                success: function(con_status) {
+                    if(con_status['con_status'] == "true"){
+                        new_url = "/opscenter/connect_ssh/";
+                        $('#connecting_id').hide();
+                        $("#myModal").modal('hide');
+                        new PNotify({
+                          title: 'SUCCESS',
+                          text: con_status['message'],
+                          type: 'success',
+                          styling: 'bootstrap3'
+                        });
+                        if(new_url.length>0){
+                            containerNumber += 1;
+                            $('#termTab').find("li[class*='active']").removeClass('active');
+                            $('#termTabContent').find("div[class*='active']").removeClass('active');
+                            $('#termTab').append('<li role="presentation" class="active"><a href="#term_tab_content_'+containerNumber+'" ' +
+                                'id="tab_id_'+containerNumber+'" role="tab" data-toggle="tab" aria-expanded="true">'+the_server_name+' <span class="close_term_class" onclick="close_term(' +
+                                ''+containerNumber+')">' +
+                                '<i class="fa fa-close"></i></span></a></li>');
+                            $('#termTabContent').append('<div role="tabpanel" class="tab-pane fade in active" id="term_tab_content_'+containerNumber+'"' +
+                                ' aria-labelledby="tab_id_'+containerNumber+'">' +
+                                '<div id="container-terminal-'+containerNumber+'"></div></div>');
+                            $('#sshModal').modal('hide');
+                            cutoverTermView();
+                            var conn_prm = {'uid': {{ user.id }},'sid': id, 'inoex': $('input:radio[name="con_ip"]:checked').val(), 'cid': conn_cert_id};
+                            WebSocketStart(conn_prm, 'container-terminal-' + containerNumber);
+                        }
+                    }else{
+                        $('#connecting_id').hide();
+                        MyMessage(0, con_status['message']);
+                        return false
+                    }
+                },
+                error: function (err) {
+                    $('#connecting_id').hide();
+                    MyMessage(0, err.responseText);
+                }
+            });
+        }
+        function reNewConn() {
+            WebSocketStop();
+            WebSocketStart();
+        }
+
+        function cutoverTermView(){
+            $('#table_row_id').hide();
+            $('#term_view_id').show();
+        }
+
+        function cutoverServerView(){
+            $('#term_view_id').hide();
+            $('#table_row_id').show();
+        }
+
+        function close_term(containerNumber){
+            $('#tab_id_'+containerNumber).remove();
+            $('#term_tab_content_'+containerNumber).remove();
+        }
+
+        var view_list_0 = [
+            {
+                title:'',
+                field:'select',
+                checkbox:true,
+                align:'center',
+                valign:'middle'
+            },
+            {
+                title:'实例ID',
+                field:'server_id',
+                sortable:false,
+                align:'center',
+                formatter: function(value, row) {
+                    var res = '<a href="/opscenter/server_detail/'+row.id+'/" style="color:#337ab7">'+row.server_id+'</a>';
+                    return res
+                }
+            },
+            {
+                title:'实例名',
+                field:'name',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'操作系统',
+                field:'os',
+                align:'center',
+                sortable:true,
+                formatter:function(value){
+                    os_name = {0: 'Linux', 1: 'Windows'};
+                    if (value == 0 || value == 1) {
+                        return os_name[value]
+                    } else {
+                        return value
+                    }
+                }
+            },
+            {
+                title:'状态',
+                field:'',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_status_1" class="server_status"><i></i></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'私有IP',
+                field:'inner_ip',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'公网IP',
+                field:'public_ip',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'到期时间',
+                field:'server_info',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row){
+                    try {
+                        var res = eval("["+row.server_info+"]")[0]['到期时间'];
+                        var color_code = '';
+                    } catch(err) {
+                        var res = ''
+                    }
+                    if (res) {
+                        var ndays = daysBetween(res, 'now');
+                        if (ndays < 30) {
+                            color_code = 'red'
+                        }
+                    } else {
+                        res = '无'
+                    }
+                    res = '<span style="color:'+color_code+'\" title="'+ndays+' 天后过期">'+res+'</span>';
+                    return res
+                }
+            },
+            {
+                title:'数据偏差',
+                field:'',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_deviation" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'CPU使用率',
+                field:'cpu_usage',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_cpu_usage" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'内存使用率',
+                field:'memory_usage',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_memory_usage" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'磁盘使用率',
+                field:'disk_usage',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_disk_usage" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'服务商',
+                field:'support.name',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'管理员',
+                field:'manager',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'自动续费',
+                field:'',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row){
+                    if (row.support && row.id){
+                        var res = '<span id="row_id_'+row.id+'"><button class="btn btn-link btn-xs" onclick="checkAutoRenew('+row.support.id+', '+row.id+')">检查</button></span>';
+                    } else {
+                        var res = ''
+                    }
+                    return res
+                }
+            },
+            {
+                title:'凭证',
+                field:'certificate.name',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'操作',
+                field:'id',
+                align:'center',
+                formatter:function(value,row,gitflow){
+                    if (row.certificate) {
+                        var cert_id = row.certificate.id
+                    } else {
+                        var cert_id = 0
+                    }
+                    var m = '<a title="远程连接" data-toggle="modal" data-target="#sshModal" data-id="'+row.id+'" data-cert_id="'+cert_id+'" data-name="'+row.name+'"><i class="ivu-icon ivu-icon-monitor" style="font-size: 18px; color: #495060"></i></a> ';
+                    return m;
+                }
+            }
+        ];
+
+        var view_list_1 = [
+            {
+                title:'',
+                field:'select',
+                checkbox:true,
+                align:'center',
+                valign:'middle'
+            },
+            {
+                title:'实例ID',
+                field:'server_id',
+                sortable:false,
+                align:'center',
+                formatter: function(value, row) {
+                    var res = '<a href="/opscenter/server_detail/'+row.id+'/" style="color:#337ab7">'+row.server_id+'</a>';
+                    return res
+                }
+            },
+            {
+                title:'实例名',
+                field:'name',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'状态',
+                field:'',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_status_1" class="server_status"><i></i></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'当前使用率',
+                field:'now',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow) {
+                    var my_html = '<div id="'+row.server_id+'_now" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'最大值(24h)',
+                field:'max',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow) {
+                    var my_html = '<div id="'+row.server_id+'_max" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'最小值(24h)',
+                field:'min',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_min" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'平均值(24h)',
+                field:'av',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_av" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'操作',
+                field:'id',
+                align:'center',
+                formatter:function(value,row,gitflow){
+                    if (row.certificate) {
+                        var cert_id = row.certificate.id
+                    } else {
+                        var cert_id = 0
+                    }
+                    var m = '<a title="远程连接" data-toggle="modal" data-target="#sshModal" data-id="'+row.id+'" data-cert_id="'+cert_id+'" data-name="'+row.name+'"><i class="ivu-icon ivu-icon-monitor" style="font-size: 18px; color: #495060"></i></a> ';
+                    return m;
+                }
+            }
+        ];
+
+        var view_list_2 = [
+            {
+                title:'',
+                field:'select',
+                checkbox:true,
+                align:'center',
+                valign:'middle'
+            },
+            {
+                title:'实例ID',
+                field:'server_id',
+                sortable:false,
+                align:'center',
+                formatter: function(value, row) {
+                    var res = '<a href="/opscenter/server_detail/'+row.id+'/" style="color:#337ab7">'+row.server_id+'</a>';
+                    return res
+                }
+            },
+            {
+                title:'实例名',
+                field:'name',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'状态',
+                field:'',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_status_1" class="server_status"><i></i></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'当前流入',
+                field:'now_in',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow) {
+                    var my_html = '<div id="'+row.server_id+'_now_in" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'最大流入(24h)',
+                field:'max_in',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow) {
+                    var my_html = '<div id="'+row.server_id+'_max_in" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'平均流入(24h)',
+                field:'av_in',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_av_in" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'当前流出',
+                field:'now_out',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_now_out" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'最大流出(24h)',
+                field:'max_out',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_max_out" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'平均流出(24h)',
+                field:'av_out',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_av_out" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'操作',
+                field:'id',
+                align:'center',
+                formatter:function(value,row,gitflow){
+                    if (row.certificate) {
+                        var cert_id = row.certificate.id
+                    } else {
+                        var cert_id = 0
+                    }
+                    var m = '<a title="远程连接" data-toggle="modal" data-target="#sshModal" data-id="'+row.id+'" data-cert_id="'+cert_id+'" data-name="'+row.name+'"><i class="ivu-icon ivu-icon-monitor" style="font-size: 18px; color: #495060"></i></a> ';
+                    return m;
+                }
+            }
+        ];
+        var view_list_3 = [
+            {
+                title:'',
+                field:'select',
+                checkbox:true,
+                align:'center',
+                valign:'middle'
+            },
+            {
+                title:'实例ID',
+                field:'server_id',
+                sortable:false,
+                align:'center',
+                formatter: function(value, row) {
+                    var res = '<a href="/opscenter/server_detail/'+row.id+'/" style="color:#337ab7">'+row.server_id+'</a>';
+                    return res
+                }
+            },
+            {
+                title:'实例名',
+                field:'name',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'状态',
+                field:'',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_status_1" class="server_status"><i></i></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'当前读/写IOPS(个)',
+                field:'now_iops',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow) {
+                    var my_html = '<div id="'+row.server_id+'_now_iops" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'最大读/写IOPS(24h)(个)',
+                field:'max_iops',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow) {
+                    var my_html = '<div id="'+row.server_id+'_max_iops" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'平均读/写IOPS(24h)(个)',
+                field:'av_iops',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_av_iops" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'当前读/写流量(KB/s)',
+                field:'now_bytes',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_now_bytes" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'最大读/写流量(24h)(KB/s)',
+                field:'max_bytes',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_max_bytes" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'平均读/写流量(24h)(KB/s)',
+                field:'av_bytes',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_av_bytes" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'操作',
+                field:'id',
+                align:'center',
+                formatter:function(value,row,gitflow){
+                    if (row.certificate) {
+                        var cert_id = row.certificate.id
+                    } else {
+                        var cert_id = 0
+                    }
+                    var m = '<a title="远程连接" data-toggle="modal" data-target="#sshModal" data-id="'+row.id+'" data-cert_id="'+cert_id+'" data-name="'+row.name+'"><i class="ivu-icon ivu-icon-monitor" style="font-size: 18px; color: #495060"></i></a> ';
+                    return m;
+                }
+            }
+        ];
+
+        var view_list_4 = [
+            {
+                title:'',
+                field:'select',
+                checkbox:true,
+                align:'center',
+                valign:'middle'
+            },
+            {
+                title:'实例ID',
+                field:'server_id',
+                sortable:false,
+                align:'center',
+                formatter: function(value, row) {
+                    var res = '<a href="/opscenter/server_detail/'+row.id+'/" style="color:#337ab7">'+row.server_id+'</a>';
+                    return res
+                }
+            },
+            {
+                title:'实例名',
+                field:'name',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'状态',
+                field:'',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_status_1" class="server_status"><i></i></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'当前进程数',
+                field:'now',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow) {
+                    var my_html = '<div id="'+row.server_id+'_now" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'最大值(24h)',
+                field:'max',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow) {
+                    var my_html = '<div id="'+row.server_id+'_max" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'最小值(24h)',
+                field:'min',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_min" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'平均值(24h)',
+                field:'av',
+                align:'center',
+                sortable:false,
+                formatter:function(value,row,gitflow){
+                    var my_html = '<div id="'+row.server_id+'_av" class="table_monitor_loadding"><img src="/static/images/loadding-n.gif"></div>';
+                    return my_html
+                }
+            },
+            {
+                title:'操作',
+                field:'id',
+                align:'center',
+                formatter:function(value,row,gitflow){
+                    if (row.certificate) {
+                        var cert_id = row.certificate.id
+                    } else {
+                        var cert_id = 0
+                    }
+                    var m = '<a title="远程连接" data-toggle="modal" data-target="#sshModal" data-id="'+row.id+'" data-cert_id="'+cert_id+'" data-name="'+row.name+'"><i class="ivu-icon ivu-icon-monitor" style="font-size: 18px; color: #495060"></i></a> ';
+                    return m;
+                }
+            }
+        ];
+
+        function view_trans(view) {
+            $("#view_trans_div_id button").attr("class","ivu-btn ivu-btn-ghost");
+            $("#view"+view+"_id").attr("class","ivu-btn ivu-btn-primary");
+            if (view == 1) {
+                $('#table').bootstrapTable('refreshOptions', {
+                    responseHandler: function (res) {
+                        res['total'] = res['count'];
+                        var server_id_list = [];
+                        for (i in res['results']) {
+                            server_id_list.push(res['results'][i]['server_id']);
+                        }
+                        $.ajax({
+                            url: '/opscenter/get_redis_list',
+                            data: {'key': server_id_list, 'start': -1},
+                            timeout: 30000,
+                            type: 'post',
+                            success: function(result) {
+                                for (i in res['results']) {
+                                    var server_id = res['results'][i]['server_id'];
+                                    if (result['result'][server_id].length > 0) {
+                                        var a = result['result'][server_id][0];
+                                        var nMinutes = minutesBetween(a['datetime'], 'now');
+                                        if (nMinutes <= 5) {
+                                            document.getElementById(server_id+'_status_1').innerHTML = '<span class="running_span"><i></i><span style="color: #090">运行中</span></span>';
+                                            if (a['cpu']) {
+                                                var value = a['cpu']['percent'];
+                                                var data = value+"%";
+                                                var btn_color = configBackgroud(value);
+                                                var t_html = '<span onclick="view_trans(3)" class="ivu-btn-small ivu-btn ivu-btn-'+btn_color+'">'+data+'</span>';
+                                                document.getElementById(server_id+'_cpu_usage').innerHTML = t_html;
+                                            }
+                                            if (a['memory']) {
+                                                var value = a['memory']['percent'];
+                                                var data = value+"%";
+                                                var btn_color = configBackgroud(value);
+                                                var t_html = '<span onclick="view_trans(4)" class="ivu-btn-small ivu-btn ivu-btn-'+btn_color+'">'+data+'</span>';
+                                                document.getElementById(server_id+'_memory_usage').innerHTML = t_html;
+                                            }
+                                            if (a['disk']) {
+                                                var value = a['disk']['usage'];
+                                                var data = value+"%";
+                                                var btn_color = configBackgroud(value);
+                                                var t_html = '<span class="ivu-btn-small ivu-btn ivu-btn-'+btn_color+'">'+data+'</span>';
+                                                document.getElementById(server_id+'_disk_usage').innerHTML = t_html;
+                                            }
+                                            var t_html = '<span class="blue">'+nMinutes+'分钟</span>';
+                                            document.getElementById(server_id+'_deviation').innerHTML = t_html;
+                                        } else {
+                                            document.getElementById(server_id+'_status_1').innerHTML = '<span class="disable_span"><i></i><span class="red" title="'+nMinutes+'分钟未收到监控信息">已断开</span></span>';
+                                        }
+                                    } else {
+                                        document.getElementById(server_id+'_status_1').innerHTML = '<span style="color: #999">监控未启动</span>';
+                                    }
+                                }
+                                for (v in $('.table_monitor_loadding')) {
+                                    try{
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>无数据</span>";
+                                        }
+                                    }catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            error: function(result){
+                                MyMessage(0, '连接Redis失败！');
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>连接Redis失败</span>";
+                                        }
+                                    }catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            complete: function (XMLHttpRequest,status) {
+                                if(status == 'timeout') {
+                                    xhr.abort();    // 超时后中断请求
+                                    MyMessage(0, '连接Redis超时！');
+                                    for (v in $('.table_monitor_loadding')) {
+                                        try {
+                                            if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                                $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>请求超时</span>";
+                                            }
+                                        } catch (err) {
+                                            continue
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        return res
+                    },
+                    columns: view_list_0
+                });
+            } else if (view == 2) {
+                $('#table').bootstrapTable('refreshOptions', {
+                    responseHandler: function (res) {
+                        res['total'] = res['count'];
+                        var server_id_list = [];
+                        for (i in res['results']) {
+                            server_id_list.push(res['results'][i]['server_id']);
+                        }
+                        $.ajax({
+                            url: '/opscenter/get_io_info',
+                            data: {'key': server_id_list, 'hour': 24, 'class': 'net'},
+                            timeout: 30000,
+                            type: 'post',
+                            success: function(result) {
+                                var n_list = ['now_in', 'max_in', 'av_in', 'now_out', 'max_out', 'av_out'];
+                                for (i in res['results']) {
+                                    var server_id = res['results'][i]['server_id'];
+                                    if (result['result'][server_id]) {
+                                        var nMinutes = minutesBetween(result['result'][server_id]['now_time'], 'now');
+                                        if (nMinutes <= 5) {
+                                            document.getElementById(server_id + '_status_1').innerHTML = '<span class="running_span"><i></i><span style="color: #090">运行中</span></span>';
+                                        } else {
+                                            document.getElementById(server_id+'_status_1').innerHTML = '<span class="disable_span"><i></i><span class="red" title="'+nMinutes+'分钟未收到监控信息">已断开</span></span>';
+                                        }
+                                        for (v in n_list) {
+                                            if (n_list[v] === 'now_in' || n_list[v] === 'now_out'){
+                                                if (nMinutes > 5) {
+                                                    continue
+                                                }
+                                            }
+                                            var value = result['result'][server_id][n_list[v]];
+                                            var data = value + "KB/s";
+                                            var btn_color = configBackgroud(value, warning = 10000, error = 50000);
+                                            var t_html = '<span class="ivu-btn-small ivu-btn ivu-btn-' + btn_color + '">' + data + '</span>';
+                                            document.getElementById(server_id + '_' + n_list[v]).innerHTML = t_html;
+                                        }
+                                    } else {
+                                        document.getElementById(server_id+'_status_1').innerHTML = '<span style="color: #999">监控未启动</span>';
+                                    }
+                                }
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>无数据</span>";
+                                        }
+                                    } catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            error: function(result){
+                                MyMessage(0, '连接Redis失败！');
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>连接Redis失败</span>";
+                                        }
+                                    } catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            complete: function (XMLHttpRequest,status) {
+                                if(status == 'timeout') {
+                                    xhr.abort();    // 超时后中断请求
+                                    MyMessage(0, '连接Redis超时！');
+                                    for (v in $('.table_monitor_loadding')) {
+                                        try {
+                                            if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                                $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>请求超时</span>";
+                                            }
+                                        } catch(err){
+                                            continue
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        return res
+                    },
+                    columns: view_list_2
+                })
+            } else if (view == 3) {
+                $('#table').bootstrapTable('refreshOptions', {
+                    responseHandler: function (res) {
+                        res['total'] = res['count'];
+                        var server_id_list = [];
+                        for (i in res['results']) {
+                            server_id_list.push(res['results'][i]['server_id']);
+                        }
+                        $.ajax({
+                            url: '/opscenter/get_classify_info',
+                            data: {'key': server_id_list, 'hour': 24, 'class': 'cpu'},
+                            timeout: 30000,
+                            type: 'post',
+                            success: function(result) {
+                                var n_list = ['now', 'max', 'min', 'av'];
+                                for (i in res['results']) {
+                                    var server_id = res['results'][i]['server_id'];
+                                    if (result['result'][server_id]) {
+                                        var nMinutes = minutesBetween(result['result'][server_id]['now_time'], 'now');
+                                        if (nMinutes <= 5) {
+                                            document.getElementById(server_id + '_status_1').innerHTML = '<span class="running_span"><i></i><span style="color: #090">运行中</span></span>';
+                                        } else {
+                                            document.getElementById(server_id+'_status_1').innerHTML = '<span class="disable_span"><i></i><span class="red" title="'+nMinutes+'分钟未收到监控信息">已断开</span></span>';
+                                        }
+                                        for (v in n_list) {
+                                            if (n_list[v] === 'now'){
+                                                if (nMinutes > 5) {
+                                                    continue
+                                                }
+                                            }
+                                            var value = result['result'][server_id][n_list[v]];
+                                            var data = value + "%";
+                                            var btn_color = configBackgroud(value);
+                                            var t_html = '<span class="ivu-btn-small ivu-btn ivu-btn-' + btn_color + '">' + data + '</span>';
+                                            document.getElementById(server_id + '_' + n_list[v]).innerHTML = t_html;
+                                        }
+                                    } else {
+                                        document.getElementById(server_id+'_status_1').innerHTML = '<span style="color: #999">监控未启动</span>';
+                                    }
+                                }
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>无数据</span>";
+                                        }
+                                    } catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            error: function(result){
+                                MyMessage(0, '连接Redis失败！');
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>连接Redis失败</span>";
+                                        }
+                                    } catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            complete: function (XMLHttpRequest,status) {
+                                if(status == 'timeout') {
+                                    xhr.abort();    // 超时后中断请求
+                                    MyMessage(0, '连接Redis超时！');
+                                    for (v in $('.table_monitor_loadding')) {
+                                        try {
+                                            if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                                $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>请求超时</span>";
+                                            }
+                                        } catch(err){
+                                            continue
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        return res
+                    },
+                    columns: view_list_1
+                })
+            } else if (view == 4) {
+                $('#table').bootstrapTable('refreshOptions', {
+                    responseHandler: function (res) {
+                        res['total'] = res['count'];
+                        var server_id_list = [];
+                        for (i in res['results']) {
+                            server_id_list.push(res['results'][i]['server_id']);
+                        }
+                        $.ajax({
+                            url: '/opscenter/get_classify_info',
+                            data: {'key': server_id_list, 'hour': 24, 'class': 'memory'},
+                            timeout: 30000,
+                            type: 'post',
+                            success: function(result) {
+                                var n_list = ['now', 'max', 'min', 'av'];
+                                for (i in res['results']) {
+                                    var server_id = res['results'][i]['server_id'];
+                                    if (result['result'][server_id]) {
+                                        var nMinutes = minutesBetween(result['result'][server_id]['now_time'], 'now');
+                                        if (nMinutes <= 5) {
+                                            document.getElementById(server_id + '_status_1').innerHTML = '<span class="running_span"><i></i><span style="color: #090">运行中</span></span>';
+                                        } else {
+                                            document.getElementById(server_id+'_status_1').innerHTML = '<span class="disable_span"><i></i><span class="red" title="'+nMinutes+'分钟未收到监控信息">已断开</span></span>';
+                                        }
+                                        for (v in n_list) {
+                                            if (n_list[v] === 'now'){
+                                                if (nMinutes > 5) {
+                                                    continue
+                                                }
+                                            }
+                                            var value = result['result'][server_id][n_list[v]];
+                                            var data = value + "%";
+                                            var btn_color = configBackgroud(value);
+                                            var t_html = '<span class="ivu-btn-small ivu-btn ivu-btn-' + btn_color + '">' + data + '</span>';
+                                            document.getElementById(server_id + '_' + n_list[v]).innerHTML = t_html;
+                                        }
+                                    } else {
+                                        document.getElementById(server_id+'_status_1').innerHTML = '<span style="color: #999">监控未启动</span>';
+                                    }
+                                }
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>无数据</span>";
+                                        }
+                                    }catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            error: function(result){
+                                MyMessage(0, '连接Redis失败！');
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>连接Redis失败</span>";
+                                        }
+                                    }catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            complete: function (XMLHttpRequest,status) {
+                                if(status == 'timeout') {
+                                    xhr.abort();    // 超时后中断请求
+                                    MyMessage(0, '连接Redis超时！');
+                                    for (v in $('.table_monitor_loadding')) {
+                                        try {
+                                            if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                                $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>请求超时</span>";
+                                            }
+                                        }catch(err){
+                                            continue
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        return res
+                    },
+                    columns: view_list_1
+                })
+            } else if (view == 5){
+                $('#table').bootstrapTable('refreshOptions', {
+                    responseHandler: function (res) {
+                        res['total'] = res['count'];
+                        var server_id_list = [];
+                        for (i in res['results']) {
+                            server_id_list.push(res['results'][i]['server_id']);
+                        }
+                        $.ajax({
+                            url: '/opscenter/get_io_info',
+                            data: {'key': server_id_list, 'hour': 24, 'class': 'disk'},
+                            timeout: 30000,
+                            type: 'post',
+                            success: function(result) {
+                                var n_list = ['now_iops', 'max_iops', 'av_iops', 'now_bytes', 'max_bytes', 'av_bytes'];
+                                for (i in res['results']) {
+                                    var server_id = res['results'][i]['server_id'];
+                                    if (result['result'][server_id]) {
+                                        var nMinutes = minutesBetween(result['result'][server_id]['now_time'], 'now');
+                                        if (nMinutes <= 5) {
+                                            document.getElementById(server_id + '_status_1').innerHTML = '<span class="running_span"><i></i><span style="color: #090">运行中</span></span>';
+                                        } else {
+                                            document.getElementById(server_id+'_status_1').innerHTML = '<span class="disable_span"><i></i><span class="red" title="'+nMinutes+'分钟未收到监控信息">已断开</span></span>';
+                                        }
+                                        for (v in n_list) {
+                                            if (n_list[v] === 'now_iops' || n_list[v] === 'now_bytes'){
+                                                if (nMinutes > 5) {
+                                                    continue
+                                                }
+                                            }
+                                            var value_read = result['result'][server_id][n_list[v]+"_read"];
+                                            var btn_color_read = configBackgroud(value_read, warning=10000, error=50000);
+                                            var value_write = result['result'][server_id][n_list[v]+"_write"];
+                                            var btn_color_write = configBackgroud(value_write, warning=10000, error=50000);
+                                            var t_html = '<span class="ivu-btn-small ivu-btn ivu-btn-' + btn_color_read + '">' + value_read + '</span>'+
+                                            ' / <span class="ivu-btn-small ivu-btn ivu-btn-' + btn_color_write + '">' + value_write + '</span>';
+                                            document.getElementById(server_id + '_' + n_list[v]).innerHTML = t_html;
+                                        }
+                                    } else {
+                                        document.getElementById(server_id+'_status_1').innerHTML = '<span style="color: #999">监控未启动</span>';
+                                    }
+                                }
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>无数据</span>";
+                                        }
+                                    }catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            error: function(result){
+                                MyMessage(0, '连接Redis失败！');
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>连接Redis失败</span>";
+                                        }
+                                    }catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            complete: function (XMLHttpRequest,status) {
+                                if(status == 'timeout') {
+                                    xhr.abort();    // 超时后中断请求
+                                    MyMessage(0, '连接Redis超时！');
+                                    for (v in $('.table_monitor_loadding')) {
+                                        try {
+                                            if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                                $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>请求超时</span>";
+                                            }
+                                        }catch(err){
+                                            continue
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        return res
+                    },
+                    columns: view_list_3
+                })
+            } else if (view == 6) {
+                $('#table').bootstrapTable('refreshOptions', {
+                    responseHandler: function (res) {
+                        res['total'] = res['count'];
+                        var server_id_list = [];
+                        for (i in res['results']) {
+                            server_id_list.push(res['results'][i]['server_id']);
+                        }
+                        $.ajax({
+                            url: '/opscenter/get_system_pids',
+                            data: {'key': server_id_list, 'hour': 24, 'class': 'pids'},
+                            timeout: 30000,
+                            type: 'post',
+                            success: function (result) {
+                                var n_list = ['now', 'max', 'min', 'av'];
+                                for (i in res['results']) {
+                                    var server_id = res['results'][i]['server_id'];
+                                    if (result['result'][server_id]) {
+                                        var nMinutes = minutesBetween(result['result'][server_id]['now_time'], 'now');
+                                        if (nMinutes <= 5) {
+                                            document.getElementById(server_id + '_status_1').innerHTML = '<span class="running_span"><i></i><span style="color: #090">运行中</span></span>';
+                                        } else {
+                                            document.getElementById(server_id+'_status_1').innerHTML = '<span class="disable_span"><i></i><span class="red" title="'+nMinutes+'分钟未收到监控信息">已断开</span></span>';
+                                        }
+                                        for (v in n_list) {
+                                            if (n_list[v] === 'now'){
+                                                if (nMinutes > 5) {
+                                                    continue
+                                                }
+                                            }
+                                            var value = result['result'][server_id][n_list[v]];
+                                            var btn_color = configBackgroud(value, warning = 500, error = 800);
+                                            var t_html = '<span class="ivu-btn-small ivu-btn ivu-btn-' + btn_color + '">' + value + '</span>';
+                                            document.getElementById(server_id + '_' + n_list[v]).innerHTML = t_html;
+                                        }
+                                    } else {
+                                        document.getElementById(server_id+'_status_1').innerHTML = '<span style="color: #999">监控未启动</span>';
+                                    }
+                                }
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>无数据</span>";
+                                        }
+                                    }catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            error: function (result) {
+                                MyMessage(0, '连接Redis失败！');
+                                for (v in $('.table_monitor_loadding')) {
+                                    try {
+                                        if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                            $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>连接Redis失败</span>";
+                                        }
+                                    }catch(err){
+                                        continue
+                                    }
+                                }
+                            },
+                            complete: function (XMLHttpRequest, status) {
+                                if (status == 'timeout') {
+                                    xhr.abort();    // 超时后中断请求
+                                    MyMessage(0, '连接Redis超时！');
+                                    for (v in $('.table_monitor_loadding')) {
+                                        try {
+                                            if (($('.table_monitor_loadding')[v].innerHTML).search('<img src="/static/images/loadding-n.gif"') != -1) {
+                                                $('.table_monitor_loadding')[v].innerHTML = "<span class='table_non_data_class'>请求超时</span>";
+                                            }
+                                        }catch(err){
+                                            continue
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        return res
+                    },
+                    columns: view_list_4
+                })
+            }
+        }
+        function configBackgroud(value, warning=70, error=90){
+            var btn_color = 'success';
+            if (value > error){
+                btn_color = 'error'
+            }else if (value > warning){
+                btn_color = 'warning'
+            }
+            return btn_color
+        }
+    </script>
+{% endblock %}

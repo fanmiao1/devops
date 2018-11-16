@@ -1,0 +1,155 @@
+{% load staticfiles %}
+<script src="{%static 'js/jquery-3.0.0.min.js' %}"></script>
+<link href="{% static 'css/bootstrap-table.min.css' %}" rel="stylesheet">
+<link href="{% static 'vendors/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+<link href="{% static 'css/prism-coy.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'jedate/jedate.css' %}" rel="stylesheet" />
+<link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+<style type="text/css">
+    #select_exec_type_id .active, #select_status_id .active, #server_type_id .active {
+        background: #2d8cf0;
+        color: #333;
+    }
+    .ivu-btn, .modal-content, .panel, .panel-heading {
+        border-radius:0;
+    }
+    .radiocheck {
+        margin-bottom: 5px;
+    }
+    #bootstrap-cron-div-id .row, #myTabContent {
+        margin-top: 5px;
+    }
+    #table .running_span i {
+        background-position: -61px -4px;
+    }
+    #table .disable_span i {
+        background-position: -61px -28px;
+    }
+    #table i {
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        vertical-align: middle;
+        border-radius: 16px;
+        margin-top: -1px;
+        background-repeat: no-repeat;
+        background-image: url("{% static 'images/ecs-icons.png' %}");
+        margin-right: 5px;
+    }
+    pre {
+        /*outline: 1px solid #ccc; */
+        padding: 5px; margin: 5px; 
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+</style>
+<table id="behavior_table"></table>
+<script src="{% static 'js/aukeyops/currency.js' %}"></script>
+{#<script src="{%static 'js/prism-coy.js' %}"></script>#}
+<script src="{%static 'bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{%static 'bootstrap/js/bootstrap-table.js' %}"></script>
+<script src="{% static 'vuejs/vue.min.js' %}"></script>
+<script src="{% static 'vuejs/iview.min.js' %}"></script>
+<script type="text/javascript">
+    function initTable() {
+        $('#behavior_table').bootstrapTable({
+            method: "get",  //使用post请求到服务器获取数据
+            contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+            dataType: "json",
+            cache: false,
+            url:'/opscenter/ssh_log_add/?host={{ id }}',
+            toolbar: '#toolbar',//指定工具栏
+            striped: true,  //表格显示条纹
+            dataField: "results",
+            pagination: false, //启动分页
+            sortable: true,  //启用排序
+            pageSize: 15,  //每页显示的记录数
+            pageNumber:1, //当前第几页
+            pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+            searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+            searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+            showExport: false,//显示导出按钮
+            singleSelect: true,
+            exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+            sidePagination: "server", //表示服务端请求
+            queryParamsType : "undefined",
+            clickToSelect: true,//是否启用点击选中行
+            responseHandler: function (res) {
+                res['total'] = res['count'];
+                return res
+            },
+            columns:[
+                {
+                    title:'用户',
+                    field:'user',
+                    align:'center',
+                    sortable:true,
+                    formatter:function(value,row){
+                        var d = '';
+                        if (row.user) {
+                            d = value.last_name+value.first_name+' - '+ value.username;
+                        }
+                        return d
+                    }
+                },
+                {
+                    title:'实例',
+                    field:'host',
+                    align:'center',
+                    sortable:true,
+                    formatter:function(value){
+                        if (value.public_ip) {
+                            var ip = '「'+value.public_ip+'」'
+                        } else {
+                            var ip = ''
+                        }
+                        if (value){
+                            return '<a href="/opscenter/server_detail/'+value.id+'/" style="color:#337ab7">'+value.name + ip+'</a>'
+                        } else {
+                            return value
+                        }
+                    }
+                },
+                {
+                    title:'时间',
+                    field:'time',
+                    align:'center',
+                    sortable:true,
+                    formatter:function(value,row){
+                        var d = '';
+                        if (value) {
+                            d =  new Date(value).toLocaleString();
+                        }
+                        return d
+                    }
+                },
+                {
+                    title:'操作记录',
+                    field:'operation_record',
+                    align:'center',
+                    sortable:true,
+                    formatter: function(value){
+                        var html = '<pre><code>'+value+'</code></pre>';
+                        return html
+                    }
+                }
+            ],
+            queryParams: function queryParams(params) {   //设置查询参数
+                if (params.sortOrder == 'desc') {
+                    params.sortName = '-'+params.sortName
+                }
+                var param = {
+                    page: params.pageNumber,
+                    size: params.pageSize,
+                    ordering:params.sortName
+                };
+                return param;
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        //调用函数，初始化表格
+        initTable();
+    });
+</script>

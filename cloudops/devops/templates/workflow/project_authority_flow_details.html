@@ -1,0 +1,262 @@
+{% extends 'detail.html' %}
+{% load staticfiles %}
+{% block page_title %}业务用户权限变更{% endblock %}
+{% block table_title %}详情{% endblock %}
+{% block detial_title %}详情{% endblock %}
+{% block detail_info %}
+    <table class="table">
+      <tbody>
+      {% for line in list %}
+        <tr>
+          <th style="width:20%">申请人:</th>
+          <td>
+            {% if line.applicant.last_name or line.applicant.first_name %}
+                {{ line.applicant.last_name }}{{ line.applicant.first_name }}
+            {% else %}
+                {{ line.applicant }}
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>项目:</th>
+          <td>{{ line.project }}</td>
+        </tr>
+        <tr>
+          <th>部门:</th>
+          <td>{{ line.department }}</td>
+        </tr>
+        <tr>
+          <th>部门负责人:</th>
+          <td>{{ line.department.depart_director}}</td>
+        </tr>
+        <tr>
+          <th>修改的用户:</th>
+          <td>{{ line.modify_user }}</td>
+        </tr>
+        <tr>
+          <th>修改的权限:</th>
+          <td><input type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#myModal" value="查看修改的权限"></td>
+        </tr>
+        <tr>
+          <th>描述:</th>
+          <td><div id="desc_maxlenght" style="word-break: break-all;">{% autoescape off %}{{ line.describe }}{% endautoescape %}</div></td>
+        </tr>
+        <tr>
+          <th>申请时间:</th>
+          <td>{{ line.applicationtime | date:"Y-m-d H:i:s" }}</td>
+        </tr>
+        <tr>
+          <th>执行时间:</th>
+          <td>{{ line.execute_time | date:"Y-m-d H:i:s" }}</td>
+        </tr>
+        <tr>
+          <th>状态:</th>
+          <td>
+              {% if line.get_status_display == '执行完成' %}
+              <span class="btn btn-xs" style="background:#5CB85C;color:#FFFFFF;">{{ line.get_status_display }}</span>
+              {% elif line.get_status_display == '待执行' %}
+              <span class="btn btn-xs" style="background:#5bc0de;color:#FFFFFF;">{{ line.get_status_display }}</span>
+              {% elif line.get_status_display == '待审批' %}
+              <span class="btn btn-xs" style="background:#5bc0de;color:#FFFFFF;">{{ line.get_status_display }}</span>
+              {% elif line.get_status_display == '不通过' %}
+              <span class="btn btn-xs" style="background:#ff4850;color:#FFFFFF;">{{ line.get_status_display }}</span>
+              {% else %}
+              <span>{{ line.get_status_display }}</span>
+              {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+{% endblock %}
+{% block ystep %}
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        {% for line in list %}
+        {% if line.status != 0 %}
+        <div class="x_panel">
+          <div class="x_title">
+              <h2>流程</h2>
+            <ul class="nav navbar-right panel_toolbox">
+              <!-- <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+              </li>
+              <li><a class="close-link"><i class="fa fa-close"></i></a>
+              </li> -->
+            </ul>
+            <div class="clearfix"></div>
+          </div>
+          <div class="x_content">
+            <div class="ystep1"></div>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        <!-- 审批按钮 -->
+        <div class="approval">
+            {% for line in list %}
+            {% if line.status == 1 %}
+            <a href="/flow/project_authority_manage/project_manager_project_authority_approval/{{ line.id }}_2" style="color: inherit"><button type="button" class="btn btn-success"> 部门负责人审批通过 </button></a>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModal_reject"> 驳回 </button>
+            {% endif %}
+            {% if line.status == 2 %}
+            <a href="/flow/project_authority_manage/project_authority_implement/{{ line.id }}_3" style="color: inherit"><button type="button" class="btn btn-primary" style="width: 130px;"> 执行权限变更 </button></a>
+            {% endif %}
+            {% endfor %}
+            <a href="{% url 'project_authority_manage' %}"><button type="button" class="btn btn-default"> 返回 </button></a>
+        </div>
+        <!-- ./approval -->
+    </div>
+    <!-- 驳回意见 模态框（Modal） -->
+    <div class="modal fade" id="myModal_reject" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width: 900px;z-index:2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel">驳回意见</h4>
+                </div>
+                    {% for line in list %}
+                    <form method="get" action="/flow/project_authority_manage/project_manager_project_authority_approval/{{ line.id }}_0">
+                    {% endfor %}
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <textarea class="form-control" id="reject_comment" name="reject_comment"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        <button name="submit" type="submit" class="btn btn-primary"> 提交 </button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div><!-- 模态框 -->
+
+    <!-- 查看修改的权限 模态框（Modal） -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index:2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">修改的权限</h4>
+                </div>
+                <div class="modal-body">
+                {% if increase_authority %}
+                    <ul class="list-group">
+                        <a class="list-group-item active" style="background-color: #428bca;border:1px solid #428bca">
+                            增加权限
+                        </a>
+                        {% for auth_name in increase_authority %}
+                            <li class="list-group-item">{{ auth_name }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if reduce_authority %}
+                    <ul class="list-group">
+                        <a class="list-group-item active" style="background-color: #ff7978;border:1px solid #ff7978">
+                            删除权限
+                        </a>
+                        {% for auth_name in reduce_authority %}
+                            <li class="list-group-item">{{ auth_name }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                    <ul class="list-group">
+                        <a class="list-group-item active">
+                            {% for line in list %}
+                            修改后 {{ line.modify_user }} 的权限列表
+                            {% endfor %}
+                        </a>
+                        {% for auth_name in new_authority %}
+                            <li class="list-group-item">{{ auth_name }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+{% endblock %}
+{% block ext_script_add %}
+    <!-- Detail-->
+    <script src="{% static 'js/aukeyops/detail.js' %}"></script>
+    <script src="{% static 'js/postbird-img-glass.min.js' %}"></script>
+    <script>
+    PostbirdImgGlass.init({
+        domSelector:"img",
+        animation:true
+    });
+    </script>
+    <script>
+        $("#flow").css("display","block");
+        $("#project_authority_manage").addClass('current-page');
+        function send_comment(){
+            $("#comment_form").val($("#editor").html());
+        }
+        $(".ystep1").loadStep({
+            //ystep的外观大小
+            //可选值：small,large
+            size: "small",
+            //ystep配色方案
+            //可选值：green,blue
+            color: "green",
+            //ystep中包含的步骤
+            steps: [{
+                //步骤名称
+                title: "申请",
+                //步骤内容(鼠标移动到本步骤节点时，会提示该内容)
+                content: "申请用户权限"
+            },{
+                title: "等待审批",
+                content: "等待项目经理审批"
+            },{
+                title: "审批完成",
+                content: "审批完成"
+            },{
+                title: "待执行",
+                content: "等待执行权限变更"
+            },{
+                title: "已变更",
+                content: "变更完成"
+            }]
+        });
+        {% for line in list %}
+        {% if line.status == 1 %}
+            $(".ystep1").setStep(2);
+        {% elif line.status == 2 %}
+            $(".ystep1").setStep(4);
+        {% elif line.status == 3 %}
+            $(".ystep1").setStep(5);
+        {% endif %}
+        {% endfor %}
+        function DeleteComment(ID){
+            $.confirm({
+                title: '确定要删除这条记录吗？',
+                closeIcon: true,
+                confirmButtonClass:'btn-danger',
+                cancelButtonClass: 'btn-default ',
+                confirmButton: '删除!',
+                cancelButton: '取消',
+                confirm: function(){
+                    $.ajax({
+                        type: "get",
+                        url: "/flow/project_authority_manage/project_authority_details/delete_comment/"+ ID,
+                        dataType: "json",
+                        success: function(result) {
+                            if(result['result'] == 'true'){
+                                location.reload();
+                            }else{
+                                new PNotify({
+                                  title: 'ERROR',
+                                  text: '您没有权限删除这条记录!',
+                                  type: 'error',
+                                  styling: 'bootstrap3'
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+{% endblock %}

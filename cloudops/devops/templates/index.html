@@ -1,0 +1,602 @@
+{% extends 'main.html' %}
+{% load staticfiles %}
+{% block tinymce_js %}{% endblock %}
+{% block right_col %}
+    <!-- top tiles -->
+    <div class="row tile_count" style="margin-bottom: 0">
+        <div class="col-md-1 col-sm-2 col-xs-3 ">
+            <span class="count_top"><a href="{% url 'index' %}"><b>工作流</b></a></span>
+        </div>
+        <div class="col-md-1 col-sm-2 col-xs-3 ">
+            <span class="count_top"><a href="#"><b>工单系统</b></a></span>
+        </div>
+        <div class="col-md-1 col-sm-2 col-xs-3 ">
+            <span class="count_top"><a href="#"><b>业务运行状态</b></a></span>
+        </div>
+        <div class="col-md-1 col-sm-2 col-xs-3 ">
+            <span class="count_top"><a href="#"><b>固定资产统计</b></a></span>
+        </div>
+        <div class="col-md-1 col-sm-2 col-xs-3 ">
+            <span class="count_top"><a href="{% url 'show_db_monitor' %}"><b>数据库资源状态</b></a></span>
+        </div>
+        <div class="col-md-1 col-sm-2 col-xs-3 ">
+            <span class="count_top"><a href="#"><b>网络运行状态</b></a></span>
+        </div>
+        <div class="col-md-1 col-sm-2 col-xs-3 ">
+            <span class="count_top"><a href="#"><b>费用管理</b></a></span>
+        </div>
+        <div class="col-md-1 col-sm-2 col-xs-3 ">
+            <span class="count_top"><a href="#"><b>我的待办</b></a></span>
+        </div>
+    </div>
+    <div class="row tile_count" style="margin-bottom: 0">
+       <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+        <span class="count_top"><i class="fa fa-align-left"></i> 工作流总量</span>
+        <div class="count" id="top_five_id">{{ workflow_total_count }}</div>
+{#        <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>#}
+      </div>
+      <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+        <span class="count_top"><i class="fa fa-align-left"></i> 工单总量</span>
+        <div class="count" id="top_one_id">{{ worksheet_total_count }}</div>
+{#        <span class="count_bottom"><i class="green">4% </i> From last Week</span>#}
+      </div>
+      <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+        <span class="count_top"><i class="fa fa-align-left"></i> 工单解决量</span>
+        <div class="count" id="top_two_id">{{ worksheet_solve_count }}</div>
+{#        <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>3% </i> From last Week</span>#}
+      </div>
+      <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+        <span class="count_top"><i class="fa fa-align-left"></i>  工单关闭量</span>
+        <div class="count" id="top_three_id">{{ worksheet_close_count }}</div>
+{#        <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>#}
+      </div>
+      <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+        <span class="count_top"><i class="fa fa-align-left"></i> 平均响应时间 (小时)</span>
+        <div class="count" id="top_four_id">{{ worksheet_response_time_count }}</div>
+{#        <span class="count_bottom"><i class="red"><i class="fa fa-sort-desc"></i>12% </i> From last Week</span>#}
+      </div>
+      <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+        <span class="count_top"><i class="fa fa-align-left"></i> 平均解决时间 (小时)</span>
+        <div class="count" id="top_five_id">{{ worksheet_solve_time_count }}</div>
+{#        <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>#}
+      </div>
+    </div>
+    <div class="row" style="margin-bottom: 10px;" id="unread_impo_row_id">
+        <div class="col-md-4 col-sm-4 col-xs-12">
+          <div class="dashboard_graph">
+            <div class="row x_title">
+              <div class="col-md-12">
+                <h3><small>待办</small></h3>
+              </div>
+            </div>
+            <div class="col-md-12 col-sm-12 col-xs-12">
+              <div class="ivu-spin ivu-spin-fix" id="unread_impo_loading_id">
+                  <div class="ivu-spin-main">
+                    <span class="ivu-spin-dot"></span>
+                    <div class="ivu-spin-text"></div>
+                    <div>数据加载中</div>
+                  </div>
+              </div>
+              <div id="unread_impo" style="width: 100%;height: 300px;">
+                  <ul class="to_do roll is-loading" id="unread_impo_todo_id" style="max-height: 300px; overflow-y: auto"></ul>
+              </div>
+            </div>
+            <div class="clearfix"></div>
+          </div>
+        </div>
+        <div class="col-md-4 col-sm-4 col-xs-12">
+          <div class="dashboard_graph">
+            <div class="row x_title">
+              <div class="col-md-12">
+                <h3><small>我最近的申请记录</small></h3>
+              </div>
+            </div>
+            <div class="col-md-12 col-sm-12 col-xs-12">
+              <div class="ivu-spin ivu-spin-fix" id="my_app_record_divid_loading_id">
+                  <div class="ivu-spin-main">
+                    <span class="ivu-spin-dot"></span>
+                    <div class="ivu-spin-text"></div>
+                    <div>数据加载中</div>
+                  </div>
+              </div>
+              <div id="my_app_record_divid" style="width: 100%;height: 300px;">
+                  <ul class="to_do" id="my_app_record_ulid"></ul>
+              </div>
+            </div>
+            <div class="clearfix"></div>
+          </div>
+        </div>
+        <div class="col-md-4 col-sm-4 col-xs-12">
+          <div class="dashboard_graph">
+            <div class="row x_title">
+              <div class="col-md-12">
+                <h3><small>我要处理的工单</small></h3>
+              </div>
+            </div>
+            <div class="col-md-12 col-sm-12 col-xs-12">
+              <div class="ivu-spin ivu-spin-fix" id="my_pro_worksheet_divid_loading_id">
+                  <div class="ivu-spin-main">
+                    <span class="ivu-spin-dot"></span>
+                    <div class="ivu-spin-text"></div>
+                    <div>数据加载中</div>
+                  </div>
+              </div>
+              <div id="my_pro_worksheet_divid" style="width: 100%;height: 300px;">
+                  <ul class="to_do roll" id="my_pro_worksheet_ulid" style="max-height: 300px; overflow-y: auto"></ul>
+              </div>
+            </div>
+            <div class="clearfix"></div>
+          </div>
+        </div>
+    </div>
+    <!-- /top tiles -->
+    {% include 'echarts/worksheet_amount.html' %}
+    {% include 'echarts/flow_amount.html' %}
+    <br />
+{% endblock %}
+{% block ext_script %}
+    <script src="{% static 'js/echarts/echarts.min.js' %}"></script>
+    <script src="{% static 'js/echarts/wonderland.js' %}"></script>
+    <script src="{% static 'js/echarts/customed.js' %}"></script>
+    <script src="{% static 'js/echarts/macarons.js' %}"></script>
+    <script src="{% static 'js/echarts/westeros.js' %}"></script>
+    <!--未读的重要消息-->
+    <script type="text/javascript">
+        $.ajax({
+            type: "post",
+            url: "{% url 'get_wait_process_message' %}",
+            success: function(result) {
+                if (result['code'] == 0){
+                    document.getElementById("unread_impo_row_id").style.display= "none";
+                }else {
+                    if (result.result.length == 0){
+                        var aText = '<div style="height:100%;width:100%;text-align:center;padding-top:20%"><span style="font-size:25px;color:#999;opacity:0.3;-webkit-user-select:none;user-select:none;">暂无待办</span></div>';
+                        document.getElementById("unread_impo").innerHTML = aText;
+                        $('#unread_impo_loading_id').hide();
+                    }else {
+                        $.each(result.result, function (index, item) {
+                            if (item['type'] == '审批') {
+                                var the_color = '#D9534F';
+                            } else {
+                                var the_color = '#5B2C6F';
+                            }
+                            var aText = '<li><a href="' + item['url'] + '" style="display:block;">' + item['title'] + '<span class"label label-danger" style="float:right;color:' + the_color + '">' + item['type'] + '</span></a></li>';
+                            {#                        var aText = '<li><a href="' + item['url'] + '" style="display:block;">' + item['title'] + '</a></li>';#}
+                            var ahtml = document.getElementById("unread_impo_todo_id").innerHTML;
+                            document.getElementById("unread_impo_todo_id").innerHTML = ahtml + aText;
+                            $('#unread_impo_loading_id').hide();
+                        });
+                    }
+                    if (result.result2.length == 0){
+                        var bText = '<div style="height:100%;width:100%;text-align:center;padding-top:20%"><span style="font-size:25px;color:#999;opacity:0.3;-webkit-user-select:none;user-select:none;">暂无申请记录</span></div>';
+                        document.getElementById("my_app_record_divid").innerHTML = bText;
+                        $('#my_app_record_divid_loading_id').hide();
+                    }else {
+                        $.each(result.result2, function (index, item) {
+                            var bText = '<li><a href="' + item['url'] + '" style="display:block;">' + item['title'] + '<span class"label label-danger" style="float:right;">' + item['type'] + '</span></a></li>';
+                            var bhtml = document.getElementById("my_app_record_ulid").innerHTML;
+                            document.getElementById("my_app_record_ulid").innerHTML = bhtml + bText;
+                            $('#my_app_record_divid_loading_id').hide();
+                        });
+                    }
+                    if (result.result3.length == 0){
+                        var cText = '<div style="height:100%;width:100%;text-align:center;padding-top:20%"><span style="font-size:25px;color:#999;opacity:0.3;-webkit-user-select:none;user-select:none;">暂无需要处理的工单</span></div>';
+                        document.getElementById("my_pro_worksheet_divid").innerHTML = cText;
+                        $('#my_pro_worksheet_divid_loading_id').hide();
+                    }else {
+                        $.each(result.result3, function (index, item) {
+                            var cText = '<li><a href="' + item['url'] + '" style="display:block;"><span>' + item['title'] + '</span></a></li>';
+                            var chtml = document.getElementById("my_pro_worksheet_ulid").innerHTML;
+                            document.getElementById("my_pro_worksheet_ulid").innerHTML = chtml + cText;
+                            $('#my_pro_worksheet_divid_loading_id').hide();
+                        });
+                    }
+                }
+            }
+        })
+    </script>
+
+    <!--工作流统计-->
+    <script type="text/javascript">
+      var flow_amount_line = echarts.init(document.getElementById('flow_amount_line'), 'wonderland');
+      function get_flow_count(start,end) {
+          $.ajax({
+              type: "post",
+              url: "{% url 'get_flow_amount' %}",
+              dataType: "json",
+              data: {'startdate':start,'enddate':end},
+              success: function(result) {
+                  var flow_date = [];
+                  var flow_count_data = [];
+                  flow_date.push(result.date_list);
+                  flow_count_data.push(result.flow_count);
+                  $("#through_flow").html("( "+ result.through_count +" )");
+                  $("#no_approval_flow").html("( "+ result.no_approval_count +" )");
+                  $("#no_through_flow").html("( "+ result.no_through_count +" )");
+                  // $('#through_flow_count_id').attr('data-transitiongoal', percent).progressbar({ display_text: 'fill' });
+                  var through_flow_count = Math.round(result.through_count/result.all_count*100);
+                  if (!through_flow_count){
+                    through_flow_count = 0
+                  }
+                  var no_approval_flow_count = Math.round(result.no_approval_count/result.all_count*100);
+                  if (!no_approval_flow_count){
+                    no_approval_flow_count = 0
+                  }
+                  var no_through_flow_count = Math.round(result.no_through_count/result.all_count*100);
+                  if (!no_through_flow_count){
+                    no_through_flow_count = 0
+                  }
+                  $('#through_flow_count_id').attr('data-transitiongoal', through_flow_count).progressbar();
+                  $('#no_approval_flow_count_id').attr('data-transitiongoal', no_approval_flow_count).progressbar();
+                  $('#no_through_flow_count_id').attr('data-transitiongoal', no_through_flow_count).progressbar();
+                  flow_amount_line_option = {
+                  tooltip : {
+                      trigger: 'axis',
+                      position:function(p){   //其中p为当前鼠标的位置
+                          return [p[0] + 10, p[1] - 10];
+                      }
+                  },
+                  legend: {
+                      data:['工作流数量']
+                  },
+                  xAxis: {
+                      type: 'category',
+                      data: eval(flow_date[0]),
+                      axisLine:{
+                          lineStyle:{
+                              color:'#000000'
+                          }
+                      }
+                  },
+                  yAxis: {
+                      type: 'value',
+                      axisLine:{
+                          lineStyle:{
+                              color:'#000000'
+                          }
+                      }
+                  },
+                  series: [{
+                      name: '工作流数量',
+                      data: eval(flow_count_data[0]),
+                      type: 'line',
+                      smooth: true,
+                      itemStyle: { normal: {label : {show: true}}}
+                  }]
+              };
+                  flow_amount_line.setOption(flow_amount_line_option);
+              }
+          });
+      }
+      window.addEventListener("resize",function(){
+          flow_amount_line.resize();
+      });
+      $(document).ready(function (){
+        get_flow_count(moment().subtract(7 ,'days').format('YYYY-MM-DD'),moment().format('YYYY-MM-DD'))
+      });
+      $(document).ready(function (){
+          //时间插件
+          $('#reportrange span').html(moment().subtract(7 ,'days').format('YYYY-MM-DD') + ' ~ ' + moment().format('YYYY-MM-DD'));
+
+          $('#reportrange').daterangepicker({
+              startDate: moment().startOf('day'),
+              endDate: moment(),
+              minDate: '01/01/2017',    //最小时间
+              maxDate : moment(), //最大时间
+              dateLimit : {
+                  days : 30
+              }, //起止时间的最大间隔
+              showDropdowns : true,
+              showWeekNumbers : false, //是否显示第几周
+              timePicker : false, //是否显示小时和分钟
+              timePickerIncrement : 1440, //时间的增量，单位为分钟
+              timePicker12Hour : false, //是否使用12小时制来显示时间
+              ranges : {
+                  //'最近1小时': [moment().subtract(1,'hours'), moment()],
+                  '今日': [moment().startOf('day'), moment()],
+                  '昨日': [moment().subtract(1,'days').startOf('day'), moment().subtract(1,'days').endOf('day')],
+                  '最近7日': [moment().subtract(6,'days'), moment()],
+                  '最近30日': [moment().subtract(29,'days'), moment()]
+              },
+              opens : 'left', //日期选择框的弹出位置
+              buttonClasses : [ 'btn btn-default' ],
+              applyClass : 'btn-small btn-primary',
+              cancelClass : 'btn-small',
+              format : 'YYYY-MM-DD', //控件中from和to 显示的日期格式
+              separator : ' to ',
+              locale : {
+                  applyLabel : '确定',
+                  cancelLabel : '取消',
+                  fromLabel : '起始时间',
+                  toLabel : '结束时间',
+                  customRangeLabel : '自定义',
+                  daysOfWeek : [ '日', '一', '二', '三', '四', '五', '六' ],
+                  monthNames : [ '一月', '二月', '三月', '四月', '五月', '六月',
+                          '七月', '八月', '九月', '十月', '十一月', '十二月' ],
+                  firstDay : 1
+              }
+          },
+          function(start, end, label) {//格式化日期显示框
+              $('#reportrange span').html(start.format('YYYY-MM-DD') + ' ~ ' + end.format('YYYY-MM-DD'));
+              get_flow_count(start.format('YYYY-MM-DD'),end.format('YYYY-MM-DD'))
+          });
+      })
+  </script>
+
+    <!--工单统计-->
+    <script type="text/javascript">
+      var worksheet_line = echarts.init(document.getElementById('worksheet_line'), 'wonderland');
+      var worksheet_type_pie = echarts.init(document.getElementById('worksheet_type_pie'), 'wonderland');
+      var worksheet_source_pie = echarts.init(document.getElementById('worksheet_source_pie'), 'wonderland');
+      function get_worksheet_count(start,end) {
+          $.ajax({
+              type: "post",
+              url: "{% url 'get_worksheet_amount' %}",
+              dataType: "json",
+              data: {'start_date':start,'end_date':end},
+              success: function(result) {
+                var ws_date = [];
+                var day_count_data = [];
+                ws_date.push(result.date_list);
+                day_count_data.push(result.day_count_list);
+
+                // 工单响应时间统计
+                $("#response_average").html(result.response_time_count.average);
+                $("#response_one_hours").html("( "+ result.response_time_count.one_hours +" )");
+                $("#response_one_to_eight_hours").html("( "+ result.response_time_count.one_to_eight_hours +" )");
+                $("#response_eight_to_one_day").html("( "+ result.response_time_count.eight_to_one_day +" )");
+                $("#response_more_than_one_day").html("( "+ result.response_time_count.more_than_one_day +" )");
+                var response_one_hours = Math.round(result.response_time_count.one_hours/result.total_count*100);
+                if (!response_one_hours){response_one_hours = 0}
+                var response_one_to_eight_hours = Math.round(result.response_time_count.one_to_eight_hours/result.total_count*100);
+                if (!response_one_to_eight_hours){response_one_to_eight_hours = 0}
+                var response_eight_to_one_day = Math.round(result.response_time_count.eight_to_one_day/result.total_count*100);
+                if (!response_eight_to_one_day){response_eight_to_one_day = 0}
+                var response_more_than_one_day = Math.round(result.response_time_count.more_than_one_day/result.total_count*100);
+                if (!response_more_than_one_day){response_more_than_one_day = 0}
+
+                $('#response_one_hours_count_id').attr('data-transitiongoal', response_one_hours).progressbar();
+                $('#response_one_to_eight_hours_count_id').attr('data-transitiongoal', response_one_to_eight_hours).progressbar();
+                $('#response_eight_to_one_day_count_id').attr('data-transitiongoal', response_eight_to_one_day).progressbar();
+                $('#response_more_than_one_day_count_id').attr('data-transitiongoal', response_more_than_one_day).progressbar();
+
+                // 工单解决时间统计
+                $("#solve_average").html(result.solve_time_count.average);
+                $("#solve_one_hours").html("( "+ result.solve_time_count.one_hours +" )");
+                $("#solve_one_to_eight_hours").html("( "+ result.solve_time_count.one_to_eight_hours +" )");
+                $("#solve_eight_to_one_day").html("( "+ result.solve_time_count.eight_to_one_day +" )");
+                $("#solve_more_than_one_day").html("( "+ result.solve_time_count.more_than_one_day +" )");
+                //$('#through_flow_count_id').attr('data-transitiongoal', percent).progressbar({ display_text: 'fill' });
+                var solve_one_hours = Math.round(result.solve_time_count.one_hours/result.total_count*100);
+                if (!solve_one_hours){solve_one_hours = 0}
+                var solve_one_to_eight_hours = Math.round(result.solve_time_count.one_to_eight_hours/result.total_count*100);
+                if (!solve_one_to_eight_hours){solve_one_to_eight_hours = 0}
+                var solve_eight_to_one_day = Math.round(result.solve_time_count.eight_to_one_day/result.total_count*100);
+                if (!solve_eight_to_one_day){solve_eight_to_one_day = 0}
+                var solve_more_than_one_day = Math.round(result.solve_time_count.more_than_one_day/result.total_count*100);
+                if (!solve_more_than_one_day){solve_more_than_one_day = 0}
+
+                $('#solve_one_hours_count_id').attr('data-transitiongoal', solve_one_hours).progressbar();
+                $('#solve_one_to_eight_hours_count_id').attr('data-transitiongoal', solve_one_to_eight_hours).progressbar();
+                $('#solve_eight_to_one_day_count_id').attr('data-transitiongoal', solve_eight_to_one_day).progressbar();
+                $('#solve_more_than_one_day_count_id').attr('data-transitiongoal', solve_more_than_one_day).progressbar();
+
+                //工单数量统计折线图
+                worksheet_line_option = {
+                    tooltip : {
+                      trigger: 'axis',
+                      position:function(p){   //其中p为当前鼠标的位置
+                          return [p[0] + 10, p[1] - 10];
+                      }
+                    },
+                    legend: {
+                      data:['工单数量']
+                    },
+                    xAxis: {
+                      type: 'category',
+                      data: eval(ws_date[0]),
+                      axisLine:{
+                          lineStyle:{
+                              color:'#000000'
+                          }
+                      }
+                    },
+                    yAxis: {
+                      type: 'value',
+                      axisLine:{
+                          lineStyle:{
+                              color:'#000000'
+                          }
+                      }
+                    },
+                    series: [{
+                      name: '工单数量',
+                      data: eval(day_count_data[0]),
+                      type: 'line',
+                      smooth: true,
+                      itemStyle: { normal: {label : {show: true}}}
+                    }]
+                };
+                //工单类型统计图饼
+                var type_name_list = [];
+                var type_data_list = [];
+                for (var v in result.type_count){
+                    type_name_list.push(v);
+                    type_data_list.push({value:result.type_count[v], name:v})
+                }
+                type_option = {
+                    title : {
+                        x:'center'
+                    },
+                    tooltip : {
+                        trigger: 'item',
+                        formatter: "{a} <br/>{b} : {c} ({d}%)"
+                    },
+{#                    legend: {#}
+{#                        x : 'center',#}
+{#                        y : 'top',#}
+{#                        data: type_name_list#}
+{#                    },#}
+                    series : [
+                        {
+                            name: '类型',
+                            type: 'pie',
+                            radius : '55%',
+                            center: ['50%', '60%'],
+                            data: type_data_list,
+                            itemStyle: {
+                                emphasis: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            },
+                            label: {
+                                normal: {
+                                    formatter: '{b|{b}：}{c}  {per|{d}%}\n  ',
+                                    rich: {
+                                        a: {
+                                            color: '#999',
+                                            lineHeight: 15,
+                                            align: 'center'
+                                        },
+                                        b: {
+                                            fontSize: 12
+                                        },
+                                        per: {
+                                            color: '#eee',
+                                            backgroundColor: '#334455',
+                                            padding: [2, 4],
+                                            borderRadius: 2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                //工单来源统计图饼
+                var source_name_list = [];
+                var source_data_list = [];
+                for (var i in result.source_count){
+                    source_name_list.push(i);
+                    source_data_list.push({value:result.source_count[i], name:i})
+                }
+                source_option = {
+                    title : {
+                        text: '工单来源',
+                        x:'center'
+                    },
+                    tooltip : {
+                        trigger: 'item',
+                        formatter: "{a} <br/>{b} : {c} ({d}%)"
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        data: source_name_list
+                    },
+                    series : [
+                        {
+                            name: '工单来源',
+                            type: 'pie',
+                            radius : '55%',
+                            center: ['50%', '60%'],
+                            data: source_data_list,
+                            itemStyle: {
+                                emphasis: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            },
+                            label: {
+                                normal: {
+                                    formatter: '{b|{b}：}{c}  {per|{d}%}\n  ',
+                                    rich: {
+                                        a: {
+                                            color: '#999',
+                                            lineHeight: 15,
+                                            align: 'center'
+                                        },
+                                        b: {
+                                            fontSize: 12
+                                        },
+                                        per: {
+                                            color: '#eee',
+                                            backgroundColor: '#334455',
+                                            padding: [2, 4],
+                                            borderRadius: 2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                };
+                worksheet_line.setOption(worksheet_line_option);
+                worksheet_type_pie.setOption(type_option);
+                worksheet_source_pie.setOption(source_option);
+              }
+          });
+      }
+      window.addEventListener("resize",function(){
+          worksheet_line.resize();
+          worksheet_type_pie.resize();
+          worksheet_source_pie.resize();
+      });
+      $(document).ready(function (){
+        get_worksheet_count(moment().subtract(7 ,'days').format('YYYY-MM-DD'),moment().format('YYYY-MM-DD'))
+      });
+      $(document).ready(function (){
+          //时间插件
+          $('#worksheet_num_range span').html(moment().subtract(7 ,'days').format('YYYY-MM-DD') + ' ~ ' + moment().format('YYYY-MM-DD'));
+
+          $('#worksheet_num_range').daterangepicker({
+              startDate: moment().startOf('day'),
+              endDate: moment(),
+              minDate: '01/01/2017',    //最小时间
+              maxDate : moment(), //最大时间
+              dateLimit : {
+                  days : 30
+              }, //起止时间的最大间隔
+              showDropdowns : true,
+              showWeekNumbers : false, //是否显示第几周
+              timePicker : false, //是否显示小时和分钟
+              timePickerIncrement : 1440, //时间的增量，单位为分钟
+              timePicker12Hour : false, //是否使用12小时制来显示时间
+              ranges : {
+                  //'最近1小时': [moment().subtract(1,'hours'), moment()],
+                  '今日': [moment().startOf('day'), moment()],
+                  '昨日': [moment().subtract(1,'days').startOf('day'), moment().subtract(1,'days').endOf('day')],
+                  '最近7日': [moment().subtract(6,'days'), moment()],
+                  '最近30日': [moment().subtract(29,'days'), moment()]
+              },
+              opens : 'left', //日期选择框的弹出位置
+              buttonClasses : [ 'btn btn-default' ],
+              applyClass : 'btn-small btn-primary',
+              cancelClass : 'btn-small',
+              format : 'YYYY-MM-DD', //控件中from和to 显示的日期格式
+              separator : ' to ',
+              locale : {
+                  format : 'YYYY-MM-DD',
+                  separator: ' ~ ',
+                  applyLabel : '确定',
+                  cancelLabel : '取消',
+                  fromLabel : '起始时间',
+                  toLabel : '结束时间',
+                  customRangeLabel : '自定义',
+                  daysOfWeek : [ '日', '一', '二', '三', '四', '五', '六' ],
+                  monthNames : [ '一月', '二月', '三月', '四月', '五月', '六月',
+                          '七月', '八月', '九月', '十月', '十一月', '十二月' ],
+                  firstDay : 1
+              }
+          },
+          function(start, end, label) {//格式化日期显示框
+              $('#worksheet_num_range span').html(start.format('YYYY-MM-DD') + ' ~ ' + end.format('YYYY-MM-DD'));
+              get_worksheet_count(start.format('YYYY-MM-DD'),end.format('YYYY-MM-DD'))
+          });
+      })
+    </script>
+{% endblock %}

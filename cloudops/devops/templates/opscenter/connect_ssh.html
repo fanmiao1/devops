@@ -1,0 +1,63 @@
+{% extends 'main.html' %}
+{% load staticfiles %}
+{% block ext_before %}
+    <style>
+    .x_title h2{
+        width: 100% !important;
+        white-space: normal;
+    }
+    .terminal {
+        background-color: #000;
+        font-family: "Lucida Sans Typewriter", "Lucida Console", Monaco, "Bitstream Vera Sans Mono";
+        font-weight: 400;
+        font-feature-settings: "liga" 0;
+        user-select:none;
+        -webkit-user-select: none;
+        font-size:14px;
+        line-height: 20px;
+    }
+    .terminal > div{
+        white-space: nowrap;
+    }
+    </style>
+{% endblock %}
+{% block right_col %}
+    <div class="page-title">
+      <div class="title_left" style="margin-bottom: 10px;"></div>
+    </div>
+    <div class="row">
+        <div class="col-md-2 col-sm-2 col-xs-12"></div>
+        <div class="col-md-10 col-sm-10 col-xs-12">
+            <div class="x_panel">
+              <div class="x_title">
+                <h2>
+                    <div class="ivu-btn-group pull-left" style="padding-left: 0; padding-bottom: 5px;">
+                    </div>
+                    <div class="pull-right">
+                        <button type="button" class="ivu-btn ivu-btn-primary" onclick="reNewConn()">重新连接</button>
+                        <button type="button" class="ivu-btn ivu-btn-error" onclick="WebSocketStop()">关闭连接</button>
+                    </div>
+                </h2>
+                <div class="clearfix"></div>
+              </div>
+              <div class="x_content">
+                <br />
+                <div id="container-terminal"></div>
+              </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block ext_script %}
+    <script type="text/javascript" src="{%static 'js/aukeyops/term.js' %}"></script>
+    <script type="text/javascript" src="{%static 'js/aukeyops/ws.js' %}"></script>
+    <script type="text/javascript">
+    var getconnarg = sessionStorage.getItem('connarg');
+    console.log(JSON.parse(getconnarg));
+    WebSocketStart(JSON.parse(getconnarg));
+    function reNewConn() {
+        WebSocketStop();
+        WebSocketStart();
+    }
+    </script>
+{% endblock %}

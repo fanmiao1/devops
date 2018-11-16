@@ -1,0 +1,810 @@
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_before %}
+<link rel="stylesheet" href="{% static 'ztree/css/metroStyle/metroStyle.css' %}" type="text/css">
+<link href="{% static 'css/prism-coy.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'jedate/jedate.css' %}" rel="stylesheet" />
+<link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+<link href="{% static 'vendors/iCheck/skins/flat/blue.css' %}" rel="stylesheet">
+<link href="{%static 'css/jquery-confirm-3.3.0.css' %}" rel="stylesheet" type="text/css">
+<style type="text/css">
+    .fixed-table-body::-webkit-scrollbar {/*滚动条整体样式*/
+        width: 1px;     /*高宽分别对应横竖滚动条的尺寸*/
+        height: 8px;
+    }
+    .fixed-table-body::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+        border-radius: 3px;
+         -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        background: #9c9c9c;
+    }
+    .fixed-table-body::-webkit-scrollbar-track {/*滚动条里面轨道*/
+        -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        border-radius: 3px;
+        background: #EDEDED;
+    }
+    #table tbody tr td{
+        line-height: 28px;
+    }
+    #select_exec_type_id .active, #select_status_id .active, #server_type_id .active {
+        background: #2d8cf0;
+        color: #333;
+    }
+    .radiocheck {
+        margin-bottom: 5px;
+    }
+    #bootstrap-cron-div-id .row, #myTabContent {
+        margin-top: 5px;
+    }
+
+    #orgModal .ztree li span.button.ico_docu{
+        background-size:90% 90% !important;
+    }
+    #orgModal .ztree li span.button.ico_close {
+        background-color: #00aeef !important;
+    }
+    #orgModal .ztree li span.button.ico_open {
+        background-color: #00aeef !important;
+    }
+</style>
+{% endblock %}
+{% block table_title %}
+<div class="pull-left" style="padding-left: 0;">
+    <button type="button" class="ivu-btn ivu-btn-default pull-left" onclick="refresh_table()"><span class="glyphicon glyphicon-refresh" style="color: #495060"></span></button>
+</div>
+<div class="pull-right">
+    <button type="button" class="ivu-btn ivu-btn-primary pull-left" data-toggle="modal" data-target="#changeModal">添加</button>
+    <button type="button" class="ivu-btn ivu-btn-primary pull-left" data-toggle="modal" data-target="#changeModal" data-id='1'>编辑</button>
+    <button type="button" class="ivu-btn ivu-btn-primary pull-left" onclick="confirmDelete()">删除</button>
+    <button id="exportBtn" type="button" class="export-excel ivu-btn ivu-btn-primary" data-table="#table">导出当前页</button>
+</div>
+{% endblock %}
+{% block ext_button %}
+<!-- 搜索栏 -->
+<form class="form-horizontal" action="#" id="searchFormId">
+    <div class="col-md-10 col-sm-10 col-xs-12">
+        <div id="asset_search">
+            <input hidden name="id__in" id="hidden_id_in">
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">域名</label></div>
+                <div class="col-md-8"><input class="ivu-input" type="text" name="domain" placeholder="" autocomplete="off"></div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">负责人</label></div>
+                <div class="col-md-8">
+                    <input class="ivu-input" type="text" name="bisnis_responsible" autocomplete="off">
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">自动续费</label></div>
+                <div class="col-md-8">
+                    <select class="selectpicker show-tick form-control" name="is_auto_pay">
+                        <option></option>
+                        <option value='True'>是</option>
+                        <option value='False'>否</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">注册日期</label></div>
+                <div class="col-md-8">
+                    <input name="register_date" class="ivu-input search_range_date" type="text" autocomplete="off" id="search_register_date_id" placeholder="点击选择日期范围">
+                    <input hidden name="register_date_0" id="search_register_date_0">
+                    <input hidden name="register_date_1" id="search_register_date_1">
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">到期日期</label></div>
+                <div class="col-md-8">
+                    <input name="expire_date" class="ivu-input search_range_date" type="text" autocomplete="off" id="search_expire_date_id" placeholder="点击选择日期范围">
+                    <input hidden name="expire_date_0" id="search_expire_date_0">
+                    <input hidden name="expire_date_1" id="search_expire_date_1">
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">状态</label></div>
+                <div class="col-md-8">
+                    <select class="selectpicker show-tick form-control" id="search_status_id" name="status">
+                        <option></option>
+                        <option value='1'>未使用</option>
+                        <option value='2'>使用中</option>
+                        <option value='3'>已过期</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">注册平台</label></div>
+                <div class="col-md-8">
+                    <select class="selectpicker show-tick form-control" id="search_register_support_id" name="register_support"></select>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">解析平台</label></div>
+                <div class="col-md-8">
+                    <select class="selectpicker show-tick form-control" id="search_dns_support_id" name="dns_support"></select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-2 col-xs-12">
+        <div class="col-md-12">
+        <a href="javascript:void(0);" id="searchBtnId" class="ivu-btn ivu-btn-circle ivu-btn-primary ivu-btn-circle-outline" style="margin-bottom: 5px;">
+            <i class="fa fa-search"></i> 搜索 </a>
+        <a href="javascript:;" class="ivu-btn ivu-btn-circle ivu-btn-ghost ivu-btn-circle-outline" onclick="formReset()" style="margin-bottom: 5px;">
+            <i class="fa fa-print"></i> 重置 </a>
+        </div>
+    </div>
+</form>
+<!-- /.搜索栏结束 -->
+<!-- 添加/修改 -->
+<div class="modal fade" id="changeModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="z-index: 2041; width: 700px;">
+        <div class="ivu-spin ivu-spin-fix" id="changing_loading_id" style="display: none;">
+            <div class="ivu-spin-main">
+                <span class="ivu-spin-dot"></span>
+                <div class="ivu-spin-text"></div>
+                <div>请求中</div>
+            </div>
+        </div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="change_h4_id">添加定时任务</h4>
+            </div>
+            <form id="change_form" action="#" class="form-horizontal form-label-left">
+                <div class="modal-body roll" style="max-height: 700; overflow-y: auto">
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">域名 <span class="required">*</span>
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                            <input name="domain" class="ivu-input is_required" required="required" type="text"
+                                autocomplete="off">
+                        </div>
+                        <label class="ivu-form-item-label pull-left col-md-2">注册日期</label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                            <input name="register_date" class="ivu-input change_register_date_picker" type="text" autocomplete="off" placeholder="点击选择日期">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">过期日期</label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                            <input name="expire_date" class="ivu-input change_expire_date_picker" type="text" autocomplete="off" placeholder="点击选择日期">
+                        </div>
+                        <label class="ivu-form-item-label pull-left col-md-2">自动续费 <span class="required">*</span>
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12" style="line-height: 32px;">
+                            <input type="radio" name="is_auto_pay" value="True" id="is_auto_pay_yes">
+                            <label for="is_auto_pay_yes" style="cursor:pointer; margin-right: 20px;">是</label>
+                            <input type="radio" name="is_auto_pay" value="False" id="is_auto_pay_no" checked>
+                            <label for="is_auto_pay_no" style="cursor:pointer;">否</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">注册服务商</label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                            <select class="selectpicker show-tick form-control" id="change_register_support_id" name="register_support"></select>
+                        </div>
+                        <label class="ivu-form-item-label pull-left col-md-2">解析服务商</label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                            <select class="selectpicker show-tick form-control" id="change_dns_support_id" name="dns_support"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">业务负责人</label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                            <input name="bisnis_responsible" class="ivu-input" type="text" placeholder="点击选择"
+                                       autocomplete="off" data-toggle="modal" data-target="#orgModal" readonly>
+                            <input name="bisnis_responsible_email" type="text" autocomplete="off" readonly placeholder="选择负责人" hidden>
+                        </div>
+                        <label class="ivu-form-item-label pull-left col-md-2">状态 <span class="required">*</span>
+                        </label>
+                        <div class="col-md-4 col-sm-4 col-xs-12">
+                            <select class="selectpicker show-tick form-control" name="status">
+                                <option value=1>未使用</option>
+                                <option value=2 selected>使用中</option>
+                                <option value=3>已过期</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">解析记录</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea name="dns_record" class="ivu-input"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="ivu-form-item-label pull-left col-md-2">备注</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea name="remark" class="ivu-input"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" onclick="change(-1)" id="change_submit_btn">
+                        <span class="ladda-label"> 确认 </span>
+                    </button>
+                    <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                </div>
+            </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+<!-- /. 添加 / 修改结束 -->
+<!-- 组织结构模态框 -->
+<div class="modal fade" id="orgModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="z-index: 2041;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">组织结构</h4>
+            </div>
+            <div class="modal-body">
+                <input id="use_orgmodal_name" hidden>
+                <ul id="treeDemo" class="ztree"></ul>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+<!-- /.组织结构模态框结束 -->
+{% endblock %}
+{% block ext_script %}
+<script src="{% static 'ztree/js/jquery.ztree.core.js' %}"></script>
+<script src="{% static 'jedate/jedate.js' %}"></script>
+<script src="{% static 'js/aukeyops/currency.js' %}"></script>
+<script src="{% static 'js/aukeyops/searchTable.js' %}"></script>
+<script src="{% static 'js/jquery-confirm-3.3.0.js' %}"></script>
+<script type="text/javascript">
+    var STATUS_CHOICES= {1: '未使用', 2: '使用中', 3: '已过期'};
+
+    // 搜索按钮触发
+    $("#searchBtnId").on("click", function () {
+        searchTable('table','searchFormId')
+    });
+
+    // 搜索重置
+    function formReset() {
+        document.getElementById("searchFormId").reset();
+        $(".selectpicker").selectpicker('refresh');
+    }
+
+    // 打开添加/修改组织结构模态框
+    $('#orgModal').on('show.bs.modal', function (event) {
+       $('#use_orgmodal_name').val(event.relatedTarget.name)
+    });
+
+    // 打开添加/修改模态框
+    $('#changeModal').on('show.bs.modal', function (event) {
+        cleanErrorAlert('change_form');
+        var form = $('#change_form');
+        form[0].reset();
+        $('.selectpicker').selectpicker('refresh');
+        var id = $(event.relatedTarget).data('id');
+        var form = $('#change_form');
+        if (id) {
+            var select = getSelectRow();
+            if (select && select.id) {
+                $('#change_h4_id').html('修改域名');
+                $('#change_submit_btn').attr('onclick','change('+select.id+')');
+                for (v in select){
+                    var obj = form.find("[name='" + v + "']");
+                    var select_v = select[v]
+                    if (select[v] || !select[v] == 'null') {
+                        if (obj.is("input") || obj.is("textarea")) {
+                            if (obj.attr("type") == 'radio'){
+                                if (select_v == true){
+                                    select_v = 'True'
+                                }
+                                $(":radio[name='" + v + "']").iCheck('uncheck');
+                                $(":radio[name='" + v + "'][value='" + select_v + "']").iCheck('check');
+                                $(":radio[name='" + v + "'][value='" + select_v + "']").prop("checked", "checked");
+                            }else {
+                                obj.val(select_v);
+                            }
+                        } else if (obj.is("select")) {
+                            if (typeof(select[v]) === 'object') {
+                                obj.selectpicker('val', select[v]['id']);
+                            } else {
+                                obj.selectpicker('val', select[v]);
+                            }
+                        }
+                    } else {
+                        if (obj.attr("type") == 'radio'){
+                            if (select_v == false){
+                                select_v = 'False'
+                            }
+                            $(":radio[name='" + v + "']").iCheck('uncheck');
+                            $(":radio[name='" + v + "'][value='" + select_v + "']").iCheck('check');
+                            $(":radio[name='" + v + "'][value='" + select_v + "']").prop("checked", "checked");
+                        }
+                    }
+                }
+            } else {
+                MyMessage(0, '请选择要修改的记录！');
+                return false
+            }
+        } else {
+            $('#change_h4_id').html('添加域名');
+            $('#change_submit_btn').attr('onclick','change(-1)');
+        }
+    });
+
+    // 时间选择器
+    jeDate(".change_register_date_picker",{
+        theme:{ bgcolor:"#2D8CF0",color:"#ffffff", pnColor:"#2D8CF0"},
+        onClose:false,
+        format:"YYYY-MM-DD",
+        isTime:false,
+        minDate:"2000-01-01"
+    });
+
+    jeDate(".change_expire_date_picker",{
+        theme:{ bgcolor:"#2D8CF0",color:"#ffffff", pnColor:"#2D8CF0"},
+        onClose:false,
+        format:"YYYY-MM-DD",
+        isTime:false,
+        minDate:"2000-01-01"
+    });
+
+    $('.search_range_date').daterangepicker({
+        autoUpdateInput: false,
+        startDate: moment().subtract(1,'days'),
+        endDate: moment(),
+        minDate: '2000-01-01',    //最小时间
+        maxDate : moment(), //最大时间
+        showDropdowns : true,
+        showWeekNumbers : false, //是否显示第几周
+        timePicker : false, //是否显示小时和分钟
+        timePickerIncrement : 1, //时间的增量，单位为分钟
+        timePicker24Hour : true, //是否使用24小时制来显示时间
+        ranges : {
+            '今日': [moment().startOf('day'), moment()],
+            '昨日': [moment().subtract(1,'days').startOf('day'), moment().subtract(1,'days').endOf('day')],
+            '最近7日': [moment().subtract(6,'days'), moment()],
+            '最近30日': [moment().subtract(29,'days'), moment()]
+        },
+        opens : 'left', //日期选择框的弹出位置
+        buttonClasses : [ 'ivu-btn' ],
+        applyClass : 'ivu-btn-primary',
+        cancelClass : 'ivu-btn-ghost',
+        format : 'YYYY-MM-DD', //控件中from和to 显示的日期格式
+        separator : ' to ',
+        locale : {
+            format : 'YYYY-MM-DD',
+            separator: ' ~ ',
+            applyLabel : '确定',
+            cancelLabel : '取消',
+            fromLabel : '起始时间',
+            toLabel : '结束时间',
+            customRangeLabel : '自定义',
+            daysOfWeek : [ '日', '一', '二', '三', '四', '五', '六' ],
+            monthNames : [ '一月', '二月', '三月', '四月', '五月', '六月',
+                  '七月', '八月', '九月', '十月', '十一月', '十二月' ],
+            firstDay : 1
+        }
+    });
+    $('#search_register_date_id').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' ~ ' + picker.endDate.format('YYYY-MM-DD'));
+        $('#search_register_date_0').val(picker.startDate.format('YYYY-MM-DD'));
+        $('#search_register_date_1').val(picker.endDate.format('YYYY-MM-DD'))
+    });
+
+    $('#search_register_date_id').on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+        $('#search_register_date_0').val('');
+        $('#search_register_date_1').val('');
+    });
+
+    $('#search_expire_date_id').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' ~ ' + picker.endDate.format('YYYY-MM-DD'));
+        $('#search_expire_date_0').val(picker.startDate.format('YYYY-MM-DD'));
+        $('#search_expire_date_1').val(picker.endDate.format('YYYY-MM-DD'))
+    });
+
+    $('#search_expire_date_id').on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+        $('#search_expire_date_0').val('');
+        $('#search_expire_date_1').val('');
+    });
+
+    // 初始化表格数据
+    function initTable() {
+        $('#table').bootstrapTable({
+            method: "get",  //使用post请求到服务器获取数据
+            contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+            dataType: "json",
+            cache: false,
+            url:'/cmdb/domain/list/',
+            toolbar: '#toolbar',//指定工具栏
+            striped: true,  //表格显示条纹
+            dataField: "results",
+            pagination: true, //启动分页
+            sortable: true,  //启用排序
+            pageSize: 15,  //每页显示的记录数
+            pageNumber:1, //当前第几页
+            pageList: [5, 15, 25, 100, 'all'],  //记录数可选列表
+            searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+            searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+            showExport: false,//显示导出按钮
+            singleSelect: true,
+            exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+            sidePagination: "server", //表示服务端请求
+            queryParamsType : "undefined",
+            clickToSelect: true,//是否启用点击选中行
+            detailView:true,
+            responseHandler: function (res) {
+                res['total'] = res['count'];
+                return res
+            },
+            columns:[
+                {
+                    title:'',
+                    checkbox:true,
+                    align:'center',
+                    valign:'middle'
+                },
+                {
+                    title:'ID',
+                    field:'id',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'域名',
+                    field:'domain',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'注册日期',
+                    field:'register_date',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'到期日期',
+                    field:'expire_date',
+                    align:'center',
+                    sortable:true,
+                    formatter: function(value, row) {
+                        var color_code = '';
+                        var ex_or = '后';
+                        if (value) {
+                            var ndays = daysBetween(value, 'now');
+                            if (ndays < 0){
+                                color_code = '#999';
+                                ex_or = '前';
+                                ndays = -ndays
+                            }else if (ndays < 30) {
+                                color_code = 'red'
+                            }else{
+                                color_code = '#090'
+                            }
+                        }
+                        res = '<span style="color:'+color_code+'\" title="'+ndays+' 天'+ex_or+'过期">'+value+'</span>';
+                        return res
+                        }
+                },
+                {
+                    title:'自动续费',
+                    field:'is_auto_pay',
+                    align:'center',
+                    sortable:true,
+                    formatter: function(value, row){
+                        var my_html = '<img src="{%static 'images/close-128.png' %}" style="width:18px;">';
+                        if (value){
+                            my_html = '<img src="{%static 'images/Checkmark-128.png' %}" style="width:18px;">'
+                        }
+                        return my_html
+                    }
+                },
+                {
+                    title:'业务负责人',
+                    field:'bisnis_responsible',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'注册服务商',
+                    field:'register_support',
+                    align:'center',
+                    sortable:true,
+                    formatter:function(value,row){
+                        var d = '';
+                        if (row.register_support) {
+                            d =  row.register_support.name;
+                        }
+                        return d
+                    }
+                },
+                {
+                    title:'解析服务商',
+                    field:'dns_support',
+                    align:'center',
+                    sortable:true,
+                    formatter:function(value,row){
+                        var d = '';
+                        if (row.dns_support) {
+                            d =  row.dns_support.name;
+                        }
+                        return d
+                    }
+                },
+                {
+                    title:'状态',
+                    field:'status',
+                    align:'center',
+                    sortable:true,
+                    formatter:function(value,row) {
+                        var my_html = '<span>'+STATUS_CHOICES[value]+'</span>';
+                        return my_html
+                    }
+                },
+                {
+                    title:'备注',
+                    field:'remark',
+                    align:'center',
+                    sortable:true
+                }
+            ],
+            queryParams: function queryParams(params) {   //设置查询参数
+                if (params.sortOrder == 'desc') {
+                    params.sortName = '-'+params.sortName
+                }
+                var param = {
+                    page: params.pageNumber,
+                    size: params.pageSize,
+                    ordering:params.sortName
+                };
+                return param;
+            },
+            detailFormatter:function (index, row) {
+                var log_result = '';
+                {% if content_type_id %}
+                    $.ajax({
+                        url: '/opscenter/revision_log/list/?content_type={{ content_type_id }}&object_id='+row.id,
+                        type: 'get',
+                        async: false,
+                        success: function(result) {
+                            var res = result['results'];
+                            for (i in res) {
+                                log_result += '<tr><td>'+res[i]['user']['username']+'</td><td>'+new Date(res[i]['datetime']).toLocaleString()+'</td><td>'+res[i]['content']+'</td></tr>'
+                            }
+                        },
+                        error: function(result) {
+                            MyMessage(0, result.responseText)
+                        }
+                    });
+                {% endif %}
+                if (log_result) {
+                    var log_html = '<table class="table table-striped table-bordered dt-responsive nowrap">' +
+                        '<thead><tr><th>操作人</th><th>操作时间</th><th>操作内容</th></tr></thead><tbody>'+log_result+'</tbody></table>'
+                } else {
+                    var log_html = '无修改记录'
+                }
+                if (row.dns_record) {
+                    var dns_record = row.dns_record
+                } else {
+                    var dns_record = '无解析记录'
+                }
+                var res_html = '<div class="" role="tabpanel" data-example-id="togglable-tabs">'+
+                    '<ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist">'+
+                        '<li role="presentation" class="active">'+
+                            '<a href="#tab_content1_'+row.id+'" role="tab" id="profile-tab" data-toggle="tab" aria-expanded="true">解析记录</a>'+
+                        '</li>'+
+                        '<li role="presentation" class="">'+
+                            '<a href="#tab_content2_'+row.id+'" id="home-tab" role="tab" data-toggle="tab" aria-expanded="false">修改日志</a>'+
+                        '</li>'+
+                    '</ul>'+
+                    '<div id="myTabContent" class="tab-content">'+
+                        '<div role="tabpanel" class="tab-pane fade active in" id="tab_content1_'+row.id+'" aria-labelledby="profile-tab">'+
+                            '<div class="col-md-12">'+dns_record+'</div>'+
+                        '</div>'+
+                        '<div role="tabpanel" class="tab-pane fade" id="tab_content2_'+row.id+'" aria-labelledby="home-tab">'+
+                            '<div class="col-md-12">'+log_html+'</div>'+
+                        '</div>'+
+                    '</div>'+
+                '</div>';
+                return res_html
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        //调用函数，初始化表格
+        initTable();
+        $(".selectpicker").selectpicker({
+            noneSelectedText : ''
+        });
+        $.ajax({ // 初始化凭证下拉框
+            url: '/opscenter/support/list/',
+            type: 'get',
+            success: function (result) {
+                $('#change_register_support_id').empty();
+                $('#change_dns_support_id').empty();
+                $('#search_register_support_id').empty();
+                $('#search_dns_support_id').empty();
+                $('#change_register_support_id.selectpicker').append('<option></option>');
+                $('#change_dns_support_id.selectpicker').append('<option></option>');
+                $('#search_register_support_id.selectpicker').append('<option></option>');
+                $('#search_dns_support_id.selectpicker').append('<option></option>');
+                $.each(result, function (index, item) {
+                   $('#change_register_support_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                   $('#change_dns_support_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                   $('#search_register_support_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                   $('#search_dns_support_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                });
+                $('#change_register_support_id').selectpicker('refresh');
+                $('#change_dns_support_id').selectpicker('refresh');
+                $('#search_register_support_id').selectpicker('refresh');
+                $('#search_dns_support_id').selectpicker('refresh');
+            }
+        });
+        $.ajax({
+            url: "/get_wechat_department_list/",
+            type: "post",
+            success: function (result) {
+                if (result['result']) {
+                    zTreeObj = $.fn.zTree.init($("#treeDemo"), setting, result['result']);
+                }
+            }
+        });
+        $('#change_form input').iCheck({
+            radioClass: 'iradio_flat-blue',
+        });
+    });
+
+    // 添加/修改动作
+    function change (id) {
+        $('#changing_loading_id').show();
+        cleanErrorAlert('change_form');
+        var re = checkRequired('change_form');
+        if (!re) {
+            $('#changing_loading_id').hide();
+            return false
+        }
+        if (id > 0) {
+            var url = '/cmdb/domain/detail/'+id+'/';
+            var type = 'put'
+        } else {
+            var url = '/cmdb/domain/list/';
+            var type = 'post'
+        }
+        change_request(url, type)
+    }
+
+    // 删除
+    function confirmDelete(view){
+        var select = getSelectRow();
+        if (select && select.id) {
+            if (select.id) {
+                $.confirm({
+                    title: '提示！',
+                    content: '确定要删除吗？',
+                    closeIcon: true,
+                    type: 'red',
+                    typeAnimated: true,
+                    icon: 'fa fa-warning',
+                    buttons: {
+                        tryAgain: {
+                            text: '删除!',
+                            btnClass: 'ivu-btn-error',
+                            action: function(){
+                                var url = '/cmdb/domain/detail/'+select.id+'/';
+                                var data = {'is_delete': 1};
+                                $.ajax({
+                                    url: url,
+                                    type: 'PUT',
+                                    data: data,
+                                    success: function(result) {
+                                        MyMessage(1, '操作成功！');
+                                        $('#table').bootstrapTable("refresh");
+                                    },
+                                    error: function(result){
+                                        MyMessage(0, result.responseText);
+                                    }
+                                })
+                            }
+                        },
+                        '取消': function () {
+                        }
+                    },
+                });
+            } else {
+                MyMessage(0, '请选择要删除的记录！');
+            }
+        } else {
+            MyMessage(0, '请选择要删除的记录！');
+        }
+    }
+    // 组织结构异步加载树
+    var zTreeObj;
+    var setting = {
+        async: {
+            enable: true,
+            type: 'post',
+            dataType: 'json',
+            url: '/get_wechat_department_list/',
+            autoParam:["id=parentid"],
+            otherParam: {"get_people": 1},
+            dataFilter: ajaxDataFilter,
+        },
+        data: {
+            simpleData: {
+                enable: true,
+                idKey: "id",
+                pIdKey: "parentid",
+                rootPId: 0
+            }
+        },
+        check: {
+            enable: true,
+            chkDisabled:true,
+            chkDisabledInherit: true,
+        },
+        callback: {
+            onClick: zTreeOnClick,
+            onAsyncSuccess: onAsyncSuccess,
+            onAsyncError: onAsyncError
+        }
+    };
+    function ajaxDataFilter(treeId, parentNode, responseData) {
+        return responseData.result;
+    }
+    function zTreeOnClick(event, treeId, treeNode){
+        if (treeNode.isParent == 1){
+            var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+            zTree.expandNode(treeNode);
+        } else {
+            $('#orgModal').modal('hide');
+            $("[name=" + $('#use_orgmodal_name').val() + "]").val(treeNode.name);
+            $("[name=" + $('#use_orgmodal_name').val() + "_email]").val(treeNode.id);
+        }
+    }
+    function onAsyncError(event, treeId, treeNode, XMLHttpRequest, textStatus, errorThrown) {
+        console.log("加载异常, 请刷新页面!");
+    }
+    function onAsyncSuccess(event, treeId, treeNode, msg) {
+    }
+    // 导出当前页
+    var TableExport = function() {
+        "use strict";
+        var runTableExportTools = function() {
+            $(".export-excel").on("click", function(e) {
+                var that = this;
+                $.confirm({
+                    title: '提示！',
+                    content: '确定要导出当前页的数据吗？',
+                    closeIcon: true,
+                    type: 'blue',
+                    typeAnimated: true,
+                    buttons: {
+                        tryAgain: {
+                            text: '导出',
+                            btnClass: 'ivu-btn-primary',
+                            action: function () {
+                                e.preventDefault();
+                                var exportTable = $(that).data("table");
+                                var ignoreColumn = $(that).data("ignorecolumn");
+                                $(exportTable).tableExport({
+                                    type : 'excel',
+                                    escape : 'false',
+                                    ignoreColumn : '[' + ignoreColumn + ']'
+                                });
+                            }
+                        },
+                        '取消': function () {
+                        }
+                    }
+                });
+            });
+        };
+        return {
+            init : function() {
+                runTableExportTools();
+            }
+        };
+    }(jQuery);
+    TableExport.init();
+</script>
+{% endblock %}

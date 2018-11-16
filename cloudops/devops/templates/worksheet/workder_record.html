@@ -1,0 +1,173 @@
+{% extends 'worksheet/simple.html' %}
+{% load staticfiles %}
+{% block viewport %}<meta name="viewport" content="width=device-width, initial-scale=1">{% endblock %}
+{% block title_top %}我提交的工单{% endblock %}
+{% block ext_css %}
+    <style>
+        body{
+            color: #000;
+        }
+        tr td{
+            overflow: hidden;
+            text-overflow:ellipsis;
+            white-space: nowrap;
+        }
+        #app{
+            padding:10px 20px 20px 20px;
+        }
+        @media screen and (min-width: 480px) {
+            pre {font-size: 12px;}
+        }
+        .pull-right.pagination-detail{
+            display:none;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div id="app">
+      <row>
+          <i-col span="24">
+{#              <card>#}
+{#                  <p slot="title">工单记录</p>#}
+                  <table id="table" class="table table-striped table-bordered dt-responsive nowrap" style='table-layout:fixed;'></table>
+{#              </card>#}
+          </i-col>
+      </row>
+    </div>
+{% endblock %}
+{% block ext_js %}
+    <script>
+    var message = new MyMessage.message({
+        /*默认参数，下面为默认项*/
+        iconFontSize: "20px", //图标大小,默认为20px
+        messageFontSize: "12px", //信息字体大小,默认为12px
+        showTime: 2000, //消失时间,默认为3000
+        align: "center", //显示的位置类型center,right,left
+        positions: { //放置信息距离周边的距离,默认为10px
+            top: "10px",
+            bottom: "10px",
+            right: "10px",
+            left: "10px"
+        },
+        message: "这是一条消息", //消息内容,默认为"这是一条消息"
+        type: "normal" //消息的类型，还有success,error,warning等，默认为normal
+      });
+     var Main = {
+      };
+      var Component = Vue.extend(Main);
+      new Component().$mount('#app');
+    </script>
+    <script src="{%static 'bootstrap/js/bootstrap-table.js' %}"></script>
+{#    <script src="{%static 'bootstrap/js/bootstrap-table-editable.js' %}"></script>#}
+    <script src="{%static 'bootstrap/js/bootstrap-table-zh-CN.js' %}"></script>
+    <script src="{%static 'bootstrap/js/bootstrap-table-export.js' %}"></script>
+    <script src="{%static 'bootstrap/js/tableExport.js' %}"></script>
+    <script type="text/javascript">
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "post",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:'{% if wechat_user_id %}{% url "get_work_order_record_data" wechat_user_id %}{% endif %}',
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                dataField: "rows",
+                pagination: true, //启动分页
+                sortable: true,  //启用排序
+                pageSize: 8,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+                search: false,  //是否启用查询
+                searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+                searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+                showColumns: false,  //显示下拉框勾选要显示的列
+                showRefresh: false,  //显示刷新按钮
+                showSearchButton: false, //显示搜索按钮
+                showFooter: false,
+                showExport: false,//显示导出按钮
+                paginationDetailHAlign:"right",
+                exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                sidePagination: "server", //表示服务端请求
+                //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+                //设置为limit可以获取limit, offset, search, sort, order
+                queryParamsType : "undefined",
+                clickToSelect: true,//是否启用点击选中行
+                toolbarAlign:'right',//工具栏对齐方式
+                buttonsAlign:'left',//按钮对齐方式
+                columns:[
+                    {
+                        title:'工单编号',
+                        field:'wsid',
+                        sortable:false,
+                    },
+                    {
+                        title:'标题',
+                        field:'title',
+                        sortable:false
+                    },
+                    // {
+                    //     title:'提交时间',
+                    //     field:'c_time',
+                    //     sortable:false
+                    // },
+                    {
+                        title:'状态',
+                        field:'status',
+                        sortable:false,
+                        formatter :function(value,row,index) {
+                            if(value == "未受理") {
+                                var a = '<span style="color:#FF3300;">'+value+'</span>';
+                            }else if(value == "待处理"){
+                                var a = '<span style="color:#0066CC;">'+value+'</span>';
+                            }else if(value == "已处理"){
+                                var a = '<span style="color:#009900;">'+value+'</span>';
+                            }else if(value == "待审批"){
+                                var a = '<span style="color:#5B2C6F;">'+value+'</span>';
+                            }else if(value == "已关闭") {
+                                var a = '<span style="color:#999;">'+value+'</span>';
+                            }else{
+                                var a = '<span>'+value+'</span>';
+                            }
+                            return a;
+                        }
+                    },
+                    {
+                        title:'操作',
+                        field:'id',
+                        align:'center',
+                        //列数据格式化
+                        //formatter:operateFormatter
+                        formatter:function(value,row,gitflow){
+                            var w = '<a href="/worksheet/work_order_record/detail/'+ row.wsid +'"><button type="button" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-search" aria-hidden="true" title="详情"></span> 详情</button></a> ';
+                            // var e = '<a href="#" mce_href="#" onclick="edit(\''+ row.id + '\')">编辑</a> ';
+{#                            var d = '<button type="button" id="btn_submit1" class="btn btn-danger btn-xs" onclick="return Delete('+row.id+')"><span class="glyphicon glyphicon-remove" aria-hidden="true" title="关闭工单"></span></button> ';#}
+                            return w;
+                        }
+                    }
+                ],
+                queryParams: function queryParams(params) {   //设置查询参数
+                    var param = {
+                        //加上csrf
+                        csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                        pageNumber: params.pageNumber,
+                        pageSize: params.pageSize,
+{#                        search:$(" input[ name='search_text' ] ").val(),#}
+                        search:params.searchText,
+                        order:params.sortOrder,
+                        sort:params.sortName
+                    };
+                    return param;
+                }
+
+            });
+        }
+        $(document).ready(function () {
+            //调用函数，初始化表格
+            initTable();
+
+            //当点击查询按钮的时候执行
+            $("#search").bind("click", initTable);
+        });
+    </script>
+{% endblock %}

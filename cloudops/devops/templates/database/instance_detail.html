@@ -1,0 +1,223 @@
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}实例管理{% endblock %}
+{% block table_title %}{% endblock %}
+{% block ext_before %}
+{#    <link rel="stylesheet" href="{% static 'ztree/css/metroStyle/metroStyle.css' %}" type="text/css">#}
+{#    <link href="{% static 'jedate/jedate.css' %}" rel="stylesheet" />#}
+{#    <link href="{% static 'bootstrap-datetimepicker/css/bootstrap-datetimepicker.css' %}" rel="stylesheet" />#}
+    <link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+{#    <link href="{% static 'jqueryui/jquery-ui-1.10.4.custom.min.css' %}" rel="stylesheet" />#}
+{#    <link href="{%static 'css/jquery-confirm-3.3.0.css' %}" rel="stylesheet" type="text/css">#}
+{% endblock %}
+{% block right_col %}
+    <div class="page-title">
+        <div class="title_left" style="margin-bottom: 10px;">
+            <h3></h3>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+    <div class="row" id="detail_row">
+        <div class="col-md-12 col-sm-12 col-xs-12" id="table_row_id">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h1>{{ line.instance_name }}</h1>
+                    <h2>
+                        <div class="ivu-btn-group pull-left" style="padding-left: 0; padding-bottom: 5px;">
+                           <button type="button" class="ivu-btn ivu-btn-primary">基本信息</button>
+                            <a href="{% url 'show_privileges' line.id %}"><button type="button" class="ivu-btn ivu-btn-ghost">账户管理</button></a>
+                            <a href="#"><button type="button" class="ivu-btn ivu-btn-ghost">参数设置</button></a>
+                            <a href="#"><button type="button" class="ivu-btn ivu-btn-ghost">备份恢复</button></a>
+                            <a href="{% url 'show_operation_log' line.id %}"><button type="button" class="ivu-btn ivu-btn-ghost">操作日志</button></a>
+                        </div>
+                        <div id="asset_bt_group" class="pull-right">
+                             <a href="{% url 'instance_detail' line.id %}">
+                            <button type="button" class="ivu-btn ivu-btn-default pull-left">
+                                <span class="glyphicon glyphicon-refresh" style="color: #495060"></span></button></a>
+                            <a href="{% url 'instances' %}">
+                                <button id="view1_id" type="button" class="ivu-btn ivu-btn-default"><i
+                                        class="ivu-icon ivu-icon-chevron-left"></i> 返回实例列表
+                                </button>
+                            </a>
+                        </div>
+                    </h2>
+                    <ul class="nav navbar-right panel_toolbox"></ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="row">
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <div class="x_panel row_panel">
+                                        <div class="x_title header_title">
+                                            <span class="header_title_span">基本信息</span>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        <div class="x_content">
+                                            <ul id="basic_info_id">
+                                                <li><span class="text-muted">名称：</span><span class="text-info"
+                                                                                             id="info_name">{{ line.instance_name }}</span></li>
+                                                <li><span class="text-muted">所属项目：</span><span class="text-info"
+                                                                                             id="info_name">{{ line.project }}</span></li>
+                                                <li><span class="text-muted">服务器 IP：</span><span class="text-info"
+                                                                                             id="info_status">{{ line.server_ip}}</span></li>
+                                                <li><span class="text-muted">端口：</span><span class="text-info"
+                                                                                              id="info_zone">{{ line.instance_port }}</span>
+                                                </li>
+                                                <li><span class="text-muted">角色：</span><span class="text-info"
+                                                                                                 id="info_os_type">{{ line.instance_role }}</span>
+                                                </li>
+                                                <li><span class="text-muted">环境：</span><span class="text-info"
+                                                                                             id="info_support">{% if line.instance_env == 1 %}
+                                                    生产环境
+                                                {% elif line.instance_env == 2 %}
+                                                    测试环境
+                                                {% elif line.instance_env == 3 %}
+                                                    开发环境
+                                                {% endif %}</span>
+                                                </li>
+                                                <li><span class="text-muted">添加时间：</span><span class="text-info"
+                                                                                               id="info_auto_renew">{{ line.createtime | date:"Y-m-d H:i:s" }}</span>
+                                                </li>
+                                                 <li><span class="text-muted">运维DBA：</span><span class="text-info"
+                                                                                               id="info_auto_renew">{{ line.ops_user}}</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-sm-2 col-xs-12">
+                                    <div class="x_panel row_panel" style="height: 203px">
+                                        <div class="x_title header_title">
+                                            <span class="header_title_span">实例大小</span>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                            <div class="x_content">
+                                                <div align="center"><h2 >{{ instance.size }}(G)</h2></div>
+{#                                                <table class="table">#}
+{#                                                    <tbody id="db_size">#}
+{#                                                    <tr>#}
+{#                                                        <th>DB</th>#}
+{#                                                        <th>SIZE</th>#}
+{#                                                    </tr>#}
+{#                                                    {% for row in db %}#}
+{#                                                        <tr>#}
+{#                                                            <td>{{ row.db }}</td>#}
+{#                                                            <td>{{ row.size }}(G)</td>#}
+{#                                                        </tr>#}
+{#                                                    {% endfor %}#}
+{#                                                    </tbody>#}
+{#                                                    <tbody id="table_size"></tbody>#}
+{#                                                </table>#}
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-sm-2 col-xs-12">
+                                    <div class="x_panel row_panel" style="height: 203px">
+                                        <div class="x_title header_title">
+                                            <span class="header_title_span">实例分布</span>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                            <div class="x_content">
+                                               <table class="table">
+                                                <tbody id="processlist_id">
+                                                    <tr>
+                                                        <th>ROLE</th>
+                                                        <th>HOST</th>
+                                                        <th>PORT</th>
+                                                    </tr>
+                                                        <td>{{ slave.master.instance_role }} </td>
+                                                        <td>{{ slave.master.server_ip }}</td>
+                                                        <td>{{ slave.master.instance_port }}</td>
+                                                {% for row in slave.slaves %}
+                                                    <tr>
+                                                        <td>{{ row.instance_role }} </td>
+                                                        <td>{{ row.server_ip }}</td>
+                                                        <td>{{ row.instance_port }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+
+                                            </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                 </div>
+                               <div class="col-md-2 col-sm-2 col-xs-12">
+                                    <div class="x_panel row_panel"  style="height: 203px;">
+                                        <div class="x_title header_title">
+                                            <span class="header_title_span">实例分布</span>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+                                            <div class="x_content">
+                                                <span>只读实例</span>
+                                                <div align="center"><h2 >{{ slave.count }}</h2></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                 </div>
+                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                    <div class="x_panel row_panel">
+                                        <div class="x_title header_title">
+                                            <span class="header_title_span">PROCESSLIST</span>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        <div class="x_content">
+                                            <table class="table">
+                                                <tbody id="processlist_id">
+                                                    <tr ALIGN="center">
+                                                        <th>ID</th>
+                                                        <th>USER</th>
+                                                        <th>HOST</th>
+                                                        <th>DB</th>
+                                                        <th>COMMAND</th>
+                                                        <th>TIME</th>
+                                                        <th>STATE</th>
+                                                        <th>INFO</th>
+                                                    </tr>
+                                                {% for row in processlist %}
+                                                    <tr>
+                                                        <td>
+                                                            <a href="{% url 'kill_process' line.id row.ID %}" mce_href="#" onclick="return kill_processid();"><button type="button" class="btn btn-xs btn-link"> KILL {{ row.ID }}</button></a>
+                                                        </td>
+                                                        <td>{{ row.USER }}</td>
+                                                        <td>{{ row.HOST }}</td>
+                                                        <td>{{ row.DB }}</td>
+                                                        <td>{{ row.COMMAND }}</td>
+                                                        <td>{{ row.TIME }}</td>
+                                                        <td>{{ row.STATE }}</td>
+                                                        <td>{{ row.INFO }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block ext_script %}
+    <script>
+            function kill_processid(){
+            if(confirm("确定要 KILL PROCESS ID?")){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+    </script>
+
+{% endblock %}

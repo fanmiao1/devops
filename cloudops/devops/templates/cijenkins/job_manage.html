@@ -1,0 +1,145 @@
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}{% if jenkins_env == 100 %}生产构建队列{% else %}测试构建队列{% endif %}{% endblock %}
+{% block table_title %}构建信息{% endblock %}
+{% block ext_button %}
+    <div id="toolbar" class="btn-group pull-right" style="margin-bottom: 10px;">
+        <a href="{% url 'job_manage_pro' 100 %}">
+            <button id="btn_add" type="button" class="btn btn-default {% if jenkins_env == 100 %}active{% endif %}">
+                <span class="glyphicon glyphicon-align-center" aria-hidden="true"></span> 生产构建
+            </button>
+        </a>
+        <a href="{% url 'job_manage_qa' 110 %}">
+            <button id="btn_add" type="button" class="btn btn-default {% if jenkins_env == 110 %}active{% endif %}" style="margin-right: 50px;">
+                <span class="glyphicon glyphicon-bishop" aria-hidden="true"></span> 测试构建
+            </button>
+        </a>
+    </div>
+{% endblock %}
+{% block table %}
+<script type="text/javascript">
+    function initTable() {
+        $('#table').bootstrapTable({
+            method: "post",  //使用post请求到服务器获取数据
+            contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+            dataType: "json",
+            cache: false,
+{#            url:'{% url "job_manage" jenkins_env %}',#}
+            url:'{% if jenkins_env == 100 %}{% url 'job_manage_pro' 100 %}{% else %}{% url 'job_manage_qa' 110 %}{% endif %}',
+            toolbar: '#toolbar',//指定工具栏
+            striped: true,  //表格显示条纹
+            dataField: "rows",
+            pagination: true, //启动分页
+            sortable: true,  //启用排序
+            pageSize: 20,  //每页显示的记录数
+            pageNumber:1, //当前第几页
+            pageList: [20, 50, 80],  //记录数可选列表
+            search: true,  //是否启用查询
+            searchOnEnterKey:false, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+            searchAlign:'left',	//指定 搜索框 水平方向的位置。’left’ or ‘right’
+            showColumns: true,  //显示下拉框勾选要显示的列
+            showRefresh: true,  //显示刷新按钮
+            showSearchButton: false, //显示搜索按钮
+            showExport: false,//显示导出按钮
+            exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+            sidePagination: "server", //表示服务端请求
+            //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+            //设置为limit可以获取limit, offset, search, sort, order
+            queryParamsType : "undefined",
+            clickToSelect: true,//是否启用点击选中行
+            toolbarAlign:'right',//工具栏对齐方式
+            buttonsAlign:'left',//按钮对齐方式
+            columns:[
+                {
+                    title:'模块名称',
+                    field:'job_name',
+                    sortable:true
+                },
+                {
+                    title:'描述',
+                    field:'description',
+                    sortable:true
+                },
+                {
+                    title:'上次成功',
+                    field:'last_sucess_time',
+                    sortable:true
+                },
+                {
+                    title:'上次失败',
+                    field:'last_false_time',
+                    sortable:true
+                },
+                {
+                    title:'上次持续时间',
+                    field:'duration',
+                    sortable:true
+                },
+                {
+                    title:'上次构建状态',
+                    field:'statu',
+                    sortable:true,
+                    formatter :function(value,row,index){
+                        if(value == "blue") {
+                            var a = '<span class="btn btn-xs" style="background:#5CB85C;color:#FFFFFF;">'+value+'</span>';
+                        }else if(value == "aborted"){
+                            var a = '<span class="btn btn-xs" style="background:#5bc0de;color:#FFFFFF;">'+value+'</span>';
+                        }else if(value == "disabled"){
+                                var a = '<span class="btn btn-xs" style="background:#428BCA;color:#FFFFFF;">'+value+'</span>';
+                        }else if(value == "red") {
+                            var a = '<span class="btn btn-xs" style="background:#FF0000;color:#FFFFFF;">'+value+'</span>';
+                        }else if(value == "notbuilt") {
+                            var a = '<span class="btn btn-xs" style="background:#000000;color:#FFFFFF;">'+value+'</span>';
+                        }else{
+                            var a = '<span>'+value+'</span>';
+                        }
+                        return a;
+                    }
+                },
+                {
+                    title:'操作',
+                    field:'id',
+                    align:'center',
+                    //列数据格式化
+                    //formatter:operateFormatter
+                    formatter:function(value,row,gitflow){
+                        {% if jenkins_env == 100 %}
+                        var w = '<a href="/cijenkins/job_manage/job_details_pro/{{ jenkins_env }}/' + row.job_name +'"><button type="button" class="btn btn-info btn-xs"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 模块详情</button></a> ';
+                        var d = '<a href="/cijenkins/job_manage/job_details_pro/{{ jenkins_env }}/'+ row.job_name +'"><button type="button" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 构建</button></a> ';
+                        var y = '<a href="/cijenkins/job_manage/configure_pro/{{ jenkins_env }}/'+ row.job_name +'"><button type="button" class="btn btn-inverse btn-xs"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 配置</button></a> ';
+                        var x = '<a href="/cijenkins/job_manage/rollback_pro/{{ jenkins_env }}/'+ row.job_name +'"><button type="button" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 回滚</button></a> ';
+                        {% else %}
+                        var w = '<a href="/cijenkins/job_manage/job_details_qa/{{ jenkins_env }}/' + row.job_name +'"><button type="button" class="btn btn-info btn-xs"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 模块详情</button></a> ';
+                        var d = '<a href="/cijenkins/job_manage/job_details_qa/{{ jenkins_env }}/'+ row.job_name +'"><button type="button" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 构建</button></a> ';
+                        var y = '<a href="/cijenkins/job_manage/configure_qa/{{ jenkins_env }}/'+ row.job_name +'"><button type="button" class="btn btn-inverse btn-xs"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 配置</button></a> ';
+                        var x = '<a href="/cijenkins/job_manage/rollback_qa/{{ jenkins_env }}/'+ row.job_name +'"><button type="button" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 回滚</button></a> ';
+                        {% endif %}
+                        return w+d+y+x;
+                    }
+                }
+            ],
+                queryParams: function queryParams(params) {   //设置查询参数
+                    var param = {
+                        //加上csrf
+                        csrfmiddlewaretoken :$("input[name='csrfmiddlewaretoken']").val(),
+                        pageNumber: params.pageNumber,
+                        search:params.searchText,
+                        pageSize: params.pageSize,
+                        order:params.sortOrder,
+                        sort:params.sortName
+                    };
+                    return param;
+                },
+
+            });
+        }
+        $(document).ready(function () {
+            //调用函数，初始化表格
+            initTable();
+
+            //当点击查询按钮的时候执行
+            $("#search").bind("click", initTable);
+        });
+</script>
+{% endblock %}
+{% block ext_script %}{% endblock %}

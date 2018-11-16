@@ -1,0 +1,65 @@
+{% extends 'form.html' %}
+{% load staticfiles %}
+{% block page_title %}业务角色管理{% endblock %}
+{% block table_title %}添加{% endblock %}
+{% block page_form %}
+    {% for field in projectform %}
+        <div class="form-group">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">{{ field.label }}</label>
+            <div class="col-md-6 col-sm-6 col-xs-12">
+            {{ field }}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
+{% block ext_script %}
+    <script type="text/javascript" src="{% static 'bootstrap/js/doublebox-bootstrap.js' %}"></script>
+    <script type="text/javascript">
+        $(function () {
+            $("#project_name").change(function () {
+                $("#id_doublebox").find("option").remove();
+                if ($(this).val() == '') {
+                    return false
+                }
+                var select = [];
+                var select_list = "";
+                var noselect = [];
+                var noselect_list = "";
+                $.get('/flow/get_all_module/' + $(this).val() + '/', function (dict) {
+                    $.each(dict.data2, function (index, item) {
+                        noselect.push({"moduleId": item[0], "moduleName": item[1]});
+                    });
+                    noselect_list = JSON.stringify(noselect);
+                    var demo2 = $('.demo').doublebox({
+                        nonSelectedListLabel: '选择权限',
+                        selectedListLabel: '授权该角色的权限',
+                        preserveSelectionOnMove: 'moved',
+                        moveOnSelect: false,
+                        nonSelectedList: eval(noselect_list),
+                        selectedList: [],
+                        optionValue: "moduleId",
+                        optionText: "moduleName",
+                        doubleMove: true
+                    });
+                });
+            });
+        });
+        $(document).ready(function(){
+            var demo2 = $('.demo').doublebox({
+                nonSelectedListLabel: '选择权限',
+                selectedListLabel: '授权该角色的权限',
+                preserveSelectionOnMove: 'moved',
+                moveOnSelect: false,
+                nonSelectedList:[{"roleId":"" ,"roleName": "请选择项目"}],
+                selectedList:[{"roleId":"" ,"roleName": "请选择项目"}],
+                optionValue:"roleId",
+                optionText:"roleName",
+                doubleMove:true
+            });
+        });
+    </script>
+    <script type="text/javascript">
+    $("#usercenter_menu_id").css("display","block");
+    $("#project_role_manage").addClass('current-page');
+    </script>
+{% endblock %}

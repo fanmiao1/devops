@@ -1,0 +1,589 @@
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block table_title %}
+<div class="ivu-btn-group pull-left" style="padding-left: 0; padding-bottom: 5px;">
+    <span style="color: #495060">脚本列表</span>
+</div>
+<div class="pull-right">
+    <button type="button" class="ivu-btn ivu-btn-default pull-left" onclick="refresh_table()"><span class="glyphicon glyphicon-refresh" style="color: #495060"></span></button>
+    <button type="button" class="ivu-btn ivu-btn-primary" data-toggle="modal" data-target="#changeModal">新增</button>
+    <button type="button" class="ivu-btn ivu-btn-primary" onclick="execView()">执行</button>
+    <button type="button" class="ivu-btn ivu-btn-primary" data-toggle="modal" data-target="#changeModal" data-id="1">编辑</button>
+    <button type="button" class="ivu-btn ivu-btn-primary" onclick="confirmDelete()">删除</button>
+</div>
+{% endblock %}
+{% block ext_before %}
+<link rel="stylesheet" href="{% static 'ztree/css/metroStyle/metroStyle.css' %}" type="text/css">
+<link href="{% static 'css/prism-coy.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'codemirror/addon/display/fullscreen.css' %}" rel="stylesheet" type="text/css">
+<link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+<link href="{% static 'codemirror/lib/codemirror.css' %}" rel="stylesheet" type="text/css">
+<link href="{% static 'codemirror/theme/mdn-like.css' %}" rel="stylesheet" type="text/css">
+<style>
+    #table tbody tr td{
+        line-height:23px;
+    }
+    .ivu-btn {
+        border-radius:0;
+    }
+    .modal-content{
+        border-radius:0;
+    }
+    #radio_ssh_ip .active {
+        background: #2d8cf0;
+        color: #333;
+    }
+    .CodeMirror{
+        font-size: 16px;
+        border: 1px solid #dddee1;
+    }
+    .CodeMirror-gutters {
+        border-left: 6px solid #57a3f3;
+    }
+    code, pre {
+        font-family: Consolas, Monaco, 'Andale Mono', 'Lucida Console', monospace;
+        hyphens: none;
+    }
+
+    pre {
+        max-height: 30em;
+        overflow: auto;
+    }
+
+    pre > code.highlight {
+        outline: .4em solid red;
+        outline-offset: .4em;
+    }
+    #select_script_div_id .active {
+        background: #2d8cf0;
+        color: #333;
+    }
+</style>
+{% endblock %}
+{% block ext_button %}
+    <!-- 添加/修改 -->
+    <div class="modal fade" id="changeModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 9999; width: 850px;">
+            <div class="ivu-spin ivu-spin-fix" id="changing_id" style="display: none">
+                <div class="ivu-spin-main">
+                    <span class="ivu-spin-dot"></span>
+                    <div class="ivu-spin-text"></div>
+                    <div>请求中</div>
+                </div>
+            </div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="change_h4_id">添加脚本</h4>
+                </div>
+                <form id="change_form" action="#" class="form-horizontal form-label-left">
+                    <div class="modal-body roll">
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">脚本名称 <span class="required">*</span></label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <input class="ivu-input is_required" name="script_name">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">脚本分类 <span class="required">*</span></label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <select class="selectpicker show-tick form-control" name="script_group" id="script_group_id">
+                                    <option value="shell">shell</option>
+                                    <option value="python">python</option>
+                                    <option value="linuxyml">linuxyml</option>
+                                    <option value="winyml">winyml</option>
+                                    <option value="winps1">winps1</option>
+                                    <option value="py_monitor">Py监控分发（自动添加第一个参数为实例ID）</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">脚本内容 <span class="required">*</span></label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <textarea id="script_edit"></textarea>
+                                <textarea class="ivu-input is_required" name="script_content" id="script_content" style="display: none;"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">脚本描述 <span class="required">*</span></label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <textarea class="ivu-input is_required" name="script_desc"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">添加人 <span class="required">*</span></label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <input class="ivu-input is_required" name="script_user">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" id="change_submit_btn" onclick="change(-1)">
+                            <span class="ladda-label"> 确认 </span>
+                        </button>
+                        <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /. 添加/修改结束 -->
+
+    <!-- 选择执行的实例 -->
+    <div class="modal fade" id="execServerModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="ivu-spin ivu-spin-fix" id="server_catch_id">
+                <div class="ivu-spin-main">
+                    <span class="ivu-spin-dot"></span>
+                    <div class="ivu-spin-text"></div>
+                    <div>实例抓取中</div>
+                </div>
+            </div>
+            <div class="ivu-spin ivu-spin-fix" id="exec_loading_id" style="display: none">
+                <div class="ivu-spin-main">
+                    <span class="ivu-spin-dot"></span>
+                    <div class="ivu-spin-text"></div>
+                    <div>请求发送中</div>
+                </div>
+            </div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">选择要执行该脚本【<span id="select_exec_script_name_id"></span>】的实例或实例组</h4>
+                </div>
+                <form id="select_server_form_id" action="#" class="form-horizontal form-label-left">
+                    <input hidden name="id" id="exec_script_id">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="btn-group" data-toggle="buttons" id="select_script_div_id">
+                                    <label class="btn btn-default ivu-btn-ghost active" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default"><input type="radio" name="server" value="server" onchange="sTChange()"> &ensp;实 例&ensp; </label>
+                                    <label class="btn btn-primary ivu-btn-ghost" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default"><input type="radio" name="server" value="group" onchange="sTChange()">实例组</label>
+                                </div>
+                            </div>
+                        </div> 
+                        <div class="clearfix" style="height: 5px;border-bottom: 1px #D7DEE5 solid;margin-bottom: 5px;"></div>
+                        <div class="form-group">
+                            <div class="col-md-12 col-sm-12 col-xs-12" id="app_p_div"></div>
+                            <ul id="treeDemo" class="ztree" style="display: none"></ul>
+                        </div>
+                    </div>
+                </form>
+                <div class="modal-footer">
+                    <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" onclick="submit_exec()">
+                        <span class="ladda-label"> 确认 </span>
+                    </button>
+                    <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /.选择执行的实例结束 -->
+{% endblock %}
+{% block ext_script %}
+<script type="text/javascript" src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+<script type="text/javascript" src="{% static 'codemirror/addon/selection/active-line.js' %}"></script>
+<script type="text/javascript" src="{% static 'codemirror/addon/edit/matchbrackets.js' %}"></script>
+<script type="text/javascript" src="{% static 'codemirror/addon/display/fullscreen.js' %}"></script>
+<script type="text/javascript" src="{% static 'codemirror/mode/python/python.js' %}"></script>
+<script type="text/javascript" src="{% static 'codemirror/mode/shell/shell.js' %}"></script>
+<script src="{% static 'codemirror/addon/display/autorefresh.js' %}"></script>
+<script src="{%static 'js/prism-coy.js' %}"></script>
+<script src="{% static 'js/aukeyops/currency.js' %}"></script>
+<script src="{% static 'ztree/js/jquery.ztree.core.js' %}"></script>
+<script src="{% static 'vuejs/vue.min.js' %}"></script>
+<script src="{% static 'vuejs/iview.min.js' %}"></script>
+<script type="text/javascript">
+    var change_server_list;
+    $('#execServerModal').on('show.bs.modal', function () {
+        $('#server_catch_id').show();
+        var a_html  = '<div id="app"><transfer :data="data1"'+
+            ':target-keys="targetKeys1"'+
+            ':list-style="listStyle"'+
+            'filterable="" '+
+            ':render-format="render1"'+
+            ':operations="[\'移出\',\'移入\']"'+
+            'not-found-text=""'+
+            '@on-change="handleChange1"></transfer>'+
+        '</div>';
+        $('#app_p_div').html(a_html);
+        var mockData = [];
+        var TargetKeys = [];
+        var Main = {
+            data () {
+                return {
+                    data1: mockData,
+                    targetKeys1: TargetKeys,
+                    listStyle: {
+                    width: '40%',
+                    height: '300px'
+                }
+                }
+            },
+            methods: {
+                render1 (item) {
+                    return item.label;
+                },
+                handleChange1 (newTargetKeys, direction, moveKeys) {
+                    change_server_list = newTargetKeys;
+                    this.targetKeys1 = newTargetKeys;
+                }
+            }
+        };
+        var Component = Vue.extend(Main);
+        new Component().$mount('#app');
+        $.ajax({
+            url: '/opscenter/server/all/list/',
+            type: 'get',
+            success: function (result) {
+                for (i in result) {
+                    mockData.push({
+                        key: result[i]['id'],
+                        label: result[i]['name'],
+                        description: result[i]['name'],
+                        disabled: false
+                    });
+                }
+                $('#server_catch_id').hide()
+            }
+        });
+    });
+
+    function initTable() {
+        $('#table').bootstrapTable({
+            method: "get",  //使用post请求到服务器获取数据
+            contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+            dataType: "json",
+            cache: false,
+            url:'/opscenter/script/list/',
+            toolbar: '#toolbar',//指定工具栏
+            striped: true,  //表格显示条纹
+            minimumCountColumns: 1,
+            dataField: "results",
+            pagination: true, //启动分页
+            sortable: true,  //启用排序
+            pageSize: 15,  //每页显示的记录数
+            pageNumber:1, //当前第几页
+            pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+            search: false,  //是否启用查询
+            searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+            searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+            showColumns: false,  //显示下拉框勾选要显示的列
+            showRefresh: false,  //显示刷新按钮
+            showSearchButton: false, //显示搜索按钮
+            showExport: false,//显示导出按钮
+            exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+            sidePagination: "server", //分页方式：client客户端分页，server服务端分页（*）
+            //设置为undefined可以获取pageNumber，pageSize，searchText，sortName，sortOrder
+            //设置为limit可以获取limit, offset, search, sort, order
+            queryParamsType : "undefined", //设置为 'limit' 则会发送符合 RESTFul 格式的参数
+            clickToSelect: true,//是否启用点击选中行
+            singleSelect:true, // 设置 true 将禁止多选
+            checkboxHeader:false, //设置 false 将在列头隐藏全选复选框
+            toolbarAlign:'left',//工具栏对齐方式
+            buttonsAlign:'right',//按钮对齐方式
+            undefinedText: '', //当数据为 undefined 时显示的字符
+            detailView:true,
+            responseHandler: function (res) {
+                res['total'] = res['count'];
+                return res
+            },
+            columns:[
+                {
+                    title:'',
+                    field:'select',
+                    //复选框
+                    checkbox:true,
+                    width:25,
+                    align:'center',
+                    valign:'middle'
+                },
+                {
+                    title:'ID',
+                    field:'id',
+                    align:'center',
+                    sortable:true,
+                },
+                {
+                    title:'脚本名称',
+                    field:'script_name',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'脚本描述',
+                    field:'script_desc',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'脚本分类',
+                    field:'script_group',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'添加人',
+                    field:'script_user',
+                    align:'center',
+                    sortable:true
+                },
+                {
+                    title:'添加时间',
+                    field:'datetime',
+                    align:'center',
+                    sortable:true,
+                    formatter:function(value,row){
+                        var d = '';
+                        if (value) {
+                            d =  new Date(value).toLocaleString();
+                        }
+                        return d
+                    }
+                },
+                {
+                    title:'操作',
+                    field:'id',
+                    align:'center',
+                    formatter:function(value,row,gitflow){
+                        var r = '<a href="/opscenter/script/exec/log/view/'+ row.id +'"><button type="button" class="btn btn-link btn-xs"><span class="glyphicon glyphicon-time" aria-hidden="true"></span> 执行记录</button></a> ';
+                            return r;
+                    }
+                }
+            ],
+            queryParams: function queryParams(params) {   //设置查询参数
+                if (params.sortOrder == 'desc') {
+                    params.sortName = '-'+params.sortName
+                }
+                var param = {
+                    page: params.pageNumber,
+                    size: params.pageSize,
+                    ordering:params.sortName
+                };
+                return param;
+            },
+            detailFormatter:function (index, row) {
+                var lang;
+                if (row.script_group == 'python') {
+                    lang = 'python'
+                } else {
+                    lang = 'bash'
+                }
+                var detail_res = '<pre class="language-'+lang+'"><code class="language-'+lang+'">'+row.script_content+'</code></pre>';
+                return detail_res
+            }
+        });
+    }
+    $(document).ready(function () {
+        initTable();
+    });
+
+    var myCodeMirror = CodeMirror.fromTextArea(document.getElementById("script_edit"), {
+        mode: "text/x-sh",
+        lineNumbers: true,
+        matchBrackets: true,
+        styleActiveLine: true,
+        indentUnit: 4,
+        lineWrapping: true,
+        theme: 'mdn-like',
+        smartIndent: false,
+        autoRefresh: true,
+        showCursorWhenSelecting: true,
+        gutters: ["CodeMirror-linenumbers"],
+    });
+
+    $('#script_group_id').change(function () {
+        var code_mode;
+        if ($(this).val() == 'python') {
+            code_mode = 'text/x-cython';
+        } else {
+            code_mode = 'text/x-sh';
+        }
+        myCodeMirror.setOption("mode", code_mode);
+    });
+
+    // 打开添加/修改模态框
+    $('#changeModal').on('show.bs.modal', function (event) {
+        var id = $(event.relatedTarget).data('id');
+        var form = $('#change_form');
+        if (id) {
+            var select = getSelectRow();
+            if (select && select.id) {
+                $('#change_h4_id').html('修改脚本');
+                $('#change_submit_btn').attr('onclick','change('+select.id+')');
+                form.find("[name='script_name']").val(select.script_name);
+                // form.find("[name='script_content']").val(select.script_content);
+                myCodeMirror.setValue(select.script_content);
+                form.find("[name='script_desc']").val(select.script_desc);
+                $('#script_group_id').selectpicker('val',select.script_group);
+            } else {
+                MyMessage(0, '请选择脚本！');
+                return false
+            }
+        } else {
+            $('#change_h4_id').html('添加脚本');
+            $('#change_submit_btn').attr('onclick','change(-1)');
+        }
+        {% if user.last_name or user.first_name %}
+            form.find("[name='script_user']").val("{{ user.last_name }}{{ user.first_name }}");
+        {% else %}
+            form.find("[name='script_user']").val("{{ user.username }}");
+        {% endif %}
+    });
+
+    // 关闭添加/修改模态框
+    $('#changeModal').on('hide.bs.modal', function () {
+        cleanErrorAlert('change_form');
+        document.getElementById("change_form").reset();
+        $('#script_group_id').selectpicker('refresh');
+        myCodeMirror.setValue('');
+    });
+
+    // 添加/修改动作
+    function change (id) {
+        $('#script_content').val(myCodeMirror.getValue());
+        cleanErrorAlert('change_form');
+        var re = checkRequired('change_form');
+        if (!re) {
+            return false
+        }
+        if (id > 0) {
+            var url = '/opscenter/script/detail/'+id+'/';
+            var type = 'put'
+        } else {
+            var url ='/opscenter/script/list/';
+            var type = 'post'
+        }
+        change_request(url, type)
+    }
+
+    // 删除
+    function confirmDelete(){
+        var select = getSelectRow();
+        if (select && select.id) {
+            var url = '/opscenter/script/detail/'+select.id+'/';
+            $.confirm({
+                title: '提示！',
+                content: '确定要删除脚本「'+select.script_name+'」吗？',
+                closeIcon: true,
+                confirmButtonClass:'btn-danger',
+                cancelButtonClass: 'btn-default ',
+                confirmButton: '删除!',
+                cancelButton: '取消',
+                confirm: function(){
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        success: function (result) {
+                            MyMessage(1, '操作成功！');
+                            $('#table').bootstrapTable("refresh");
+                        },
+                        error: function (result) {
+                            MyMessage(0, result['responseText']);
+                        }
+                    })
+                }
+            });
+        } else {
+            MyMessage(0, '请选择脚本！');
+            return false;
+        }
+    }
+
+    function execView () {
+        var select = getSelectRow();
+        if (select && select.id) {
+            $('#exec_script_id').val(select.id);
+            $('#select_exec_script_name_id').html(select.script_name);
+            $('#execServerModal').modal('show');
+        } else {
+            MyMessage(0, '请选择脚本！');
+            return false;
+        }
+    }
+    
+
+    function tranServerGroup () {
+        var nodes = [{'id':0, 'parent_id':0, 'name': "实例分组", 'open': 'true'}];
+        $.ajax({
+            url: '/opscenter/server_group/list/',
+            type: 'get',
+            async: false,
+            success: function (result) {
+                nodes = nodes.concat(result);
+            }
+        });
+        var setting = {
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "id",
+                    pIdKey: "parent_id",
+                    rootPId: 0
+                }
+            },
+            check: {
+                enable: true
+            },
+            callback: {
+                onClick: zTreeOnClick
+            }
+        };
+        zTreeObj = $.fn.zTree.init($("#treeDemo"), setting, nodes);
+        function zTreeOnClick(event, treeId, treeNode){
+            $("#org_search_input_id").val(treeNode.name);
+            if (treeNode.id > 0) {
+                $.ajax({
+                    url: '/opscenter/server_group/detail/'+treeNode.id+'/',
+                    type: 'get',
+                    async: false,
+                    success: function (result) {
+                        if (result['server']) {
+                            change_server_list = eval("["+result['server']+"]")
+                        }
+                    },
+                    error: function (result) {
+                        MyMessage(0, result['responseText']);
+                    }
+                })
+            } else {
+                change_server_list = [];
+            }
+        }
+    }
+
+    function sTChange () {
+        var sel = $("#select_script_div_id input[name='server']:checked").val();
+        if (sel == 'group') {
+            $('#app_p_div').hide();
+            tranServerGroup();
+            $('#treeDemo').show();
+        } else {
+            $('#treeDemo').hide();
+            $('#app_p_div').show();
+        }
+    }
+
+    function submit_exec () {
+        $('#exec_loading_id').show();
+        var submit_script_id = $('#exec_script_id').val();
+        var submit_data = {'id': submit_script_id, 'server_id': change_server_list.join(',')};
+        $.ajax({
+            url: '/opscenter/script/exec/',
+            data: submit_data,
+            type: 'post',
+            success: function (result) {
+                $('#execServerModal').modal('hide');
+                MyMessage(result['code'], result['result']);
+                $('#exec_loading_id').hide();
+            },
+            error: function (result) {
+                MyMessage(0, result['responseText']);
+                $('#exec_loading_id').hide();
+            }
+        })
+    }
+</script>
+{% endblock %}

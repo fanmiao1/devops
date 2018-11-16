@@ -1,0 +1,1715 @@
+{% extends 'table.html' %}
+{% load staticfiles %}
+{% block page_title %}{% endblock %}
+{% block table_title %}
+    <div class="ivu-btn-group pull-left" style="padding-left: 0; padding-bottom: 5px;" id="view_trans_div_id">
+        <button id="view1_id" type="button" class="ivu-btn ivu-btn-primary" onclick="view_trans(1)">采购订单</button>
+        <button id="view2_id" type="button" class="ivu-btn ivu-btn-ghost" onclick="view_trans(2)">物品类型管理</button>
+{#        <button id="" type="button" class="ivu-btn ivu-btn-ghost" data-toggle="modal" data-target="#CountModal">采购统计</button>#}
+    </div>
+    <div id="purchase_action_btn" class="pull-right">
+        <button id="" type="button" class="ivu-btn ivu-btn-primary pull-left" data-toggle="modal" data-target="#changeModal">添加</button>
+        <button id="" type="button" class="ivu-btn ivu-btn-primary pull-left" data-toggle="modal" data-target="#changeModal" data-id="1">修改</button>
+        <button id="" type="button" class="ivu-btn ivu-btn-primary pull-left" onclick="confirmDelete(1)">删除</button>
+{#        <button id="importBtn" type="button" class="ivu-btn ivu-btn-primary"data-toggle="modal" data-target="#importModal">导入</button>#}
+        <button id="exportBtn" type="button" class="export-excel ivu-btn ivu-btn-primary" data-table="#table">导出当前页</button>
+{#        <button id="customExportBtn" type="button" class="ivu-btn ivu-btn-primary" data-toggle="modal" data-target="#customExportModal">自定义导出</button>#}
+    </div>
+    <div id="goodstype_action_btn" class="pull-right" style="display: none">
+        <button id="" type="button" class="ivu-btn ivu-btn-primary pull-left" data-toggle="modal" data-target="#TypeChangeModal">添加</button>
+        <button id="" type="button" class="ivu-btn ivu-btn-primary pull-left" data-toggle="modal" data-target="#TypeChangeModal" data-id="1">修改</button>
+        <button id="" type="button" class="ivu-btn ivu-btn-primary pull-left" onclick="confirmDelete(2)">删除</button>
+    </div>
+{% endblock %}
+{% block tinymce_js %}{% endblock %}
+{% block ext_before %}
+    <link rel="stylesheet" href="{% static 'ztree/css/metroStyle/metroStyle.css' %}" type="text/css">
+    <link href="{% static 'jedate/jedate.css' %}" rel="stylesheet" />
+    <link href="{% static 'bootstrap-datetimepicker/css/bootstrap-datetimepicker.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/asset_list.css' %}" rel="stylesheet" />
+    <link href="{% static 'jqueryui/jquery-ui-1.10.4.custom.min.css' %}" rel="stylesheet" />
+    <link href="{%static 'css/jquery-confirm-3.3.0.css' %}" rel="stylesheet" type="text/css">
+    <style>
+    #table{width:100%;}
+    #table td{word-break: keep-all;white-space:nowrap;}
+    .fixed-table-body::-webkit-scrollbar {/*滚动条整体样式*/
+        width: 1px;     /*高宽分别对应横竖滚动条的尺寸*/
+        height: 8px;
+    }
+    .fixed-table-body::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+        border-radius: 3px;
+         -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        background: #9c9c9c;
+    }
+    .fixed-table-body::-webkit-scrollbar-track {/*滚动条里面轨道*/
+        -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        border-radius: 3px;
+        background: #EDEDED;
+    }
+    #table tbody tr td{
+        line-height: 28px;
+    }
+    #custom_export_select_field_id .bootstrap-select {
+        padding: 0;
+    }
+    .fixed-table-container thead th .sortable {
+        padding-right: 15px;
+    }
+    .ui-spinner-input {
+        margin: 1px;
+        height: 30px;
+    }
+    .ui-widget-content {
+        border: 1px solid #dddee1;
+    }
+
+    #orgModal .ztree li span.button.ico_docu{
+        background-size:90% 90% !important;
+    }
+    #orgModal .ztree li span.button.ico_close {
+        background-color: #00aeef !important;
+    }
+    #orgModal .ztree li span.button.ico_open {
+        background-color: #00aeef !important;
+    }
+    /*导入*/
+    #file , #file_inout{
+        position: relative;
+        display: inline-block;
+        background: transparent;
+        border: 1px solid #CCCCCC;
+        border-radius: 4px;
+        padding: 1px 5px;
+        overflow: hidden;
+        color: #1E88C7;
+        text-decoration: none;
+        text-indent: 0;
+        line-height: 18px;
+
+    }
+    #file input ,#file_inout input{
+        position: absolute;
+        font-size: 100px;
+        right: 0;
+        top: 0;
+        opacity: 0;
+        cursor:pointer;
+    }
+    #file:hover , #file_inout:hover{
+        background: #FFFFFF;
+        border-color: #CCCCCC;
+        color: #004974;
+        text-decoration: none;
+    }
+    </style>
+{% endblock %}
+{% block ext_button %}
+    <!-- 搜索栏 -->
+    <form class="form-horizontal" action="#" id="searchFormId">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div id="asset_search">
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">订单ID</label></div>
+                    <div class="col-md-8"><input class="ivu-input" type="text" name="id__in" placeholder="多个用英文逗号','分隔" autocomplete="off"></div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">申购人</label></div>
+                    <div class="col-md-8"><input class="ivu-input" type="text" name="applicant" autocomplete="off"></div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">申购物品</label></div>
+                    <div class="col-md-8"><input class="ivu-input" type="text" name="goods" autocomplete="off"></div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">物品类型</label></div>
+                    <div class="col-md-8">
+                        <select class="selectpicker show-tick form-control" name="type" id="search_type_id"></select>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-3"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">申购日期</label></div>
+                    <div class="col-md-9">
+                        <input class="ivu-input search_range_date" type="text" id="search_application_date_id" autocomplete="off">
+                        <input hidden name="application_date_0" id="search_application_date_0">
+                        <input hidden name="application_date_1" id="search_application_date_1">
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">状态</label></div>
+                    <div class="col-md-8">
+                        <select class="selectpicker show-tick form-control" name="status">
+                            <option></option>
+                            <option value=1>已申请</option>
+                            <option value=2>待审批</option>
+                            <option value=3>采购中</option>
+                            <option value=4>已开票</option>
+                            <option value=5>已完结</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">采购人</label></div>
+                    <div class="col-md-8"><input class="ivu-input" type="text" name="purchaser" autocomplete="off"></div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">采购类型</label></div>
+                    <div class="col-md-8">
+                        <select class="selectpicker show-tick form-control" name="purchase_type" autocomplete="off">
+                            <option></option>
+                            <option value=1>新购</option>
+                            <option value=2>续费</option>
+                            <option value=3>升级</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">接收人</label></div>
+                    <div class="col-md-8"><input class="ivu-input" type="text" name="receiver" autocomplete="off"></div>
+                </div>
+                <div class="col-md-3 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-3"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">采购日期</label></div>
+                    <div class="col-md-9">
+                        <input class="ivu-input search_range_date" id="search_purchase_date_id" type="text" autocomplete="off" style="font-size:10px;">
+                        <input hidden name="purchase_date_0" id="search_purchase_date_0">
+                        <input hidden name="purchase_date_1" id="search_purchase_date_1">
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <input hidden name="department_id__in">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">所属部门</label></div>
+                    <div class="col-md-8">
+{#                        <input class="ivu-input" type="text" name="department" placeholder="点击选择"#}
+{#                               autocomplete="off" data-toggle="modal" data-target="#OrgModalNoPeople" readonly>#}
+                        <input class="ivu-input" type="text" name="department">
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">费用分摊组</label></div>
+                    <div class="col-md-8">
+                        <input class="ivu-input" type="text" name="group" autocomplete="off">
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">其他信息</label></div>
+                    <div class="col-md-8">
+                        <input class="ivu-input" type="text" name="other_info" autocomplete="off">
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-4"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">备注</label></div>
+                    <div class="col-md-8">
+                        <input class="ivu-input" type="text" name="remark" id="id_description">
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 col-xs-12" style="min-width: 241px;">
+                    <div class="col-md-3"><label class="ivu-form-item-label pull-left" style="line-height: 34px;">接收日期</label></div>
+                    <div class="col-md-9">
+                        <input class="ivu-input search_range_date" id="search_receive_date_id" type="text" autocomplete="off" style="font-size:10px;">
+                        <input hidden name="receive_date_0" id="search_receive_date_0">
+                        <input hidden name="receive_date_1" id="search_receive_date_1">
+                    </div>
+                </div>
+                <div id="lend_count_search"></div>
+            </div>
+            <div class="ivu-form-item-content pull-left">
+                <div class="col-md-12">
+                <a href="javascript:void(0);" id="searchBtnId" class="ivu-btn ivu-btn-circle ivu-btn-primary ivu-btn-circle-outline">
+                    <i class="fa fa-search"></i> 搜索 </a>
+                <a href="javascript:;" class="ivu-btn ivu-btn-circle ivu-btn-ghost ivu-btn-circle-outline" onclick="formReset()">
+                    <i class="fa fa-print"></i> 重置 </a>
+                </div>
+            </div>
+        </div>
+    </form>
+    <!-- /.搜索栏结束 -->
+    <script src="{% static 'js/aukeyops/searchTable.js' %}"></script>
+
+    <!-- change模态框 -->
+    <div class="modal fade" id="changeModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="ivu-spin ivu-spin-fix" id="changing_loading_id" style="display: none;">
+                <div class="ivu-spin-main">
+                    <span class="ivu-spin-dot"></span>
+                    <div class="ivu-spin-text"></div>
+                    <div>请求中</div>
+                </div>
+            </div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="change_h4_id">添加订单</h4>
+                </div>
+                <form id="change_form" action="#" class="form-horizontal form-label-left">
+                    <input type="hidden" name="hidden_add_asset_id_input" id="hidden_add_asset_id">
+                    <div class="modal-body roll" style="max-height: 700px;overflow-y: auto">
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">申购人 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="applicant" class="ivu-input is_required" required="required" type="text" placeholder="点击选择"
+                                       autocomplete="off" data-toggle="modal" data-target="#orgModal" readonly>
+                            </div>
+                            <input name="applicant_email" type="text" autocomplete="off" placeholder="选择申购人" readonly hidden>
+                            <label class="ivu-form-item-label pull-left col-md-2">申购日期</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="application_date" class="ivu-input change_application_date_picker" type="text" autocomplete="off" placeholder="选择日期">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">申购物品 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="goods" class="ivu-input is_required" required="required" type="text" autocomplete="off">
+                            </div>
+                            <label class="ivu-form-item-label pull-left col-md-2">物品类型</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <select class="selectpicker show-tick form-control" name="type" id="change_type_id"></select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">所属部门</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <div class="ivu-input-wrapper ivu-input-wrapper-default ivu-input-type">
+                                    <i class="ivu-icon ivu-icon-ios-arrow-down ivu-input-icon ivu-input-icon-normal ivu-input-search-icon" style="cursor: pointer" data-toggle="modal" data-target="#OrgModalBelongDepartment"></i>
+                                    <i class="ivu-icon ivu-icon-ios-loading ivu-load-loop ivu-input-icon ivu-input-icon-validate"></i>
+                                    <input name="department" class="ivu-input" placeholder="点击右边按钮选择" type="text" autocomplete="off">
+                                </div>
+                            </div>
+                            <label class="ivu-form-item-label pull-left col-md-2">费用分摊组</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <div class="ivu-input-wrapper ivu-input-wrapper-default ivu-input-type">
+                                    <i class="ivu-icon ivu-icon-ios-arrow-down ivu-input-icon ivu-input-icon-normal ivu-input-search-icon" style="cursor: pointer" data-toggle="modal" data-target="#OrgModalBelongGroup"></i>
+                                    <i class="ivu-icon ivu-icon-ios-loading ivu-load-loop ivu-input-icon ivu-input-icon-validate"></i>
+                                    <input name="group" class="ivu-input" type="text" placeholder="点击右边按钮选择" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">单价(元) <span class="required">*</span>
+                            </label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="unit_price" class="ivu-input is_required is_int" required="required" type="text" autocomplete="off">
+                            </div>
+                            <label class="ivu-form-item-label pull-left col-md-2">申购数量 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="count" class="ivu-input spinner is_int" required="required" type="text" autocomplete="off" value="1">
+                            </div>
+                        </div>
+{#                        <input name="department" type="text" placeholder="选择申购人" autocomplete="off" readonly hidden>#}
+{#                        <input name="department_id" type="text" hidden>#}
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">总价(元) <span class="required">*</span>
+                            </label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="total_price" class="ivu-input is_required is_int" required="required" type="text" autocomplete="off">
+                            </div>
+                            <label class="ivu-form-item-label pull-left col-md-2">规格</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="standard" class="ivu-input" autocomplete="off">
+                            </div>
+                            <input name="approver_email" type="text" autocomplete="off" readonly placeholder="选择审批人" hidden>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">采购人</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="purchaser" class="ivu-input" type="text" placeholder="点击选择"
+                                       autocomplete="off" data-toggle="modal" data-target="#orgModal" readonly>
+                            </div>
+                            <input name="purchaser_email" type="text" autocomplete="off" readonly placeholder="选择采购人" hidden>
+                            <label class="ivu-form-item-label pull-left col-md-2">采购日期</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="purchase_date" class="ivu-input change_purchase_date_picker" type="text" autocomplete="off" placeholder="选择日期">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">采购类型</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <select class="selectpicker show-tick form-control" id="change_purchase_type_id" name="purchase_type">
+                                    <option value=1>新购</option>
+                                    <option value=2>续费</option>
+                                    <option value=3>升级</option>
+                                </select>
+                            </div>
+                            <label class="ivu-form-item-label pull-left col-md-2">部门审批人</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="approver" class="ivu-input" type="text" placeholder="点击选择"
+                                       autocomplete="off" data-toggle="modal" data-target="#orgModal" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">接收人</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="receiver" class="ivu-input" type="text" placeholder="点击选择"
+                                       autocomplete="off" data-toggle="modal" data-target="#orgModal" readonly>
+                            </div>
+                            <input name="receiver_email" type="text" autocomplete="off" readonly placeholder="选择接收人" hidden>
+                            <label class="ivu-form-item-label pull-left col-md-2">接收日期</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <input name="receive_date" class="ivu-input change_receive_date_picker" type="text" autocomplete="off" placeholder="选择日期">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">状态</label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <select class="selectpicker show-tick form-control" name="status">
+                                    <option value=1>已申请</option>
+                                    <option value=2>待审批</option>
+                                    <option value=3>采购中</option>
+                                    <option value=4>已开票</option>
+                                    <option value=5>已完结</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">备注</label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <textarea name="remark" class="ivu-input" style="display: none" id="change_remark"></textarea>
+                                <div id="editor_action" hidden></div>
+                                <div id="editor" class="ivu-input" style="height: 150px;"></div>
+                            </div>
+                        </div>
+                        <input name="other_info" id="change_other_info_id" hidden>
+                        <div id="add_my_field_group"></div>
+                        <div id="add_item_group"></div>
+                        <label class="ivu-form-item-label pull-left col-md-2"></label>
+                        <button type="button" class="ivu-btn ivu-btn-dashed" onclick="addItem()"><span>添加字段</span></button>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" id="change_submit_btn" onclick="change()">
+                            <span class="ladda-label"> 确认 </span>
+                        </button>
+                        <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /.change模态框结束 -->
+
+    <!-- 物品类型编辑模态框 -->
+    <div class="modal fade" id="TypeChangeModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="ivu-spin ivu-spin-fix" id="type_change_loading_id" style="display: none;">
+                <div class="ivu-spin-main">
+                    <span class="ivu-spin-dot"></span>
+                    <div class="ivu-spin-text"></div>
+                    <div>请求中</div>
+                </div>
+            </div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="type_title_h4_id">添加物品类型</h4>
+                </div>
+                <form id="type_add_form" action="#" class="form-horizontal form-label-left">
+                    <input id="form_type_id" name="asset_form_type_name" hidden>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">类型名称 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                <input id="type_add_id" name="name" class="ivu-input is_required" required="required" type="text" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">定制资产字段</label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <div class="type_add_tags" id="tags" tabindex="1">
+                                    <input hidden name="customize" id="change_customize_id">
+                                    <input id="form-field-tags" type="text" placeholder="请输入字段名 ..." value="Tag Input Control" name="tags" style="display: none;"/>
+                                    <input type="text" placeholder="（选填）输入字段名 ..." class="tags_enter" autocomplete="off" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" id="type_change_submit_btn" onclick="ActionTypeChange()">
+                            <span class="ladda-label"> 确认 </span>
+                        </button>
+                        <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /.物品类型编辑模态框结束 -->
+
+    <!-- 组织结构模态框 -->
+    <div class="modal fade" id="OrgModalNoPeople" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">组织结构</h4>
+                </div>
+                <div class="modal-body">
+                    <ul id="treeDemoOrg" class="ztree"></ul>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /.组织结构模态框结束 -->
+
+      <!-- 组织结构模态框 -->
+    <div class="modal fade" id="OrgModalBelongDepartment" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">组织结构</h4>
+                </div>
+                <div class="modal-body">
+                    <ul id="treeBelongDepartment" class="ztree"></ul>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /.组织结构模态框结束 -->
+
+    <!-- 组织结构模态框 -->
+    <div class="modal fade" id="OrgModalBelongGroup" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">组织结构</h4>
+                </div>
+                <div class="modal-body">
+                    <ul id="treeBelongGroup" class="ztree"></ul>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /.组织结构模态框结束 -->
+
+    <!-- 组织结构模态框 -->
+    <div class="modal fade" id="orgModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">组织结构</h4>
+                </div>
+                <div class="modal-body">
+                    <input id="use_orgmodal_name" hidden>
+                    <ul id="treeDemo" class="ztree"></ul>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /.组织结构模态框结束 -->
+
+    <!-- 资产统计模态框 -->
+    <div class="modal fade" id="CountModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">库存统计</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-striped table-bordered dt-responsive nowrap" style="color:#495060">
+                        <thead>
+                            <tr><th>资产类型</th><th>在库数量</th><th>借出数量</th><th>维修数量</th><th>报废数量</th><th>统计</th></tr>
+                        </thead>
+                        <tbody id="asset_count_tbody_id">
+                        </tbody>
+                    </table>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /.资产统计模态框结束 -->
+
+    <!-- 按类型导出 -->
+    <div class="modal fade" id="customExportModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="ivu-spin ivu-spin-fix" id="export_loading_id" style="display: none;">
+            <div class="ivu-spin-main">
+                <span class="ivu-spin-dot"></span>
+                <div class="ivu-spin-text"></div>
+                <div>正在导出</div>
+            </div>
+        </div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">按类型导出</h4>
+                    <h5 style="color: red">按所选字段导出选中类型下的所有记录</h5>
+                </div>
+                <form id="custom_export_form_id" action="#" class="form-horizontal form-label-left">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">资产类型 <span class="required">*</span>
+                            </label>
+                            <div class="col-md-4 col-sm-4 col-xs-12">
+                                <select id="custom_export_asset_type_id" class="selectpicker" name="type"></select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="ivu-form-item-label pull-left col-md-2">导出字段 <span class="required">*</span></label>
+                            <div class="col-md-10 col-sm-10 col-xs-12" id="custom_export_select_field_id">
+                                <select class="col-md-12 selectpicker" multiple id="custom_export_field_id" name="field"></select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div class="modal-footer">
+                    <button type="button" class="ivu-btn ivu-btn-primary" data-style="expand-left" onclick="CustomExportSubmit()">
+                        <span class="ladda-label"> 确认 </span>
+                    </button>
+                    <button type="button" class="ivu-btn ivu-btn-ghost" data-dismiss="modal">取消</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /.按类型导出 -->
+
+    <!-- 导入模态框 -->
+    <div class="modal fade" id="importModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="z-index: 2041;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">导入</h4>
+                </div>
+                <div class="modal-body">
+                    <pre id="upload_pre"><span style="color:red">导入格式（必须按顺序写入到xls文件，第一行的标题如下）：</span><br><p>  <b>资产：</b>资产编号、资产类型、资产状态、采购日期、供应商、使用人、领用时间、备注、供应商、其他（其他信息写在后面）</p><br><p>  <b>出入记录：</b>经手人、资产编号、类型、操作人、操作时间、备注</p><br><p>  注意：资产状态只能有4种：“在库”、“借出”、“维修”、“报废”。 不是这4种状态默认转换为“在库”】</p><br><p>  每次最多只能导入10000条数据</p><br><p>  日期格式：yyyy-m-d</p><br><p>  时间格式：yyyy-m-d h:mm:ss</p></pre>
+                    <a href="javascript:FileUpload()" class="file btn btn-xs" id="file">导入资产<input type="file" name="file" id="file_upload" accept="application/msword"></a>
+                    <a href="javascript:FileUpload()" class="file btn btn-xs" id="file_inout">导入资产出入库记录<input type="file" name="file" id="file_inout_upload" accept="application/msword"></a>
+                    <div id="progress_div_id" style="display: none">
+                        <span id="percentage"></span>
+                        <div class="progress progress_sm" style="width: 50%;">
+                          <div id="fileupdate_progressbar_id" class="progress-bar bg-green" role="progressbar" data-transitiongoal="0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+    <!-- /.导入模态框结束 -->
+{% endblock %}
+{% block ext_script %}
+    <script src="{% static 'ztree/js/jquery.ztree.core.js' %}"></script>
+    <script src="{% static 'bootstrap/js/spin.min.js' %}"></script>
+    <script src="{% static 'bootstrap/js/ladda.min.js' %}"></script>
+    <script src="{% static 'jedate/jedate.js' %}"></script>
+    <script src="{% static 'js/aukeyops/JsonExportExcel.min.js' %}"></script>
+    <script src="{% static 'js/aukeyops/currency.js' %}"></script>
+    <script src="{% static 'jqueryui/jquery-ui-1.10.4.custom.min.js' %}"></script>
+    <script src="{% static 'js/jquery-confirm-3.3.0.js' %}"></script>
+    <script src="{% static 'js/aukeyops/wangEditor.min.js' %}"></script>
+    <script type="text/javascript">
+        var tag_mum = 0;
+        var PURCHASE_TYPE_CHOICES = {1: '新购', 2: '续费', 3: '升级'};
+        var STATUS_CHOICES= {1: '已申请', 2: '待审批', 3: '采购中', 4: '已开票', 5: '已完结'};
+        var Item = 0;
+        var E = window.wangEditor;
+        var editor = new E('#editor_action','#editor');
+        editor.customConfig.uploadImgServer = "{% url 'ws_uploadIMG' %}";
+        editor.customConfig.uploadFileName = 'img';
+        editor.customConfig.uploadImgTimeout = 60000;
+        editor.customConfig.zIndex = 1
+        editor.customConfig.uploadImgMaxLength = 20;
+        editor.customConfig.uploadImgMaxSize = 10 * 1024 * 1024;
+        editor.customConfig.showLinkImg = false; //隐藏网络图片功能
+        editor.customConfig.pasteFilterStyle = true; //关闭粘贴样式的过滤
+        editor.customConfig.onchange = function (html) {
+            $('#change_remark').val(html)
+        };
+        editor.customConfig.uploadImgHooks = {
+            customInsert: function (insertImg, result, editor) {
+                if (result.url.length == 0){
+                    message.add("贴图失败，请点击上传图片", "error");
+                }else {
+                    var the_url;
+                    for (the_url in result.url) {
+                        insertImg(result.url[the_url])
+                    }
+                }
+            }
+        };
+        editor.customConfig.menus = [
+            'undo',  // 撤销
+            'redo',  // 重复
+            'head',  // 标题
+            'bold',  // 粗体
+            'link',  // 插入链接
+            'image'  // 插入图片
+        ];
+      editor.customConfig.customAlert = function (info) {
+            message.add(info, "error");
+      };
+      editor.create();
+
+        // 添加字段
+        function addItem(){
+            Item += 1;
+            $("#add_item_group").append('\
+            <div class="form-group" id="item_'+Item+'">\
+                <input type="text" id="item_input_'+Item+'" style="display:none">\
+                <label class="ivu-form-item-label pull-left col-md-2">\
+                <input class="ivu-input is_required" required="required" type="text" placeholder="字段名" id="item_label_'+Item+'" autocomplete="off"></label>\
+                <div class="col-md-8 col-sm-8 col-xs-8" style="padding-right:0">\
+                <input class="ivu-input is_required" required="required" type="text" autocomplete="off" placeholder="值" id="item_value_'+Item+'"></div>\
+                <div class="col-md-2 col-sm-2 col-xs-2" style="padding-left:0">\
+                <button class="btn btn-link" type="button" onclick="delItem(\'item_'+Item+'\')" style="font-size:12px;">移除字段</button>\
+                </div>\
+            </div>')
+        }
+
+        // 移除字段
+        function delItem(item){
+            $("#"+item).remove();
+        }
+
+        // 选择物品类型触发显示定制字段
+        $('#change_type_id').change(function(e){
+            if (e.target.value) {
+                $.ajax({
+                    url: "/costcenter/goods_type/detail/"+e.target.value+"/",
+                    type: "get",
+                    success: function(result) {
+                        $("#add_my_field_group").empty();
+                        if (result['customize']){
+                            var my_field_num = 0;
+                            var cust = result['customize'].split(',');
+                            for (i in cust){
+                                my_field_num += 1;
+                                $("#add_my_field_group").append('\
+                                <div class="form-group" id="my_field_'+my_field_num+'">\
+                                    <label class="ivu-form-item-label pull-left col-md-2">'+cust[i]+'</label>\
+                                    <div class="col-md-10 col-sm-10 col-xs-10" style="padding-right:0">\
+                                    <input class="ivu-input" required="required" type="text" autocomplete="off" \
+                                    name="'+cust[i]+'" id="my_field_value_'+my_field_num+'"></div>\
+                                </div>')
+                            }
+                        }
+                    }
+                })
+            }
+        });
+
+        // 物品类型添加/修改模态框
+        $('#TypeChangeModal').on('show.bs.modal', function (event) {
+            document.getElementById("type_add_form").reset();
+            $("#tags span").remove();
+            var a = $(event.relatedTarget).data('id');
+            if (a) {
+                var select = getSelectRow();
+                if (select && select.id) {
+                    $("#type_title_id").html('修改物品类型');
+                    $("#form_type_id").val(select.id);
+                    $("#type_add_id").val(select.name);
+                    $('#type_change_submit_btn').attr('onclick','ActionTypeChange('+select.id+')');
+                    if (select.customize) {
+                        var tag_mum = 999;
+                        for (tag in select.customize.split(",")) {
+                            $("#form-field-tags").before("<span class='type_add_tag' id='type_add_tag_id_" + tag_mum + "'><span>" +
+                                select.customize.split(",")[tag] + "</span><button class='close' type='button' onclick='closeTag(\"type_add_tag_id_" + tag_mum + "\")'>×</button></span>"); //添加标签
+                            tag_mum += 1
+                        }
+                    }
+                } else {
+                    MyMessage(0, '请选择需要修改的记录！');
+                    return false;
+                }
+            } else {
+                $("#type_title_id").html('添加物品类型');
+                $('#type_change_submit_btn').attr('onclick','ActionTypeChange(-1)');
+            }
+        });
+
+        // 物品类型添加/修改动作
+        function ActionTypeChange(id) {
+            $('#type_change_loading_id').show();
+            cleanErrorAlert('type_add_form');
+            var re = checkRequired('type_add_form');
+            if (!re) {
+                $('#type_change_loading_id').hide();
+                return false
+            }
+            if (id > 0) {
+                var url = '/costcenter/goods_type/detail/'+id+'/';
+                var type = 'put'
+            } else {
+                var url ='/costcenter/goods_type/list/';
+                var type = 'post'
+            }
+            var my_field = [];
+            $('#tags').children('span')[0];
+            for (i in $('#tags').children('span')){
+                span_id = $('#tags').children('span')[i].id;
+                if (span_id){
+                    my_field.push($('#'+span_id+' span').text().replace(/(^\s*)|(\s*$)/g, ""));
+                }
+            }
+            $('#change_customize_id').val(my_field);
+            $.ajax({
+                url: url,
+                type: type,
+                data: $('#type_add_form').serializeArray(),
+                success: function(result) {
+                    MyMessage(1, '操作成功！');
+                    tag_mum = 0;
+                    $('#TypeChangeModal').modal('hide');
+                    $('#table').bootstrapTable("refresh");
+                },
+                error: function(result) {
+                    MyMessage(0, result.responseText);
+                },
+                complete: function() {
+                    $('#type_change_loading_id').hide();
+                }
+            });
+        }
+
+        // 搜索触发
+        $("#searchBtnId").on("click", function () {
+            searchGetTable('table', 'searchFormId', '/costcenter/purchase/list/');
+        });
+
+        // 重置搜索表单
+        function formReset() {
+            document.getElementById("searchFormId").reset();
+            $('#searchFormId .selectpicker').selectpicker('refresh');
+        }
+        // 打开添加/修改组织结构模态框
+        $('#orgModal').on('show.bs.modal', function (event) {
+           $('#use_orgmodal_name').val(event.relatedTarget.name)
+        });
+        
+        // 打开添加/修改模态框
+        $('#changeModal').on('show.bs.modal', function (event) {
+            cleanErrorAlert('change_form');
+            $("#add_my_field_group").empty();
+            $("#add_item_group").empty();
+            editor.txt.html('');
+            var form = $('#change_form');
+            form[0].reset();
+            $('.selectpicker').selectpicker('refresh');
+            var id = $(event.relatedTarget).data('id');
+            if (id) {
+                var select = getSelectRow();
+                if (select && select.id) {
+                    $('#any_server_select').hide();
+                    $('#one_server_select').show();
+                    $('#change_h4_id').html('修改订单');
+                    $('#change_submit_btn').attr('onclick','change('+select.id+')');
+                    for (v in select){
+                        if (select[v] || !select[v] == 'null') {
+                            var obj = form.find("[name='" + v + "']");
+                            if (obj.is("input") || obj.is("textarea")) {
+                                obj.val(select[v]);
+                            } else if (obj.is("select")) {
+                                if (typeof(select[v]) === 'object') {
+                                    obj.selectpicker('val', select[v]['id']);
+                                } else {
+                                    obj.selectpicker('val', select[v]);
+                                }
+                            }
+                        }
+                    }
+                    editor.txt.html($('#change_remark').val());
+                    var other_label = [];
+                    var my_alert_field_num = 0;
+                    var o_dict = eval('['+select.other_info+']')[0];
+                    $("#add_my_field_group").empty();
+                    for (i in o_dict){
+                        other_label.push(i);
+                        my_alert_field_num += 1;
+                        $("#add_my_field_group").append('\
+                        <div class="form-group" id="my_field_'+my_alert_field_num+'">\
+                            <label class="ivu-form-item-label pull-left col-md-2">'+i+'</label>\
+                            <div class="col-md-10 col-sm-10 col-xs-10" style="padding-right:0">\
+                            <input class="ivu-input" required="required" type="text" autocomplete="off" value="'+o_dict[i]+'" \
+                            name="'+i+'" id="my_field_value_'+my_alert_field_num+'"></div>\
+                        </div>')
+                    }
+                    if (select.type) {
+                        $.ajax({
+                            url: "/costcenter/goods_type/detail/"+select.type.id+"/",
+                            type: "get",
+                            success: function(result) {
+                                if (result['customize']){
+                                    var list_value = result['customize'].split(',');
+                                    for (i in list_value) {
+                                        if ($.inArray(list_value[i], other_label) == -1) {
+                                            if (o_dict[list_value[i]]) {
+                                                var the_value = o_dict[list_value[i]]
+                                            } else {
+                                                var the_value = ''
+                                            }
+                                            my_alert_field_num += 1;
+                                            $("#add_my_field_group").append('\
+                                            <div class="form-group" id="my_field_' + my_alert_field_num + '">\
+                                                <label class="ivu-form-item-label pull-left col-md-2">' + list_value[i] + '</label>\
+                                                <div class="col-md-10 col-sm-10 col-xs-10" style="padding-right:0">\
+                                                <input class="ivu-input" required="required" type="text" autocomplete="off" value="' + the_value + '" \
+                                                name="' + list_value[i] + '" id="my_field_value_' + my_alert_field_num + '"></div>\
+                                            </div>')
+                                        }
+                                    }
+                                }
+                            }
+                        })
+                    }
+                } else {
+                    MyMessage(0, '请选择要修改的记录！');
+                    return false
+                }
+            } else {
+                $('#change_h4_id').html('添加订单');
+                $('#change_submit_btn').attr('onclick','change(-1)');
+            }
+        });
+
+        // 添加/修改采购订单动作
+        function change(id) {
+            $('#changing_loading_id').show();
+            cleanErrorAlert('change_form');
+            var re = checkRequired('change_form');
+            var re_int = checkInt('change_form');
+            if (!re || !re_int) {
+                $('#changing_loading_id').hide();
+                return false
+            }
+            var child_element = $('#add_item_group').children().size();
+            var other_info_dict = {};
+            if (child_element > 0){
+                for (i = 0; i < child_element; i++){
+                    var input_id = $('#add_item_group').children()[i].id;
+                    var label = $('#'+input_id+" label input").val();
+                    var value = $('#'+input_id+" div:first input").val();
+                    other_info_dict[label] = value;
+                }
+            }
+            var add_my_field_group = $('#add_my_field_group').children();
+            var add_my_field_group_count = add_my_field_group.size();
+            for (i = 0; i < add_my_field_group_count; i++){
+                var input_id = 'my_field_value_'+(i+1);
+                other_info_dict[$('#'+input_id).attr("name")] = $('#'+input_id).val();
+            }
+            if (id > 0) {
+                var url = '/costcenter/purchase/detail/'+id+'/';
+                var type = 'put'
+            } else {
+                var url ='/costcenter/purchase/list/';
+                var type = 'post'
+            }
+            $('#change_other_info_id').val(JSON.stringify(other_info_dict));
+            change_request(url, type)
+        }
+
+        // 删除
+        function confirmDelete(view){
+            var select = getSelectRow();
+            if (select && select.id) {
+                if (select.id) {
+                    $.confirm({
+                        title: '提示！',
+                        content: '确定要删除吗？',
+                        closeIcon: true,
+                        type: 'red',
+                        typeAnimated: true,
+                        icon: 'fa fa-warning',
+                        buttons: {
+                            tryAgain: {
+                                text: '删除!',
+                                btnClass: 'ivu-btn-error',
+                                action: function(){
+                                    if (view == 1){
+                                        var url = '/costcenter/purchase/detail/'+select.id+'/';
+                                        var data = {'goods': select.goods, 'purchase_type':select.purchase_type, 'is_delete': 1};
+                                    } else if (view == 2){
+                                        var url = '/costcenter/goods_type/detail/'+select.id+'/';
+                                        var data = {'name': select.name, 'is_delete': 1};
+                                    }
+                                    $.ajax({
+                                        url: url,
+                                        type: 'PUT',
+                                        data: data,
+                                        success: function(result) {
+                                            MyMessage(1, '操作成功！');
+                                            $('#table').bootstrapTable("refresh");
+                                        },
+                                        error: function(result){
+                                            MyMessage(0, result.responseText);
+                                        }
+                                    })
+                                }
+                            },
+                            '取消': function () {
+                            }
+                        },
+                    });
+                } else {
+                    MyMessage(0, '请选择要删除的记录！');
+                }
+            } else {
+                MyMessage(0, '请选择要删除的记录！');
+            }
+        }
+
+        // 标签
+        $(function() {
+            $(".tags_enter").blur(function() { //焦点失去触发
+                var txtvalue=$(this).val().trim();
+                if(txtvalue!=''){
+                    addTag($(this));
+                    $(this).parents(".type_add_tags").css({"border-color": "#d5d5d5"})
+                }
+            }).keydown(function(event) {
+                var key_code = event.keyCode;
+                var txtvalue=$(this).val().trim();
+                if (key_code == 13&& txtvalue != '') { //enter
+                    addTag($(this));
+                }
+                if (key_code == 32 && txtvalue!='') { //space
+                    addTag($(this));
+                }
+            });
+            $(".type_add_tags").click(function() {
+                $(this).css({"border-color": "#57a3f3"})
+            }).blur(function() {
+                $(this).css({"border-color": "#d5d5d5"})
+            })
+        });
+        function addTag(obj) {
+            var tag = obj.val().replace(/(^\s*)|(\s*$)/g, "");
+            if (tag != '') {
+                var i = 0;
+                $(".type_add_tag").each(function() {
+                    if ($(this).text() == tag + "×") {
+                        $(this).addClass("tag-warning");
+                        setTimeout("removeWarning()", 400);
+                        i++;
+                    }
+                });
+                obj.val('');
+                if (i > 0) { //说明有重复
+                    return false;
+                }
+                $("#form-field-tags").before("<span class='type_add_tag' id='type_add_tag_id_"+tag_mum+"'><span>" +
+                    tag + "</span><button class='close' type='button' onclick='closeTag(\"type_add_tag_id_"+tag_mum+"\")'>×</button></span>"); //添加标签
+            }
+            tag_mum += 1
+        }
+        function removeWarning() {
+            $(".tag-warning").removeClass("tag-warning");
+        }
+        function closeTag(tag_id){
+            $("#"+tag_id).remove();
+        }
+
+        var view_list_1 = [
+            {
+                title:'',
+                field:'select',
+                checkbox:true,
+                align:'center',
+                valign:'middle'
+            },
+            {
+                title:'订单ID',
+                field:'id',
+                sortable:false,
+                align:'center',
+                visible: false,
+            },
+            {
+                title:'申购人',
+                field:'applicant',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row) {
+                    var my_html = '<span data-toggle="tooltip" data-placement="bottom" title="'+row.applicant_email+'">'+value+'</span>';
+                    return my_html
+                }
+            },
+            {
+                title:'申购日期',
+                field:'application_date',
+                align:'center',
+                sortable:true,
+            },
+            {
+                title:'所属部门',
+                field:'department',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'费用分摊组',
+                field:'group',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'部门审批人',
+                field:'approver',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row) {
+                    var my_html = '<span title="'+row.approver_email+'">'+value+'</span>';
+                    return my_html
+                }
+            },
+            {
+                title:'申购物品',
+                field:'goods',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'单价(元)',
+                field:'unit_price',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'申购数量',
+                field:'count',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'总价(元)',
+                field:'total_price',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'物品类型',
+                field:'type',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row) {
+                    if (row.type){
+                        var my_html = '<span>'+row.type.name+'</span>';
+                    } else {
+                        var my_html = '<span>'+row.type+'</span>';
+                    }
+                    return my_html
+                }
+            },
+            {
+                title:'规格',
+                field:'standard',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'采购人',
+                field:'purchaser',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row) {
+                    var my_html = '<span title="'+row.purchaser_email+'">'+value+'</span>';
+                    return my_html
+                }
+
+            },
+            {
+                title:'采购日期',
+                field:'purchase_date',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'采购类型',
+                field:'purchase_type',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row) {
+                    var my_html = '<span>'+PURCHASE_TYPE_CHOICES[value]+'</span>';
+                    return my_html
+                }
+            },
+            {
+                title:'接收人',
+                field:'receiver',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row) {
+                    var my_html = '<span title="'+row.receiver_email+'">'+value+'</span>';
+                    return my_html
+                }
+
+            },
+            {
+                title:'接收日期',
+                field:'receive_date',
+                align:'center',
+                sortable:true
+            },
+            {
+                title:'状态',
+                field:'status',
+                align:'center',
+                sortable:true,
+                formatter:function(value,row) {
+                    var my_html = '<span>'+STATUS_CHOICES[value]+'</span>';
+                    return my_html
+                }
+            },
+            {
+                title:'其他',
+                field:'other_info',
+                align:'center',
+                sortable:false,
+                visible:false
+            },
+        ];
+        var view_list_2 = [
+            {
+                title:'',
+                field:'select',
+                checkbox:true,
+                align:'center',
+                valign:'middle'
+            },
+            {
+                title:'名称',
+                field:'name',
+                sortable:false,
+                align:'center',
+            },
+            {
+                title:'定制字段',
+                field:'customize',
+                sortable:false,
+                align:'center',
+            },
+        ];
+        function initTable() {
+            $('#table').bootstrapTable({
+                method: "get",  //使用post请求到服务器获取数据
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",//必须要有
+                dataType: "json",
+                cache: false,
+                url:'/costcenter/purchase/list/',
+                toolbar: '#toolbar',//指定工具栏
+                striped: true,  //表格显示条纹
+                minimumCountColumns: 1,
+                dataField: "results",
+                pagination: true, //启动分页
+                sortable: true,  //启用排序
+                pageSize: 15,  //每页显示的记录数
+                pageNumber:1, //当前第几页
+                pageList: [5, 25, 100, 200, 500, 'all'],  //记录数可选列表
+                search: false,  //是否启用查询
+                searchOnEnterKey:true, //设置为 true时，按回车触发搜索方法，否则自动触发搜索方法
+                searchAlign:'left', //指定 搜索框 水平方向的位置。’left’ or ‘right’
+                showColumns: true,  //显示下拉框勾选要显示的列
+                showRefresh: false,  //显示刷新按钮
+                showSearchButton: false, //显示搜索按钮
+                showExport: false,//显示导出按钮
+                exportDataType: "all", //'basic'导出当前页, 'all'导出所有数据, 'selected'导出选中的数据.
+                sidePagination: "server", //分页方式：client客户端分页，server服务端分页（*）
+                queryParamsType : "undefined", //设置为 'limit' 则会发送符合 RESTFul 格式的参数
+                clickToSelect: true,//是否启用点击选中行
+                singleSelect:true, // 设置 true 将禁止多选
+                checkboxHeader:false, //设置 false 将在列头隐藏全选复选框
+                toolbarAlign:'left',//工具栏对齐方式
+                buttonsAlign:'right',//按钮对齐方式
+                undefinedText: '', //当数据为 undefined 时显示的字符
+                detailView:true,
+                responseHandler: function (res) { //加载服务器数据之前的处理程序，可以用来格式化数据。参数：res为从服务器请求到的数据
+                    res['total'] = res['count'];
+                    return res
+                },
+                columns: view_list_1,
+                queryParams: function queryParams(params) {   //设置查询参数
+                    if (params.sortOrder == 'desc') {
+                        params.sortName = '-'+params.sortName
+                    }
+                    var param = {
+                        page: params.pageNumber,
+                        size: params.pageSize,
+                        ordering:params.sortName
+                    };
+                    return param;
+                },
+                detailFormatter:function (index, row) {
+                    var log_result = '';
+                    $.ajax({
+                        url: '/opscenter/revision_log/list/?content_type={{ content_type_id }}&object_id='+row.id,
+                        type: 'get',
+                        async: false,
+                        success: function(result) {
+                            var res = result['results'];
+                            for (i in res) {
+                                log_result += '<tr><td>'+res[i]['user']['username']+'</td><td>'+new Date(res[i]['datetime']).toLocaleString()+'</td><td>'+res[i]['content']+'</td></tr>'
+                            }
+                        },
+                        error: function(result) {
+                            MyMessage(0, result.responseText)
+                        }
+                    })
+                    if (log_result) {
+                        var log_html = '<table class="table table-striped table-bordered dt-responsive nowrap">' +
+                            '<thead><tr><th>操作人</th><th>操作时间</th><th>操作内容</th></tr></thead><tbody>'+log_result+'</tbody></table>'
+                    } else {
+                        var log_html = '无修改记录'
+                    }
+                    if (row.remark) {
+                        var desc = row.remark
+                    } else {
+                        var desc = '无更多备注'
+                    }
+                    var other_info_html = '';
+                    if(row.other_info){
+                        var other_info = JSON.parse(row.other_info);
+                        for (i in other_info){
+                            other_info_html += '<div style="" class="col-md-4 col-sm-6 col-xs-12"><b>'+i+'：</b><span>'+other_info[i]+'</span></div>'
+                        }
+                    } else {
+                        other_info_html = '无更多信息';
+                    }
+                    var res_html = '<div class="" role="tabpanel" data-example-id="togglable-tabs">'+
+                        '<ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist">'+
+                            '<li role="presentation" class="active">'+
+                                '<a href="#tab_content1_'+row.id+'" role="tab" id="profile-tab" data-toggle="tab" aria-expanded="true">更多信息</a>'+
+                            '</li>'+
+                            '<li role="presentation" class="">'+
+                                '<a href="#tab_content2_'+row.id+'" id="home-tab" role="tab" data-toggle="tab" aria-expanded="false">备注</a>'+
+                            '</li>'+
+                            '<li role="presentation" class="">'+
+                                '<a href="#tab_content3_'+row.id+'" id="home-tab" role="tab" data-toggle="tab" aria-expanded="false">修改记录</a>'+
+                            '</li>'+
+                        '</ul>'+
+                        '<div id="myTabContent" class="tab-content">'+
+                            '<div role="tabpanel" class="tab-pane fade active in" id="tab_content1_'+row.id+'" aria-labelledby="profile-tab">'+
+                                '<div class="col-md-12">'+other_info_html+'</div>'+
+                            '</div>'+
+                            '<div role="tabpanel" class="tab-pane fade" id="tab_content2_'+row.id+'" aria-labelledby="home-tab">'+
+                                '<pre class="language-bash"><code class="language-bash">'+desc+'</code></pre>'+
+                            '</div>'+
+                            '<div role="tabpanel" class="tab-pane fade" id="tab_content3_'+row.id+'" aria-labelledby="home-tab">'+
+                                '<div class="col-md-12">'+ log_html +'</div>'+
+                            '</div>'+
+                        '</div>'+
+                    '</div>';
+                    return res_html
+                }
+            });
+        }
+        function view_trans(view) {
+            $("#view_trans_div_id button").attr("class","ivu-btn ivu-btn-ghost");
+            $("#view"+view+"_id").attr("class","ivu-btn ivu-btn-primary");
+            if (view == 1){
+                $('#searchFormId').show();
+                $('#goodstype_action_btn').hide();
+                $('#purchase_action_btn').show();
+                $('#table').bootstrapTable('refreshOptions', {
+                    url:'/costcenter/purchase/list/',
+                    pageNumber:1, //当前第几页
+                    columns: view_list_1,
+                    detailView: true
+                })
+            } else if (view == 2) {
+                $('#searchFormId').hide();
+                $('#purchase_action_btn').hide();
+                $('#goodstype_action_btn').show();
+                $('#table').bootstrapTable('refreshOptions', {
+                    url:'/costcenter/goods_type/list/',
+                    pageNumber:1, //当前第几页
+                    columns: view_list_2,
+                    detailView: false
+                })
+            }
+        }
+        $(document).ready(function() {
+            initTable(); // 初始化列表
+            $('.spinner').spinner({
+                min: 1
+            });
+            $("[data-toggle='tooltip']").tooltip();
+            $(".selectpicker").selectpicker({
+                noneSelectedText : '',  //默认显示内容
+                multipleSeparator: ','
+            });
+            $.ajax({
+                url: '/costcenter/goods_type/list/',
+                type: 'get',
+                success: function(result) {
+                    $('#search_type_id').empty();
+                    $('#change_type_id').empty();
+                    $('#search_type_id.selectpicker').append('<option></option>');
+                    $('#change_type_id.selectpicker').append('<option></option>');
+                    $.each(result['results'], function (index, item) {
+                       $('#search_type_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                       $('#change_type_id.selectpicker').append('<option value=' + item['id'] + '>' + item['name'] + '</option>');
+                    });
+                    $('#search_type_id').selectpicker('refresh');
+                    $('#change_type_id').selectpicker('refresh');
+                }
+            });
+            jeDate(".change_application_date_picker",{
+                theme:{ bgcolor:"#2D8CF0",color:"#ffffff", pnColor:"#2D8CF0"},
+                onClose:false,
+                format:"YYYY-MM-DD",
+                isTime:false,
+                minDate:"2000-01-01"
+            });
+            jeDate(".change_purchase_date_picker",{
+                theme:{ bgcolor:"#2D8CF0",color:"#ffffff", pnColor:"#2D8CF0"},
+                onClose:false,
+                format:"YYYY-MM-DD",
+                isTime:false,
+                minDate:"2000-01-01"
+            });
+            jeDate(".change_receive_date_picker",{
+                theme:{ bgcolor:"#2D8CF0",color:"#ffffff", pnColor:"#2D8CF0"},
+                onClose:false,
+                format:"YYYY-MM-DD",
+                isTime:false,
+                minDate:"2000-01-01"
+            });
+            $('.search_range_date').daterangepicker({
+                autoUpdateInput: false,
+                startDate: moment().subtract(1,'days'),
+                endDate: moment(),
+                minDate: '2000-01-01',    //最小时间
+                maxDate : moment(), //最大时间
+                showDropdowns : true,
+                showWeekNumbers : false, //是否显示第几周
+                timePicker : false, //是否显示小时和分钟
+                timePickerIncrement : 1, //时间的增量，单位为分钟
+                timePicker24Hour : true, //是否使用24小时制来显示时间
+                ranges : {
+                    '今日': [moment().startOf('day'), moment()],
+                    '昨日': [moment().subtract(1,'days').startOf('day'), moment().subtract(1,'days').endOf('day')],
+                    '最近7日': [moment().subtract(6,'days'), moment()],
+                    '最近30日': [moment().subtract(29,'days'), moment()]
+                },
+                opens : 'left', //日期选择框的弹出位置
+                buttonClasses : [ 'ivu-btn' ],
+                applyClass : 'ivu-btn-primary',
+                cancelClass : 'ivu-btn-ghost',
+                format : 'YYYY-MM-DD', //控件中from和to 显示的日期格式
+                separator : ' to ',
+                locale : {
+                    format : 'YYYY-MM-DD',
+                    separator: ' ~ ',
+                    applyLabel : '确定',
+                    cancelLabel : '取消',
+                    fromLabel : '起始时间',
+                    toLabel : '结束时间',
+                    customRangeLabel : '自定义',
+                    daysOfWeek : [ '日', '一', '二', '三', '四', '五', '六' ],
+                    monthNames : [ '一月', '二月', '三月', '四月', '五月', '六月',
+                          '七月', '八月', '九月', '十月', '十一月', '十二月' ],
+                    firstDay : 1
+                }
+            });
+            $('#search_application_date_id').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' ~ ' + picker.endDate.format('YYYY-MM-DD'));
+                $('#search_application_date_0').val(picker.startDate.format('YYYY-MM-DD'));
+                $('#search_application_date_1').val(picker.endDate.format('YYYY-MM-DD'))
+            });
+
+            $('#search_application_date_id').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                $('#search_application_date_0').val('');
+                $('#search_application_date_1').val('');
+            });
+
+            $('#search_purchase_date_id').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' ~ ' + picker.endDate.format('YYYY-MM-DD'));
+                $('#search_purchase_date_0').val(picker.startDate.format('YYYY-MM-DD'));
+                $('#search_purchase_date_1').val(picker.endDate.format('YYYY-MM-DD'))
+            });
+
+            $('#search_purchase_date_id').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                $('#search_purchase_date_0').val('');
+                $('#search_purchase_date_1').val('');
+            });
+            $('#search_receive_date_id').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' ~ ' + picker.endDate.format('YYYY-MM-DD'));
+                $('#search_receive_date_0').val(picker.startDate.format('YYYY-MM-DD'));
+                $('#search_receive_date_1').val(picker.endDate.format('YYYY-MM-DD'))
+            });
+
+            $('#search_receive_date_id').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                $('#search_receive_date_0').val('');
+                $('#search_receive_date_1').val('');
+            });
+            $.ajax({
+                url: "/cmdb/get_org/",
+                type: "post",
+                success: function (resultOrg) {
+                    if (resultOrg['result']) {
+                        for (i in resultOrg['result']) {
+                            if (resultOrg['result'][i]['id'] == 1) {
+                                resultOrg['result'][i]['open'] = 'true';
+                                break
+                            }
+                        }
+                        zTreeObjOrg = $.fn.zTree.init($("#treeDemoOrg"), settingOrg, resultOrg['result']);
+                        zTreeBelongDepartment = $.fn.zTree.init($("#treeBelongDepartment"), settingBelongDepartment, resultOrg['result']);
+                        zTreeBelongGroup = $.fn.zTree.init($("#treeBelongGroup"), settingBelongGroup, resultOrg['result']);
+                    }
+                    zTreeObjOrgData = resultOrg['result']
+                }
+            });
+            $.ajax({
+                url: "/get_wechat_department_list/",
+                type: "post",
+                success: function (result) {
+                    if (result['result']) {
+                        zTreeObj = $.fn.zTree.init($("#treeDemo"), setting, result['result']);
+                    }
+                }
+            });
+        });
+
+        // 组织结构树
+        var zTreeObjOrgData;
+        var zTreeObjOrg;
+        var settingOrg = {
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "id",
+                    pIdKey: "parentid",
+                    rootPId: 0
+                }
+            },
+            check: {
+                enable: true,
+            },
+            callback: {
+                onClick: zTreeOnClickOrg,
+            }
+        };
+        function zTreeOnClickOrg(event, treeId, treeNode){
+            $('#OrgModalNoPeople').modal('hide');
+            $("#searchFormId").find("[name='department']").val(treeNode.name);
+{#            var oid = getChildNodes(treeNode);#}
+{#            $("#searchFormId").find("[name='department_id__in']").val(oid);#}
+        }
+        // 获取所有子节点ID
+        function getChildNodes(treeNode) {
+            var childNodes = zTreeObjOrg.transformToArray(treeNode);
+            var nodes = new Array();
+            for(i = 0; i < childNodes.length; i++) {
+                nodes[i] = childNodes[i].id;
+            }
+            return nodes.join(",");
+        }
+
+        // change所属部门
+        var zTreeBelongDepartment;
+        var settingBelongDepartment = {
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "id",
+                    pIdKey: "parentid",
+                    rootPId: 0
+                }
+            },
+            check: {
+                enable: true
+            },
+            callback: {
+                onClick: zTreeOnClickBelongDepartment
+            }
+        };
+        function zTreeOnClickBelongDepartment(event, treeId, treeNode){
+            $('#OrgModalBelongDepartment').modal('hide');
+            $("#change_form").find("[name='department']").val(treeNode.name);
+        }
+
+        // change所属组
+        var zTreeBelongGroup;
+        var settingBelongGroup = {
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "id",
+                    pIdKey: "parentid",
+                    rootPId: 0
+                }
+            },
+            check: {
+                enable: true
+            },
+            callback: {
+                onClick: zTreeOnClickBelongGroup
+            }
+        };
+        function zTreeOnClickBelongGroup(event, treeId, treeNode){
+            $('#OrgModalBelongGroup').modal('hide');
+            $("#change_form").find("[name='group']").val(treeNode.name);
+        }
+
+        // 组织结构异步加载树
+        var zTreeObj;
+        var setting = {
+            async: {
+				enable: true,
+                type: 'post',
+                dataType: 'json',
+                url: '/get_wechat_department_list/',
+				autoParam:["id=parentid"],
+                otherParam: {"get_people": 1},
+				dataFilter: ajaxDataFilter,
+			},
+            data: {
+                simpleData: {
+                    enable: true,
+                    idKey: "id",
+                    pIdKey: "parentid",
+                    rootPId: 0
+                }
+            },
+            check: {
+                enable: true,
+                chkDisabled:true,
+                chkDisabledInherit: true,
+            },
+            callback: {
+                onClick: zTreeOnClick,
+                onAsyncSuccess: onAsyncSuccess,
+                onAsyncError: onAsyncError
+            }
+        };
+        function ajaxDataFilter(treeId, parentNode, responseData) {
+            return responseData.result;
+        }
+        function zTreeOnClick(event, treeId, treeNode){
+            if (treeNode.isParent == 1){
+                var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+                zTree.expandNode(treeNode);
+            } else {
+                $('#orgModal').modal('hide');
+{#                if ($('#use_orgmodal_name').val() == 'applicant') {#}
+{#                    $("#change_form").find("[name='department']").val(treeNode.getParentNode().name);#}
+{#                    $("#change_form").find("[name='department_id']").val(treeNode.parentid);#}
+{#                }#}
+                $("#change_form").find("[name=" + $('#use_orgmodal_name').val() + "]").val(treeNode.name);
+                $("#change_form").find("[name=" + $('#use_orgmodal_name').val() + "_email]").val(treeNode.id);
+            }
+        }
+        function onAsyncError(event, treeId, treeNode, XMLHttpRequest, textStatus, errorThrown) {
+            console.log("加载异常, 请刷新页面!");
+        }
+        function onAsyncSuccess(event, treeId, treeNode, msg) {
+        }
+        // 导出当前页
+        var TableExport = function() {
+            "use strict";
+            var runTableExportTools = function() {
+                $(".export-excel").on("click", function(e) {
+                    var that = this;
+                    $.confirm({
+                        title: '提示！',
+                        content: '确定要导出当前页的数据吗？',
+                        closeIcon: true,
+                        type: 'blue',
+                        typeAnimated: true,
+                        buttons: {
+                            tryAgain: {
+                                text: '导出',
+                                btnClass: 'ivu-btn-primary',
+                                action: function () {
+                                    e.preventDefault();
+                                    var exportTable = $(that).data("table");
+                                    var ignoreColumn = $(that).data("ignorecolumn");
+                                    $(exportTable).tableExport({
+                                        type : 'excel',
+                                        escape : 'false',
+                                        ignoreColumn : '[' + ignoreColumn + ']'
+                                    });
+                                }
+                            },
+                            '取消': function () {
+                            },
+                        }
+                    });
+                });
+            };
+            return {
+                init : function() {
+                    runTableExportTools();
+                }
+            };
+        }(jQuery);
+        TableExport.init();
+
+        // 导入
+        $(function() {
+            $("#file").on("change", "input[type='file']", function () {
+                var form_data = new FormData();
+                var file_get = $('#file_upload')[0];
+                var file_info = file_get.files[0];
+                form_data.append("file", file_info);
+                if (file_info == undefined) { //判断是否有附件
+                    alert('你没有选择任何文件');
+                    $(this).val('');
+                    return false
+                }
+                var fileSize = file_info.size;
+                //35160  计算机存储数据最为常用的单位是字节(B)
+                //在此处我们限制文件大小为50M
+                if (fileSize == -1) {
+                    alert('"您的浏览器暂不支持计算上传文件的大小，确保上传文件不要超过50M，建议使用 Chrome（谷歌）浏览器。";');
+                    $(this).val('');
+                    return false;
+                }
+                if (fileSize > 50 * 1024 * 1024) {
+                    new PNotify({
+                        title: 'ERROR',
+                        text: '文件过大, 请上传小于50M的文件！',
+                        type: 'error',
+                        styling: 'bootstrap3'
+                    });
+                    $(this).val('');
+                    return false;
+                }
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function () {//服务器返回值的处理函数，此处使用匿名函数进行实现
+                    if (xhr.readyState == 4 && xhr.status == 200) {//
+                        var responseText = xhr.responseText;
+                        result_dict = JSON.parse(unescape(responseText.replace(/\\u/g, '%u')));
+                        new PNotify({
+                            title: result_dict.title,
+                            text: result_dict.result,
+                            type: result_dict.status,
+                            styling: 'bootstrap3'
+                        });
+                        old_html = document.getElementById("percentage").innerHTML;
+                        if (result_dict.status == 'success') {
+                            document.getElementById("percentage").innerHTML = old_html + ' <span style="color:green"> ' + result_dict.result + '</span>';
+                        } else {
+                            document.getElementById("percentage").innerHTML = '<span style="color:red">' + result_dict.result + '</span>';
+                        }
+                    }
+                };
+                xhr.upload.addEventListener('progress', on_progress, false);     //xhr对象含有一个upload对象，它有一个progress事件，在文件上传过程中会被不断触发，我们为这个事件对应一个处理函数，每当事件触发就会调用这个函数，于是便可利用这个函数来修改当前进度，更多细节可自行查询
+                $("#progress_div_id").css("display", "block");
+                xhr.open('POST', '/cmdb/asset_manage/fixed_asset/asset_import/', true);  //请将url改成上传url
+                xhr.setRequestHeader('X-CSRFTOKEN', '{{ request.COOKIES.csrftoken }}');   //此处为Django要求，可无视，或者换成相应后台所要求的CSRF防护，不是django用户请去掉
+                xhr.send(form_data);   //发送表单
+
+                function on_progress(evt) {       //看这个函数之前先看upload函数。这个函数可以接收一个evt(event)对象(细节自行查询progress)，他有3个属性lengthComputable，loaded，total，第一个属性是个bool类型的，代表是否支持，第二个代表当前上传的大小，第三个为总的大小，由此便可以计算出实时上传的百分比
+                    if (evt.lengthComputable) {
+                        var percent = Math.round((evt.loaded) * 100 / evt.total);
+                        $('#fileupdate_progressbar_id').attr('data-transitiongoal', percent).progressbar();
+                        document.getElementById("percentage").innerHTML = percent + "%";
+                        if (percent == 100) {
+                            $('#importModal').modal('hide');
+                            $('#table').bootstrapTable("refresh");
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

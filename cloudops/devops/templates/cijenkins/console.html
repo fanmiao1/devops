@@ -1,0 +1,54 @@
+{% extends 'cijenkins/base.html' %}
+{% load staticfiles %}
+{% block page_title %}{% if jenkins_env == 100 %}控制台{% else %}控制台{% endif %}{% endblock %}
+{% block table_title %}输出{% endblock %}
+{% block logs_include %}{% endblock %}
+{% block ext_div %}class="col-md-10 col-sm-10 col-xs-12"{% endblock %}
+{% block detail_info %}
+    <table class="table">
+      <tbody>
+        <tr>
+            <p id="console_out">{{ console_output|linebreaksbr }}</p>
+        </tr>
+      </tbody>
+    </table>
+<script>
+     /**
+     *将记录滚动到最底部位置
+     *
+     */
+    function setContainerScrollBottom() {
+        var containerEle = document.getElementsByTagName('html')[0],
+            scrollHeight = containerEle.scrollHeight;
+        containerEle.scrollTop = scrollHeight;
+    }
+
+  var count =0;
+  var timer =  setInterval(function () {
+        if (count===120) {
+            clearInterval(timer);
+        }
+        $.ajax({
+            type:"POST",
+            url:"{% if jenkins_env == 100 %}{% url 'console_pro' jenkins_env job_name num_id %}{% else %}{% url 'console_qa' jenkins_env job_name num_id %}{% endif %}",
+            success:function (res) {
+                count++;
+                console.log(res['console_output']);
+                document.getElementById('console_out').innerText = '';
+                document.getElementById('console_out').innerText = res['console_output'];
+                setContainerScrollBottom();
+            }
+        });
+    },2000);
+
+</script>
+{% endblock %}
+{% block ystep %}
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="approval">
+            <a href="javascript: history.back(-1)">
+                <button type="button" class="btn btn-default">返回</button>
+            </a>
+        </div>
+    </div>
+{% endblock %}
