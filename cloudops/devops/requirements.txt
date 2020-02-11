@@ -16,7 +16,7 @@ chardet==3.0.4
 constantly==15.1.0
 cryptography==2.2.2
 daphne==2.1.2
-Django==2.0.1
+Django==2.2.10
 django-celery-beat==1.1.1
 django-core==1.4.1
 django-mssql==1.8
