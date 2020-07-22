@@ -29,7 +29,7 @@ def is_invalid_conn(server_ip, instance_username, instance_password, instance_po
     @author: qingyw
     @note: 「MySQL 数据库管理模块」 引用方法
     '''
-    instance_role, slave_info = '', []
+    instance_role, subordinate_info = '', []
 
     try:
         if instance_type == 'MySQL':
@@ -39,38 +39,38 @@ def is_invalid_conn(server_ip, instance_username, instance_password, instance_po
                                        port=instance_port, charset='utf8')
             except Exception as e:
                 print(e)
-                return True, instance_role, slave_info
+                return True, instance_role, subordinate_info
             try:
                 cursor = conn.cursor(dictionary=True)
                 cursor.execute("SHOW SLAVE STATUS")
                 result = cursor.fetchone()
                 if result is not None:
-                    instance_role = 'Slave'
-                    slave_info.append(result['Master_Host'])
-                    slave_info.append(result['Master_Port'])
+                    instance_role = 'Subordinate'
+                    subordinate_info.append(result['Main_Host'])
+                    subordinate_info.append(result['Main_Port'])
                     if result['SQL_Delay']:
-                        slave_info.append(1)
+                        subordinate_info.append(1)
                     else:
-                        slave_info.append(0)
-                    slave_info.append(result['SQL_Delay'])
+                        subordinate_info.append(0)
+                    subordinate_info.append(result['SQL_Delay'])
                 else:
-                    instance_role = 'Master'
+                    instance_role = 'Main'
 
                 conn.close()
-                return False, instance_role, slave_info
+                return False, instance_role, subordinate_info
             except Exception as e:
-                return False, instance_role, slave_info
+                return False, instance_role, subordinate_info
         elif instance_type == 'SQL SERVER':
             conn = pymssql.connect(host=server_ip, user=instance_username,
                                    password=instance_password,
                                    port=instance_port, charset='utf8')
             conn.close()
 
-            return False, instance_role, slave_info
+            return False, instance_role, subordinate_info
 
     except Exception as e:
         print(e)
-        return True, instance_role, slave_info
+        return True, instance_role, subordinate_info
 
 
 def exec_sqlalert(server_ip, instance_username, instance_password, instance_port, instance_type, exec_sql):
