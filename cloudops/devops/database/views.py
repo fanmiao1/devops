@@ -500,7 +500,7 @@ def add_instance(request):
             instance_type = data.get('instance_type')
             is_exist_name = Instance.objects.filter(instance_name=instance_name, is_delete=0)
             is_exist_ip_port = Instance.objects.filter(server_ip=server_ip, instance_port=instance_port, is_delete=0)
-            is_conn, instance_role, slave_info = is_invalid_conn(server_ip, instance_username, instance_password, instance_port, str(instance_type))
+            is_conn, instance_role, subordinate_info = is_invalid_conn(server_ip, instance_username, instance_password, instance_port, str(instance_type))
 
             # instanceform = InstanceForm(
             #     initial={
@@ -544,13 +544,13 @@ def add_instance(request):
                 instancelog.instance_id = instanceid.id
                 instancelog.content = '{applicant:' + get_name_by_id.get_name(request.user.id) + ', action: 新增, info:添加' + instance_type.cate_name + '实例}'
                 instancelog.save()
-                if len(slave_info):
+                if len(subordinate_info):
                     instancestruct = InstanceStruct()
                     instancestruct.instance_id = instanceid.id
-                    instancestruct.master_host = slave_info[0]
-                    instancestruct.master_port = slave_info[1]
-                    instancestruct.slave_type = slave_info[2]
-                    instancestruct.slave_delay = slave_info[3]
+                    instancestruct.main_host = subordinate_info[0]
+                    instancestruct.main_port = subordinate_info[1]
+                    instancestruct.subordinate_type = subordinate_info[2]
+                    instancestruct.subordinate_delay = subordinate_info[3]
                     instancestruct.save()
                 return render(request, 'database/instances.html', {'add_instance': add_instance})
         else:
@@ -757,8 +757,8 @@ def modify_instance(request, id):
             is_exist_name = Instance.objects.filter(instance_name=instance_name, is_delete=0).exclude(id=id)
             is_exist_ip_port = Instance.objects.filter(server_ip=server_ip, instance_port=instance_port,
                                                        is_delete=0).exclude(id=id)
-            is_conn, instance_role, slave_info = is_invalid_conn(server_ip, instance_username, instance_password, instance_port, str(instance_type))
-            # print (is_conn, instance_role, slave_info)
+            is_conn, instance_role, subordinate_info = is_invalid_conn(server_ip, instance_username, instance_password, instance_port, str(instance_type))
+            # print (is_conn, instance_role, subordinate_info)
             if is_exist_name:
                 errors = '该实例名已存在！'
                 messages.add_message(request, messages.ERROR, errors)
@@ -782,19 +782,19 @@ def modify_instance(request, id):
                                                       instance_role=instance_role)
 
                 is_exists_struct = InstanceStruct.objects.filter(instance_id=id).count()
-                if is_exists_struct and instance_role == 'Master':
+                if is_exists_struct and instance_role == 'Main':
                     InstanceStruct.objects.filter(instance_id=id).delete()
-                elif is_exists_struct and instance_role == 'Slave':
-                    InstanceStruct.objects.filter(instance_id=id).update(master_host=slave_info[0], slave_type=slave_info[1],
-                                                  slave_delay=slave_info[2], updatetime=timezone.now())
+                elif is_exists_struct and instance_role == 'Subordinate':
+                    InstanceStruct.objects.filter(instance_id=id).update(main_host=subordinate_info[0], subordinate_type=subordinate_info[1],
+                                                  subordinate_delay=subordinate_info[2], updatetime=timezone.now())
                 else:
-                    if len(slave_info):
+                    if len(subordinate_info):
                         instancestruct = InstanceStruct()
                         instancestruct.instance_id = id
-                        instancestruct.master_host = slave_info[0]
-                        instancestruct.master_port = slave_info[1]
-                        instancestruct.slave_type = slave_info[2]
-                        instancestruct.slave_delay = slave_info[3]
+                        instancestruct.main_host = subordinate_info[0]
+                        instancestruct.main_port = subordinate_info[1]
+                        instancestruct.subordinate_type = subordinate_info[2]
+                        instancestruct.subordinate_delay = subordinate_info[3]
                         instancestruct.save()
 
                 content_key = ['applicant', 'action', 'info']
@@ -868,22 +868,22 @@ def instance_detail(request, id, process_id=0):
                                                    instance_info.instance_username,
                                                    prpCryptor.decrypt(instance_info.instance_password),
                                                    instance_info.instance_port)
-        if instance_info.instance_role == 'Master':
-            slave_id = InstanceStruct.objects.filter(master_host=instance_info.server_ip,
-                                                     master_port=instance_info.instance_port).values_list('instance_id',
+        if instance_info.instance_role == 'Main':
+            subordinate_id = InstanceStruct.objects.filter(main_host=instance_info.server_ip,
+                                                     main_port=instance_info.instance_port).values_list('instance_id',
                                                                                                           flat=True)
-            slaves = Instance.objects.filter(id__in=slave_id)
-            slave_info = {'count': slaves.count(), 'master': instance_info, 'slaves': slaves}
-        elif instance_info.instance_role == 'Slave':
-            master = InstanceStruct.objects.get(instance_id=instance_info.id)
-            slave_id = InstanceStruct.objects.filter(master_host=master.master_host,
-                                                     master_port=master.master_port).values_list('instance_id',
+            subordinates = Instance.objects.filter(id__in=subordinate_id)
+            subordinate_info = {'count': subordinates.count(), 'main': instance_info, 'subordinates': subordinates}
+        elif instance_info.instance_role == 'Subordinate':
+            main = InstanceStruct.objects.get(instance_id=instance_info.id)
+            subordinate_id = InstanceStruct.objects.filter(main_host=main.main_host,
+                                                     main_port=main.main_port).values_list('instance_id',
                                                                                                    flat=True)
-            slaves = Instance.objects.filter(id__in=slave_id)
-            slave_info = {'count': slaves.count(), 'master': master, 'slave': slaves}
+            subordinates = Instance.objects.filter(id__in=subordinate_id)
+            subordinate_info = {'count': subordinates.count(), 'main': main, 'subordinate': subordinates}
         else:
             processlist_info = ''
-            slave_info = {}
+            subordinate_info = {}
     # db_size = get_db_size(instance_info.server_ip,
     #                       instance_info.instance_username,
     #                       prpCryptor.decrypt(instance_info.instance_password),
@@ -896,7 +896,7 @@ def instance_detail(request, id, process_id=0):
     instance_detail = {
         "line": instance_info,
         "processlist": processlist_info,
-        "slave": slave_info,
+        "subordinate": subordinate_info,
         "instance": instance_size,
     }
     return render(request, 'database/instance_detail.html', instance_detail)

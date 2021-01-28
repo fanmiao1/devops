@@ -53,10 +53,10 @@ class Instance(models.Model):
 
 class InstanceStruct(models.Model):
     instance = models.ForeignKey(Instance, on_delete=models.CASCADE, verbose_name='实例')
-    master_host = models.CharField(u'主库IP', max_length=100, help_text="主库地址")
-    master_port = models.IntegerField(u'主库端口', help_text="主库端口")
-    slave_type = models.IntegerField(u'从库类型', help_text="从库类型：实时从库，延时从库")
-    slave_delay = models.IntegerField(u'从库延迟', help_text="从库类型：实时从库，延时从库")
+    main_host = models.CharField(u'主库IP', max_length=100, help_text="主库地址")
+    main_port = models.IntegerField(u'主库端口', help_text="主库端口")
+    subordinate_type = models.IntegerField(u'从库类型', help_text="从库类型：实时从库，延时从库")
+    subordinate_delay = models.IntegerField(u'从库延迟', help_text="从库类型：实时从库，延时从库")
     createtime = models.DateTimeField(u'添加时间', auto_now_add=True, help_text="添加时间")
     updatetime = models.DateTimeField(u'更新时间', null=True, help_text="更新时间")
 
